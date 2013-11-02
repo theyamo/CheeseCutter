@@ -99,7 +99,32 @@ CXX_SRCS = src/audio/resid/residctrl.cpp \
 
 CXX_OBJS = $(CXX_SRCS:.cpp=.o)
 
-UTILOBJS = src/ct2util.o src/ct/base.o src/com/cpu.o src/ct/pack.o src/ct/purge.o src/ct/dump.o
+C_SRCS	= \
+	src/asm/acme.c \
+	src/com/asm.c \
+	src/asm/alu.c \
+	src/asm/basics.c \
+	src/asm/cpu.c \
+	src/asm/dynabuf.c \
+	src/asm/encoding.c \
+	src/asm/flow.c \
+	src/asm/global.c \
+	src/asm/input.c src/asm/label.c \
+	src/asm/macro.c \
+	src/asm/mnemo.c \
+	src/asm/output.c \
+	src/asm/platform.c \
+	src/asm/section.c \
+	src/asm/tree.c
+
+C_OBJS	= $(C_SRCS:.c=.o)
+
+UTILOBJS = src/ct2util.o \
+	src/ct/base.o \
+	src/com/cpu.o \
+	src/ct/pack.o \
+	src/ct/purge.o \
+	src/ct/dump.o
 
 C64OBJS = src/c64/player.bin \
 	src/c64/custplay.bin
@@ -112,10 +137,13 @@ $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
 .cpp.o : $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+.c.o : $(C_SRCS)
+	$(CC) -c $< -o $@
+
 ct: $(C64OBJS) $(CTOBJS)
 
-ct2util: $(C64OBJS) $(UTILOBJS)
-	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS)
+ct2util: $(C64OBJS) $(UTILOBJS) $(C_OBJS)
+	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(C_OBJS) $(LIBS) 
 
 c64: $(C64OBJS)
 
@@ -139,7 +167,7 @@ dist:	release
 
 clean: 
 	rm -f *.o *~ resid/*.o resid-fp/*.o ccutter ct2util \
-		$(C64OBJS) $(OBJS) $(CTOBJS) $(CXX_OBJS) $(UTILOBJS)
+		$(C64OBJS) $(OBJS) $(CTOBJS) $(CXX_OBJS) $(UTILOBJS) $(C_OBJS)
 
 dclean: clean
 	rm -rf dist
@@ -151,7 +179,7 @@ tar:
 	git archive master --prefix=cheesecutter-2.5.1/ | bzip2 > cheesecutter-2.5.1-macosx-src.tar.bz2
 # --------------------------------------------------------------------------------
 
-src/c64/player.bin: src/c64/player.acme
+src/c64/player.bin: src/c64/player_v400.acme
 	acme -f cbm --outfile $@ $<
 
 src/c64/custplay.bin: src/c64/custplay.acme
