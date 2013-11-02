@@ -1,0 +1,40 @@
+ZP = $fd
+*=$fe0-4
+!set ptimerlo = timerlo-*
+!set ptimerhi = timerhi-*
+!set pplay = play-*
+!set pinit = init-*
+!8	ptimerlo,ptimerhi,pplay,pinit
+play	dec ZP
+	bpl $1006-2
+	lda #1
+	sta ZP
+	jmp $1003
+init	ldx #0
+	stx ZP
+timerlo	= *+1
+	ldx #<$4cc7
+timerhi	= *+1
+	ldy #>$4cc7
+	sty $dc05
+	stx $dc04
+	jmp $1000
+*=$1000-4
+; timer		= $4cc7 / 2
+; div		= 1
+; 		jmp custinit
+; 		jmp custplay
+; custinit	ldx #>timer
+; 		ldy #<timer
+; 		stx $dc05
+; 		sty $dc04
+; 		jmp $1000
+; custplay	dec counter
+; 		bpl $1006
+; 		lda #div
+; 		sta counter
+; 		jmp $1003
+; counter		!8 0
+		
+; !align $ff,0,0
+		

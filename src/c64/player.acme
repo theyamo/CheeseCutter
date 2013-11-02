@@ -1,0 +1,1674 @@
+;;; ----------------------------------------
+;;; CCUTTER 2.5.x musicplayer by abad
+;;; Based on JCH NP 21.G4 by Laxity/VIB
+;;; ----------------------------------------
+;;; 
+;;; Here's how to use this in your program:
+;;; 
+;;; - set EXPORT to TRUE (takes all editor specific code out)
+;;; 
+;;; - set the INCLUDE flags to match what you used in your song
+;;; 
+;;; - set the 'editorflag' byte near the end of the program code to
+;;; value other than 0
+;;; 
+;;; - set INSNO to match the actual number of instruments in your tune
+;;; (note that ct2util currently dumps the whole instrument table, you have
+;;; to manually shorten it to match the actual amount)
+;;; 
+;;; - remove the template tables (starting from where the program counter
+;;; gets set to $2000)
+;;; 
+;;; - paste in your dumped tune data
+;;; 
+;;; - assemble & enjoy
+
+ZREG		= $fb
+FALSE		= 0
+TRUE		= 1
+EXPORT		= FALSE				; if TRUE, editor specific code will be left out
+MULTISPEED	= TRUE				; support for multispeed playback
+INSNO		= 48				; number of instruments used
+		
+;;; ----------------------------------------
+;;; instr table enums
+;;; ----------------------------------------
+INS_AD		= 0				;
+INS_SR		= 1 * INSNO
+INS_HR		= 2 * INSNO			; $x0 = HR type, $0x arp delay count
+INS_4		= 3 * INSNO			; HR waveform
+INS_FLTP	= 4 * INSNO			; 
+INS_PULSP	= 5 * INSNO			; 
+INS_7		= 6 * INSNO			; 
+INS_ARP		= 7 * INSNO
+;;; ----------------------------------------
+;;; assembly conditionals
+;;; ----------------------------------------
+INCLUDE_CMD_SLUP	= TRUE
+INCLUDE_CMD_SLDOWN	= TRUE
+INCLUDE_CMD_VIBR	= TRUE
+INCLUDE_CMD_PORTA	= TRUE
+INCLUDE_CMD_SET_ADSR	= TRUE
+INCLUDE_CMD_SET_OFFSET	= TRUE
+INCLUDE_CMD_SET_LOVIB	= TRUE
+INCLUDE_CMD_SET_WAVE	= TRUE
+INCLUDE_CMD_SET_SPEED	= TRUE
+INCLUDE_CMD_SET_VOL	= TRUE
+INCLUDE_SEQ_SET_PULSE	= TRUE
+INCLUDE_SEQ_SET_FILTER	= TRUE
+INCLUDE_SEQ_SET_CHORD	= TRUE
+INCLUDE_SEQ_SET_ATT	= TRUE
+INCLUDE_SEQ_SET_DEC	= TRUE
+INCLUDE_SEQ_SET_SUS	= TRUE
+INCLUDE_SEQ_SET_REL	= TRUE
+INCLUDE_SEQ_SET_SPEED	= TRUE
+INCLUDE_SEQ_SET_VOL	= TRUE
+INCLUDE_VIBRAFEEL	= TRUE
+INCLUDE_BREAKSPEED	= TRUE
+INCLUDE_CHORD		= TRUE
+;;; ----------------------------------------
+;;; new effect commands
+;;; ----------------------------------------
+CMD_SLIDE_UP	= $00				
+CMD_SLIDE_DOWN	= $01				
+CMD_VIBRATO	= $02				
+CMD_SET_OFFSET	= $03				
+CMD_SET_ADSR	= $04				
+CMD_SET_LOVIB	= $05
+CMD_SET_WAVE	= $06
+CMD_PORTAMENTO	= $07				
+CMD_STOP	= $08				;stop portamento/slide
+;;; ----------------------------------------
+SUPERHIGH = CMD_SET_OFFSET
+;;; ----------------------------------------
+;;; the following data describes the player features
+;;; for the editor
+;;; ----------------------------------------
+!if EXPORT = FALSE {
+*=$e00
+features		= *
+requestedTables	!8 %00001111
+;;; 1 = points to wave table
+;;; 2 = points to cmd table (NOT IMPLEMENTED)
+;;; 3 = points to pulse table
+;;; 4 = points to filter table
+;;; ...
+instrumentFlags	!8 0,0,0,0,4,3,0,1
+;;; 1 = points to wave table
+;;; 3 = points to pulse table
+;;; 4 = points to filter table
+cmdFlags	!8 0,0,0,0,0,0,0,0
+		!8 0,0,0,0,0,0,0,0
+
+instrumentDescriptionsHeader
+        !16 idescr0,idescr1,idescr2,idescr3,idescr4,idescr5,idescr6,idescr7
+pulseDescriptionsHeader
+	!16 pdescr0,pdescr1,pdescr2,pdescr3
+filterDescriptionsHeader
+	!16 fdescr0,fdescr1,fdescr2,fdescr3
+waveDescriptionsHeader
+	!16 wdescr0,wdescr1
+cmdDescriptionsHeader
+	!16 mdescr0,mdescr1
+}
+
+;;; ----------------------------------------
+;;; some pointers for the editor
+;;; ----------------------------------------
+!if EXPORT = FALSE {
+		 *= $0fa0
+ofa0		!16 features
+ofa2		!16 volume
+ofa4		!16 editorflag
+ofa6		!16 songsets
+ofa8		!16 playspeed
+ofaa		!16 subnoteplay
+ofac		!16 submplayplay
+ofae		!16 instrumentDescriptionsHeader
+ofb0		!16 pulseDescriptionsHeader
+ofb2		!16 filterDescriptionsHeader
+ofb4		!16 waveDescriptionsHeader
+ofb6		!16 cmdDescriptionsHeader
+ofb8		!16 dummy
+ofba		!16 dummy
+ofbc		!16 arp1	
+ofbe		!16 arp2	
+ofc0		!16 filttab	
+ofc2		!16 pulstab	
+ofc4		!16 inst	
+ofc6		!16 track1	
+ofc8		!16 track2	
+ofca		!16 track3	
+ofcc		!16 seqlo	
+ofce		!16 seqhi	
+ofd0		!16 cmd1    
+ofd2		!16 s0	 
+ofd4		!16 speed	 
+ofd6		!16 tracklo
+ofd8		!16 voice	 ;voice 1c X, for voice on/of flagging
+ofda		!16 gate
+ofdc		!16 chord
+ofde		!16 trans
+ofe0		!16 chordindex
+ofe2		!16 shtrans
+ofe6		!16 dummy
+ofe8		!16 dummy
+ofea		!16 dummy
+ofec		!16 dummy
+ofee		!16 newseq
+version		!pet "cc4.00"
+}
+;;; ----------------------------------------
+;;; editor specific player routines, will be 
+;;; left out from a finalized tune
+;;; ----------------------------------------
+!if EXPORT = FALSE {
+*=$f000
+idescr0 !raw "Attack / Decay.",0
+idescr1 !raw "Sustain / Release.",0
+idescr2 !raw "Restart type / arpeggio speed.&$00 = 3 Frame Restart.&$40 = Soft restart.&$80 = Hard Restart. &$00-$0F = Arpeggio delay value.",0
+idescr3 !raw "Hard Restart waveform.",0
+idescr4 !raw "Filter Table pointer.",0
+idescr5 !raw "Pulse Table pointer.",0
+idescr6 !raw "unused.",0
+idescr7 !raw "Wave Table pointer.",0
+	
+pdescr0	!raw "Duration and direction.&$00-$7F = Add n frames.&$80-$FF = Subtract n frames.",0
+pdescr1	!raw "Add value.",0
+pdescr2	!raw "Initial pulse value.&Note: Nibbles are reversed! $48 = $8400",0
+pdescr3	!raw "Pointer to next set ($00-$3F) or $7F = stop pulse program.",0
+
+fdescr0	!raw "Duration or filter type.&$00-$7f = Duration or $90-$F0 select filter type.",0
+fdescr1	!raw "Add value or filter resonance and channel mask.",0
+fdescr2	!raw "Initial filter value or $FF = skip.",0
+fdescr3	!raw "Pointer to next set ($00-$3F) or $7F = stop filter program.",0
+
+;;; wave table help
+wdescr0 !raw "Transpose value / Loop.&$00-$5F = Relative transpose up,&"
+	!raw "$80-$DF = Absolute tuning (unaffected by note/transpose value).&"
+	!raw "$7E = loop to previous row, $7F = loop to row",0
+wdescr1 !raw "Waveform / Wave delay / Loop pointer&"
+	!raw "$00 = Do nothing.&"
+	!raw "$01 - $0F = Override instrument's Wave Delay value for this row.&"
+	!raw "$10 - $DF = Waveform; SID Control Register value.&"
+	!raw "$E0 - $EF = SID Control Register value $00 - $0F.&"
+	!raw "$00 - $FF = Loop pointer, if Byte 1 = $7F.",0
+
+
+;;; Command table help
+mdescr0 !raw "Command number.&"
+	!raw "$0 = Slide up.&"
+	!raw "$1 = Slide down.&"
+	!raw "$2 = Hi-fi Vibrato.&"
+	!raw "$3 = Detune current note.&"
+	!raw "$4 = Set ADSR for the current note.&"
+	!raw "$5 = Lo-fi vibrato.&"
+	!raw "$6 = Set wave.&"
+	!raw "$7 = Portamento a tie note.&"
+	!raw "$8 = Stop portamento",0
+mdescr1 !raw "Parameter values.&"
+	!raw "Slide up/down: Slide speed (signed 16-bit).&"
+	!raw "Vibrato: 1st byte, lonibble: vibrato 'feel'&"
+	!raw "    2nd byte, hinibble: Speed.&"
+	!raw "              lonibble: Depth divider (bigger value = narrower vibrato).&"
+	!raw "Detune: (signed 16-bit).&"
+	!raw "ADSR: (self-explanatory).&"
+	!raw "Lo-fi vibrato: Speed / Depth."
+	!raw "&Set waveform (in the last parameter byte).&"
+;;; 	!raw "Portamento: (Portamento must be applied to tie notes only and reset with e.g. No command 8-00 00).",0	
+	!raw "Portamento: Portamento speed. Runs until a command 8-00 00 is given).",0	
+
+	
+	
+*=$f800
+submplayplay	lda #$80
+		sta state
+		ldx #2
+		jmp updsound
+
+;;; ----------------------------------------
+;;; used for triggering a note from th editor
+;;; ----------------------------------------
+subnoteplay	
+		sta shnote,x
+		cmp #3
+		lda #0
+		rol
+		eor #1
+		sta tienote,x
+		tya
+		sta shinst,x
+
+		lda #2
+		sta tsync,x
+		lda #0
+		sta synccnt,x
+		lda #1
+		sta newinsflag,x
+		lda #0
+		sta effstate,x
+		sta chordvalue,x
+		lda #$80
+		sta state
+		sta chordtpos,x
+		
+		jmp updsound
+}
+		
+
+		 *= $1000
+
+init		jmp subinit
+play		jmp subplay
+!if MULTISPEED = TRUE {
+mplay		jmp submplay
+}
+;---------------------------------------
+subinit		asl
+		asl
+		asl
+		tay
+		ldx #0
+!if INCLUDE_BREAKSPEED = TRUE {
+		stx speedsub
+}
+subinit0	lda songsets,y			
+		sta twraplo,x
+		iny
+		lda songsets,y
+		sta twraphi,x			
+		iny
+		inx
+		cpx #3
+		bne subinit0
+		lda songsets,y			;set song speed
+		sta speed
+!if EXPORT = FALSE {
+		cmp #2
+		bcs subinit00
+		sty inittemp
+		tay
+		lda chord,y
+		ldy inittemp
+subinit00	sta playspeed
+}
+		lda editorflag	
+		beq subinit3	
+
+		ldx #2
+subinit1	lda songsets+1,y
+		and bits,x
+		sta voicon,x
+		lda twraplo,x	; trackpointers not set from the editor
+		sta tracklo,x
+		lda twraphi,x
+		sta trackhi,x
+		lda #1		; newseq not set from the editor
+		sta newseq,x
+		dex				
+		bpl subinit1
+						
+subinit3	lda #1
+		sta state
+		rts
+
+;;; ----------------------------------------
+;;; do only sound work, used for multispeed
+;;; playback frames
+;;; ----------------------------------------
+!if MULTISPEED = TRUE {
+submplay	lda #$40
+		sta state
+		ldx #2
+		jmp syncskip
+}
+;;; ----------------------------------------
+;;; regular play call
+;;; ----------------------------------------
+subplay
+		lda state
+		beq run
+		
+		lda #2
+		sta speedcnt
+
+		ldx #(clrlast-clrfirst)
+		lda #0
+subinit4	dex
+		sta clrfirst,x
+		bne subinit4
+		
+		;; reset synchonization
+
+		ldx #2
+subinit5	lda #2
+		sta synccnt,x			; HR allowed
+		lda #$fe
+		sta tsync,x 			; sync done
+		dex
+		bpl subinit5
+		lda #$0f
+		sta volume
+		lda #0
+		sta filter
+		sta bandpass
+		lda #$f0
+		sta $d417
+		lda #0
+		sta state
+		rts
+
+run		dec speedcnt
+		bpl speeddone
+		lda speed
+!if INCLUDE_BREAKSPEED = TRUE {
+		cmp #2
+		bpl speedok
+speedalt	ldy speedsub
+		lda chord,y
+		sta playspeed
+		cmp #2
+		bpl speedok
+		lda #2
+}
+speedok		sta speedcnt
+		
+!if INCLUDE_BREAKSPEED = TRUE {
+		iny
+		lda chord,y
+		bpl speednowrap
+		and #$7f
+		tay
+speednowrap	sty speedsub
+}
+speeddone
+;---------------------------------------
+		ldx #2
+main0		lda voicon,x
+		bne trackon
+		jmp next
+trackon		inc synccnt,x
+		lda speedcnt
+		beq jupdseq
+		cmp #1
+		beq updtrack
+		jmp updsound
+jupdseq		jmp updseq
+;---------------------------------------
+updtrack	lda newseq,x
+		beq skiptrack
+		sec
+		sbc #1		
+		sta seqcnt,x
+		lda #0
+		sta newseq,x
+		tay
+		lda tracklo,x
+		sta ZREG
+		lda trackhi,x
+		sta ZREG+1
+		lda (ZREG),y
+		bpl trk02
+
+		cmp #$80			; get transpose value
+		beq skiptrans
+		sbc #$a0
+		sta shtrans2,x
+skiptrans	inc tracklo,x
+		bne trk01
+		inc trackhi,x
+trk01		iny
+		lda (ZREG),y
+trk02		sta curseq,x
+		iny
+		lda (ZREG),y
+		cmp #$f0
+		bcc trk03
+
+		pha
+		iny
+		lda (ZREG),y
+		clc
+		adc twraplo,x
+		sta tracklo,x
+
+		pla
+		and #$07
+		adc twraphi,x			; song wrap
+		sta trackhi,x
+		jmp updsound
+
+trk03		inc tracklo,x
+		bne skiptrack
+		inc trackhi,x
+skiptrack	jmp updsound
+;---------------------------------------
+updseq		dec durcnt,x
+		bmi nextnote
+		jmp updsound
+nextnote	ldy curseq,x
+		lda seqlo,y
+		sta ZREG
+		lda seqhi,y
+		sta ZREG+1
+		lda #2
+		sta tsync,x
+getseq		ldy seqcnt,x
+seqnext		lda (ZREG),y
+		cmp #$c0
+		bcs command
+		cmp #$60-1			; command coming up?
+		bcc nocmdbyt
+		sbc #$60
+		bpl nottie
+		inc tienote,x			; $5f = flag tienote
+		iny
+		jmp seqnext
+		
+nottie		pha				; store note value
+		iny
+		lda (ZREG),y			; fetch sequence command
+		beq skipcmd
+		sta shsuper,x
+
+		inc newcmdflag,x
+skipcmd		pla
+		
+nocmdbyt	sta shnote,x			; check for rest & gate flags
+		cmp #3
+		bcs sequpdtrans
+settie		inc tienote,x
+		jmp seqdone
+
+command		cmp #$f0
+		bmi notdur
+setdur		and #$0f
+		sta duration,x
+		iny
+		jmp seqnext
+
+notdur		sbc #$c0-1
+		sta shinst,x
+
+		inc newinsflag,x
+		iny
+		jmp seqnext
+
+sequpdtrans	lda shtrans2,x
+		sta shtrans,x
+seqdone		iny
+		beq seqsetflag		       ; new seq automatically if seqcnt wrapped
+		tya
+		sta seqcnt,x
+
+		lda (ZREG),y
+		cmp #$bf		       ;seq end mark
+		bne noteos
+seqsetflag	inc newseq,x
+noteos		
+		lda duration,x
+		sta durcnt,x			
+!if INCLUDE_CMD_PORTA = TRUE {
+		lda newcmdflag,x
+		beq snotporta			; !
+		
+		;; Check for super commands that
+		;; ;should be parsed immidiately
+		
+		ldy shsuper,x		       ;cmd byte?
+		cpy #$40
+		bpl updsound
+		
+		lda cmd1,y
+		cmp #CMD_PORTAMENTO
+		bne snotporta
+
+		lda cmd2,y
+		and #$0f
+		sta portahi,x
+		lda cmd3,y
+		sta portalo,x
+
+		lda #$81
+		sta effstate,x
+		;; formerly clrsuper
+		lda #0
+		sta newcmdflag,x
+
+		jmp updsound
+snotporta
+}
+
+;;; ----------------------------------------
+;;; sound work
+;;; ----------------------------------------
+updsound	lda #0
+		sta hardon,x
+		lda tsync,x
+		bpl dosync
+		jmp syncskip
+
+dosync		dec tsync,x
+
+		lda tienote,x			
+		beq syncnottied
+		jmp syncskip
+
+syncnottied	lda tsync,x
+		cmp #1
+		bne syncgate
+
+		lda synccnt,x			; hard restart possible?
+		cmp #2			
+		bmi syncnohr
+
+		ldy shinst,x			; use hard restart?
+		lda inst+INS_HR,y		
+		bpl syncnohr
+		and #$20
+		bne laxhr
+
+		;; Hard restart
+
+		lda cmd2			;Set adsr for HR
+		sta ad,x			
+laxhr		lda cmd3
+		sta sr,x
+syncnohr	lda #$fe
+		sta gate,x
+		jmp dowave			;only update wavetable
+
+syncgate	cmp #$ff
+		beq syncgateon
+		jmp syncskip
+
+syncgateon	lda newinsflag,x
+		beq checknote
+
+		ldy shinst,x			
+		lda inst,y			;Store ADSR of insturmen in shadow
+		sta shad,x			;ADSR regs
+		lda inst+INS_SR,y		
+		sta shsr,x
+
+		lda effstate,x			;don't reset porta
+		bmi checknote
+		
+		lda #0
+		sta effstate,x
+
+checknote	lda shtrans,x			;set transpose to current
+		sta trans,x
+
+		lda shnote,x			
+		clc				;get real (transposed) value of the note
+		adc trans,x			
+		sta notereal,x
+
+		ldy effstate,x			;skip if portamento
+		bmi skipsetfrq			
+!if INCLUDE_CMD_PORTA = TRUE {
+		tay
+		lda freqtable_lo,y
+		sta plo,x
+		lda freqtable_hi,y
+		sta phi,x
+}		
+
+		txa
+		sta shfreqlo,x
+		lda #0
+		sta shfreqhi,x
+skipsetfrq	ldy shinst,x
+		lda inst+INS_ARP,y		;set wave pos
+		sta wavepos,x
+		lda shad,x			;set ADSR
+		sta ad,x
+		lda shsr,x
+		sta sr,x
+
+		lda inst+INS_PULSP,y		;set the pulse
+		beq setflt
+		asl				
+		asl
+		sta pulsenxt,x			;pointer
+		lda #0
+		sta pulsecnt,x
+
+setflt		lda inst+INS_FLTP,y
+		beq filterdone			;no filter reset
+		asl				
+		asl
+		sta filtnxt
+		lda #0
+		sta filtcnt
+filterdone	
+		
+scmddone	lda #0
+		sta newinsflag,x
+!if INCLUDE_CHORD = TRUE {
+		sta chordvalue,x
+		lda #$80
+		sta chordtpos,x
+}
+
+		lda inst+INS_HR,y		;set wave timer
+		and #$0f
+		sta wavetime,x
+		lda #0
+		sta wavecnt,x
+
+		lda inst+INS_HR,y
+		and #$c0			;Check for soft
+		cmp #$40			;restart
+		beq wavenotoff
+
+		lda inst+INS_4,y
+		ora #1
+		sta waveform,x
+		inc hardon,x
+wavenotoff	lda #$ff			;Gate on
+		sta gate,x
+		
+		lda #$00			;Reset sync
+		sta synccnt,x			
+		ldy effstate,x
+		bmi noeffreset
+		sta effstate,x
+noeffreset	jmp checksuper
+
+syncskip
+;;; ----------------------------------------
+;;; pulsework
+;;; ----------------------------------------
+updatepulse	ldy pulsecur,x
+		dec pulsecnt,x
+		bpl pulsenotnew
+
+		lda pulsenxt,x
+		sta pulsecur,x
+		tay
+		lda pulstab+2,y
+		cmp #$ff
+		beq pulseskipset
+
+		sta ZREG
+		and #$f0
+		sta pulselo,x
+		lda ZREG
+		and #$0f
+		sta pulsehi,x
+
+pulseskipset	lda pulstab+0,y
+		and #$7f
+		sta pulsecnt,x
+
+		lda pulstab+3,y
+		bne pulsenotnxt
+		lda pulsenxt,x
+		clc
+		adc #4
+		jmp pulsesetnxt
+pulsenotnxt	cmp #$7f
+		bne pulsenotstop
+		lda #0
+		jmp pulsesetnxt
+pulsenotstop	asl
+		asl
+pulsesetnxt	sta pulsenxt,x
+
+		
+		
+pulsenotnew	lda pulstab,y
+		bmi pulsesub
+
+		lda pulselo,x
+		clc
+		adc pulstab+1,y
+		sta pulselo,x
+		bcc pulsedone
+		inc pulsehi,x
+		
+		jmp pulsedone
+
+pulsesub	lda pulselo,x
+		sec
+		sbc pulstab+1,y
+		sta pulselo,x
+		bcs pulsedone
+		dec pulsehi,x
+pulsedone		  
+;;; ----------------------------------------
+;;; sfx
+;;; ----------------------------------------
+		lda effstate,x
+		bne effdo1
+		jmp effdone
+effdo1		cmp #$01
+		bne effdo2
+
+effslideup	lda shfreqlo,x
+		clc
+		adc slidelo,x
+		sta shfreqlo,x
+		lda shfreqhi,x
+		adc slidehi,x
+		sta shfreqhi,x
+
+		jmp effdone
+effdo2		cmp #$02
+		bne effdo3
+
+effslidedown	lda shfreqlo,x
+		sec
+		sbc slidelo,x
+		sta shfreqlo,x
+		lda shfreqhi,x
+		sbc slidehi,x
+		sta shfreqhi,x
+		jmp effdone
+
+effdo3		cmp #$04
+		bne effdo3a
+		
+		lda vibraamp,x
+		sta ZREG
+		lda #0
+		asl ZREG
+		rol
+		asl ZREG
+		rol
+		sta ZREG+1
+		jmp vibrealadd
+				
+effdo3a		cmp #$03
+		beq effvibrato
+		jmp effdo4
+
+effvibrato	ldy notereal,x			
+		sec
+		lda freqtable_lo+1,y
+		sbc freqtable_lo,y
+		sta ZREG
+		lda freqtable_hi+1,y
+		sbc freqtable_hi+0,y
+		sta ZREG+1
+
+		lda vibracor,x
+		clc
+		adc vibraamp,x
+		tay
+		lda #0
+		sta vibracor,x
+viblessamp	dey
+		bmi vibadd
+		lsr ZREG+1
+		ror ZREG
+		jmp viblessamp
+
+vibadd		
+!if INCLUDE_VIBRAFEEL = TRUE {		
+		lda ZREG
+		clc
+		adc vibrafl,x
+		sta ZREG
+		lda ZREG+1
+		adc vibrafh,x
+		sta ZREG+1
+
+		lda vibrafl,x
+		clc
+		adc vibraflv,x
+		sta vibrafl,x
+		lda vibrafh,x
+		adc #0
+		sta vibrafh,x
+}		
+vibrealadd	lda vibradir,x
+		and #1
+		bne vibradown
+
+		lda shfreqlo,x
+		clc
+		adc ZREG
+		sta shfreqlo,x
+		lda shfreqhi,x
+		adc ZREG+1
+		sta shfreqhi,x
+		jmp vibrapost
+		
+vibradown	lda shfreqlo,x
+		sec
+		sbc ZREG
+		sta shfreqlo,x
+		lda shfreqhi,x
+		sbc ZREG+1
+		sta shfreqhi,x
+		
+vibrapost	clc
+		lda vibracnt,x
+		adc #1
+		cmp vibrafrq,x
+		bcc vibradirok
+
+		inc vibradir,x
+		lda #0
+vibradirok	sta vibracnt,x
+vibradone	
+!if INCLUDE_CMD_PORTA = TRUE {
+effdo4		cmp #$81			; Portamento
+		beq effporta
+		jmp effdone
+
+effporta
+		ldy notereal,x
+		lda freqtable_lo,y
+		sta ZREG
+		lda freqtable_hi,y
+		sta ZREG+1
+
+		lda plo,x
+		sec
+		sbc ZREG
+		sta plo,x
+
+		lda phi,x
+		sbc ZREG+1
+		sta phi,x
+
+		bmi portaup
+
+		lda plo,x
+		sec
+		sbc portalo,x
+		sta plo,x
+		lda phi,x
+		sbc portahi,x
+		sta phi,x
+
+		bpl portaclc
+
+		jmp portaset
+
+portaup		lda plo,x
+		clc
+		adc portalo,x
+		sta plo,x
+		lda phi,x
+		adc portahi,x
+		sta phi,x
+
+		bmi portaclc
+
+portaset	lda ZREG
+		sta plo,x
+		lda ZREG+1
+		sta phi,x
+		jmp portadone
+portaclc	lda plo,x
+		clc
+		adc ZREG
+		sta plo,x
+		lda phi,x
+		adc ZREG+1
+		sta phi,x
+
+portadone	ldy notereal,x
+		lda plo,x
+		sec
+		sbc freqtable_lo,y
+		sta shfreqlo,x
+		lda phi,x
+		sbc freqtable_hi,y
+		sta shfreqhi,x
+}
+effdone
+;;; ----------------------------------------
+;;; update wavetable
+;;; ----------------------------------------
+dowave		lda hardon,x
+		beq waveok
+		jmp wavedone
+	
+waveok		dec wavecnt,x
+		bpl waveprocess
+
+		lda wavetime,x
+		sta wavecnt,x
+
+		ldy wavepos,x
+		lda arp1,y
+		sta wavetrans,x
+		lda arp2,y
+		cmp #$10
+		bcc waveskip
+		cmp #$e0
+		bcc wavereg
+		and #$0f
+wavereg		sta waveform,x
+waveskip	lda arp1+1,y
+		cmp #$7e
+		beq wavestore
+		iny
+wavenotend	cmp #$7f
+		bne wavenotend2
+		lda arp2,y
+		tay
+wavenotend2	lda arp2,y
+		beq wavestore
+		cmp #$10
+		bcs wavestore
+		sta wavecnt,x
+wavestore	tya
+		sta wavepos,x
+	
+!if INCLUDE_CHORD = TRUE {
+		ldy chordtpos,x
+		bmi chorddone
+chordinit	lda chord,y
+		cmp #$40
+		bcc chordnotneg
+		ora #$80
+chordnotneg	sta chordvalue,x
+		inc chordtpos,x
+		lda chord+1,y
+		bpl chorddone
+		and #$7f
+		sta chordtpos,x
+chorddone	
+}
+
+waveprocess	lda wavetrans,x
+		bpl wavenotabs
+waveabs		and #$7f
+		tay
+		lda freqtable_lo,y
+		sta freqlo,x
+		lda freqtable_hi,y
+		sta freqhi,x
+		jmp wavedone
+wavenotabs	clc
+		adc notereal,x
+!if INCLUDE_CHORD = TRUE {
+		adc chordvalue,x
+}
+		tay
+		lda freqtable_lo,y
+		clc
+		adc shfreqlo,x
+		sta freqlo,x
+		lda freqtable_hi,y
+		adc shfreqhi,x
+		sta freqhi,x
+	
+wavedone
+;;; ------------------------------------------------------------
+checksuper	lda tsync,x
+		cmp #$ff
+		beq supersync
+		jmp superdone
+supersync	lda newcmdflag,x
+		bne superparse
+		jmp superdone
+
+superparse	lda #0
+		sta newcmdflag,x
+		
+superparse2	ldy shsuper,x
+		cpy #$40
+		bcs *+5
+		jmp iscmd
+		tya
+		cmp #$60
+		bcs notpulse
+
+		and #$1f
+		asl
+		asl
+		sta pulsenxt,x
+		lda #0
+		sta pulsecnt,x
+		jmp superdone
+
+notpulse	cmp #$80
+		bcs notfilt
+
+		and #$1f
+		asl
+		asl
+		sta filtnxt
+		lda #0
+		sta filtcnt
+		jmp superdone
+
+
+notfilt		cmp #$a0
+		bcs notchord
+!if INCLUDE_CHORD = TRUE {
+		and #$1f
+		tay
+		lda chordindex,y
+		sta chordtpos,x
+		jmp superdone
+}
+notchord	cmp #$b0
+		bcs notatt
+
+		asl
+		asl
+		asl
+		asl
+		sta ZREG
+		lda ad,x
+		and #$0f
+		ora ZREG
+		sta ad,x
+		jmp superdone
+		
+notatt		cmp #$c0
+		bcs notdec
+
+		and #$0f
+		sta ZREG
+		lda ad,x
+		and #$f0
+		ora ZREG
+		sta ad,x
+		
+		jmp superdone
+
+notdec		cmp #$d0
+		bcs notsus
+
+		asl
+		asl
+		asl
+		asl
+		sta ZREG
+		lda sr,x
+		and #$0f
+		ora ZREG
+		sta sr,x
+		jmp superdone
+
+
+notsus		cmp #$e0
+		bcs notrel
+
+		and #$0f
+		sta ZREG
+		lda sr,x
+		and #$f0
+		ora ZREG
+		sta sr,x
+		jmp superdone
+		
+notrel		cmp #$f0
+		bcs notvol
+
+		and #$0f
+		sta volume
+		jmp superdone
+notvol		and #$0f
+		sta speed
+		cmp #2
+		bcs notvol2
+		tay
+		lda chord,y
+notvol2		sta playspeed
+		sta speedcnt
+		dec speedcnt
+		jmp superdone
+;;; ----------------------------------------
+;;; process a command table entry
+;;; ----------------------------------------
+iscmd		lda cmd2,y
+		sta ZREG
+		lda cmd1,y
+;		   and #$0f
+		sta ZREG+1
+		cmp #SUPERHIGH
+		bcc superlow
+		jmp superhigh
+
+		 ;SLIDE UP
+superlow	cmp #0
+		bne snotslide1
+		lda ZREG
+		sta slidehi,x
+		lda cmd3,y
+		sta slidelo,x
+		lda #1
+		sta effstate,x
+		jmp superdone
+
+		 ;SLIDE DOWN
+
+snotslide1	cmp #CMD_SLIDE_DOWN
+		bne snotslide2
+		lda ZREG
+		sta slidehi,x
+		lda cmd3,y	
+		sta slidelo,x
+		
+		lda #2
+		sta effstate,x
+		
+		jmp superdone
+		
+		 ;VIBRATO
+
+snotslide2	cmp #CMD_VIBRATO
+		bne snotvibrato
+		
+		lda #3
+		sta effstate,x
+
+!if INCLUDE_VIBRAFEEL = TRUE {
+		lda ZREG
+		and #$0f
+		sta vibraflv,x
+}
+		
+		lda cmd3,y
+		and #$0f
+		sta vibraamp,x
+		lda cmd3,y
+		lsr 
+		lsr 
+		lsr 
+		lsr 
+		clc
+		adc #1
+		sta vibrafrq,x
+		lsr 
+		bcc novibcor
+
+		inc vibracor,x			;Correction
+novibcor	sta vibracnt,x
+		lda #0
+		sta vibradir,x
+!if INCLUDE_VIBRAFEEL = TRUE {
+		sta vibrafl,x
+		sta vibrafh,x
+}
+		
+snotvibrato	jmp superdone
+
+superhigh
+!if INCLUDE_CMD_SET_OFFSET = TRUE {
+		cmp #CMD_SET_OFFSET
+		bne snotoffset
+		
+		lda cmd2,y
+		sta shfreqhi,x
+		lda cmd3,y
+		sta shfreqlo,x
+		
+		jmp superdone
+snotoffset
+}
+!if INCLUDE_CMD_SET_ADSR = TRUE {
+		cmp #CMD_SET_ADSR
+		bne snotattdec
+
+		lda cmd2,y
+		sta ad,x
+		lda cmd3,y
+		sta sr,x
+				
+		jmp superdone
+snotattdec
+}
+!if INCLUDE_CMD_SET_LOVIB {
+		cmp #CMD_SET_LOVIB
+		bne snotlovib
+		lda #4
+		sta effstate,x
+		lda cmd2,y
+		sta vibrafrq,x
+		lsr
+	;; 	adc #0
+		sta vibracnt,x
+		lda cmd3,y
+		sta vibraamp,x
+		lda #0
+		sta vibradir,x
+		
+snotlovib
+}
+!if INCLUDE_CMD_SET_WAVE {
+		cmp #CMD_SET_WAVE
+		bne snotwave
+
+		lda cmd3,y
+		sta waveform,x
+		
+snotwave
+}
+!if INCLUDE_CMD_PORTA {
+		cmp #CMD_STOP
+		bne snotstop
+		lda #0
+		sta effstate,x
+snotstop
+}
+superdone
+;;; ----------------------------------------
+setsid		ldy voice,x
+		lda freqlo,x
+		sta $d400,y
+		lda freqhi,x
+		sta $d401,y
+		lda sr,x
+		sta $d406,y
+		lda ad,x
+		sta $d405,y
+		lda pulselo,x
+		sta $d402,y
+		lda pulsehi,x
+		sta $d403,y
+		lda waveform,x
+		and gate,x
+		sta $d404,y
+;;; ----------------------------------------
+		bit state
+		bvc *+5
+		jmp next
+
+		;; check tie & super
+		lda tsync,x			
+		cmp #$ff
+		beq postsync
+		jmp skippostsync
+postsync	dec tsync,x
+		
+		lda tienote,x
+		bne tiednote
+		jmp next
+
+tiednote	lda shtrans,x			;check the note
+		sta trans,x
+
+		lda shnote,x
+		beq tiestore
+		cmp #3
+		bcc setgatestat
+		
+		clc
+		adc trans,x
+		sta notereal,x
+		
+		ldy effstate,x
+		bmi tieclear
+
+		lda #0
+		sta shfreqlo,x
+		sta shfreqhi,x
+		sta effstate,x
+skiptiefrq	jmp tiestore
+
+setgatestat	tay
+		lda gatestat-1,y
+		sta gate,x
+tieclear	lda #0
+tiestore	sta tienote,x
+
+skippostsync
+	
+;---------------------------------------
+next		dex
+		bmi maindone
+
+		bit state			; 7th bit, keyjam call
+!if EXPORT = FALSE {
+		bpl *+5
+		jmp updsound
+}
+		bvs *+5				; 6th bit, multiplay call
+		jmp main0
+		jmp syncskip
+		
+maindone	lda #0
+		sta state
+;;; ----------------------------------------
+;;; filter routine
+;;; ----------------------------------------
+;;; feb '12: sweeps now in 10 bits res to allow faster sweeps
+;;; ($80 in 10 bits corresponds to $20 in 8 bits)
+		
+		dec filtcnt
+		bpl filtnotnew
+		lda filtnxt
+filtstart	sta filtcur
+		tay
+		lda filttab,y		;byte A = duration or bandpass
+		bpl filtsetcnt
+		and #$70
+		sta bandpass
+		lda filttab+1,y
+		sta $d417
+		lda #0
+filtsetcnt	sta filtcnt
+
+		lda filttab+1,y
+		and #3
+		asl
+		sta filtadd+1
+		lda filttab+1,y
+		cmp #$80
+		ror
+		cmp #$80
+		ror
+		; cmp #$80
+		; ror
+		sta filtadd
+		
+filtjump	lda filttab+3,y			; check jump value
+		bne filtnotnxt
+		lda filtnxt
+		clc
+		adc #4
+		jmp filtsetnxt
+filtnotnxt	cmp #$7f
+		bne filtnotstop
+		lda #0
+		jmp filtsetnxt		
+filtnotstop	asl
+		asl
+filtsetnxt	sta filtnxt
+		
+ 		lda filttab+2,y
+ 		cmp #$ff
+ 		beq filtnotset
+ 		sta filter
+ 		lda #0
+ 		sta filtlo
+		
+filtnotset	
+		jmp filterskip
+
+filtnotnew	lda filtadd+1
+		clc
+		adc filtlo
+		cmp #8
+		and #7				
+		sta filtlo
+		lda filter
+		adc filtadd
+		sta filter
+		
+filterskip	lda filtlo
+		sta $d415
+		lda filter
+		sta $d416
+		lda volume
+		ora bandpass
+		sta $d418
+		
+		rts
+
+dummy		!8 0
+		!8 $fc,$3d	; end-of-code mark for packer
+
+;---------------------------------------
+freqtable_lo
+		!8 $16,$27,$38,$4b,$5f,$73
+		!8 $8a,$a1,$ba,$d4,$f0,$0e
+		!8 $2d,$4e,$71,$96,$bd,$e7
+		!8 $13,$42,$74,$a9,$e0,$1b
+		!8 $5a,$9b,$e2,$2c,$7b,$ce
+		!8 $27,$85,$e8,$51,$c1,$37
+		!8 $b4,$37,$c4,$57,$f5,$9c
+		!8 $4e,$09,$d0,$a3,$82,$6e
+		!8 $68,$6e,$88,$af,$eb,$39
+		!8 $9c,$13,$a1,$46,$04,$dc
+		!8 $d0,$dc,$10,$5e,$d6,$72
+		!8 $38,$26,$42,$8c,$08,$b8
+		!8 $a0,$b8,$20,$bc,$ac,$e4
+		!8 $70,$4c,$84,$18,$10,$70
+		!8 $40,$70,$40,$78,$58,$c8
+		!8 $e0,$98,$08,$30,$20,$2e
+freqtable_hi
+		!8 $01,$01,$01,$01,$01,$01
+		!8 $01,$01,$01,$01,$01,$02
+		!8 $02,$02,$02,$02,$02,$02
+		!8 $03,$03,$03,$03,$03,$04
+		!8 $04,$04,$04,$05,$05,$05
+		!8 $06,$06,$06,$07,$07,$08
+		!8 $08,$09,$09,$0a,$0a,$0b
+		!8 $0c,$0d,$0d,$0e,$0f,$10
+		!8 $11,$12,$13,$14,$15,$17
+		!8 $18,$1a,$1b,$1d,$1f,$20
+		!8 $22,$24,$27,$29,$2b,$2e
+		!8 $31,$34,$37,$3a,$3e,$41
+		!8 $45,$49,$4e,$52,$57,$5c
+		!8 $62,$68,$6e,$75,$7c,$83
+		!8 $8b,$93,$9c,$a5,$af,$b9
+		!8 $c4,$d0,$dd,$ea,$f8,$fd
+;---------------------------------------
+ ;Registers
+voicon		!8 1,1,1			;flags channels on and off
+editorflag	!8 0				; set to >0 from packer
+		
+state		!8 0
+inittemp	= state		; real state value overrides temp at the end of init
+
+bits		!8 %00000001
+		!8 %00000010
+		!8 %00000100
+
+gatestat	!8 $fe,$ff
+voice		!8 0,7,14
+
+tracklo		!8 0,0,0 ;track pointers low
+trackhi		!8 0,0,0 ;track pointers hig
+twraplo		!8 0,0,0 ;track wrap low
+twraphi		!8 0,0,0 ;track wrap high
+
+speed		!8 0
+speedcnt	!8 0
+playspeed	!8 0
+		
+!if INCLUDE_BREAKSPEED = TRUE {
+speedsub	!8 0
+}
+newseq		!8 0,0,0
+		
+volume		!8 $0f
+temp		!8 $00
+
+shtrans2	!8 0,0,0
+				
+				
+clrfirst ;Clear variables from here
+
+;;; ----------------------------------------
+;;; State variables
+;;; ----------------------------------------
+newinsflag	!8 0,0,0			
+newcmdflag	!8 0,0,0
+hardon		!fi 3,0
+duration	!8 0,0,0
+durcnt		!8 0,0,0
+tsync		!8 0,0,0
+synccnt		!8 0,0,0
+tienote		!8 0,0,0
+notereal	!8 0,0,0
+effstate	!8 0,0,0
+		;; 0 = no effect
+		;; 1 = slide up
+		;; 2 = slide down
+		;; 3 = vibrato
+		;; 0x80 = portamento
+		
+;;; ----------------------------------------
+;;; Shadow variables
+;;; ----------------------------------------
+		;; bit 0 = instrument was set
+		;; bit 1 = cmd was set
+shtrans		!8 0,0,0
+shnote		!8 0,0,0
+shinst		!8 0,0,0
+shsuper		!8 0,0,0
+shad		!8 0,0,0
+shsr		!8 0,0,0
+shfreqlo	!8 0,0,0
+shfreqhi	!8 0,0,0
+freqlo		!8 0,0,0
+freqhi		!8 0,0,0
+trans		!8 0,0,0    
+gate		!8 0,0,0    
+		
+		 ;Sequence
+
+curseq		!8 0,0,0
+seqcnt		!8 0,0,0
+
+		 ;Filter
+
+bandpass	!8 0
+filter		!8 0
+filtcnt		!8 0
+filtcur		!8 0
+filtnxt		!8 0
+filtadd		!8 0,0
+filtlo		!8 0
+
+		 ;Vibration variables
+
+vibracnt	!8 0,0,0 ;Count
+vibradir	!8 0,0,0 ;Direction
+vibraamp	!8 0,0,0 ;Amplitude
+vibrafrq	!8 0,0,0 ;Frequency
+vibracor	!8 0,0,0 ;Tune correction
+!if INCLUDE_VIBRAFEEL = TRUE {
+vibrafl		!8 0,0,0 ;Vibrato feel low
+vibrafh		!8 0,0,0 ;Vibrato feel high
+vibraflv	!8 0,0,0 ;Vibrato feel add
+}
+		 ;Slide variables
+
+slidelo		 !8 0,0,0 ;Low fraction
+slidehi		 !8 0,0,0 ;High fraction
+
+		 ;Pulse
+
+pulsecur	!8 0,0,0
+pulsenxt	!8 0,0,0
+pulsecnt	!8 0,0,0
+pulselo		!8 0,0,0 ;-->d402
+pulsehi		!8 0,0,0 ;-->d403
+
+		 ;ADSR
+
+ad		!8 0,0,0 ;-->d405
+sr		!8 0,0,0 ;-->d406
+
+		 ;Waveform
+
+waveform	!8 0,0,0 ;-->d404
+
+		 ;Wavetable
+
+wavetrans	!8 0,0,0
+wavecnt		!8 0,0,0
+wavepos		!8 0,0,0
+wavetime	!8 0,0,0
+chordtpos	!8 0,0,0
+chordvalue	!8 0,0,0
+		 ;Portamento
+!if INCLUDE_CMD_PORTA = TRUE {
+portahi		!8 0,0,0
+portalo		!8 0,0,0
+plo		!8 0,0,0
+phi		!8 0,0,0
+}
+clrlast		 ;Clear variables to here
+		!8 $fc,$3c
+
+*=$2000
+;---------------------------------------
+songsets	!16 track1,track2,track3
+		!8 5,7
+
+;---------------------------------------
+		*= songsets + $200
+track1		!8 $a0,$00,$f0,0
+		!for .v, $1fe {
+				!8 $f0,00
+		}
+
+		*= track1+$0400
+track2		!8 $a0,$00,$f0,0
+		!for .v, $1fe {
+				!8 $f0,00
+		}
+
+		*= track2+$0400
+track3		!8 $a0,$00,$f0,0
+		!for .v, $1fe {
+				!8 $f0,00
+		}
+		
+
+;---------------------------------------
+		*= track3 + $400
+seqlo		!fi 128, <s0
+seqhi		!for .v, 128 {
+			!8 >s0+((.v-1)*256)
+ 		}
+		
+;---------------------------------------
+		*= seqlo+$0100
+
+!macro emptyseq {
+		!8 $f0,$f0,$60,$00
+		!8 $bf
+}
+		
+s0		+emptyseq
+!set curPC = s0
+!for .v, 128-1 {
+		*= curPC + $100
+		!set curPC = *
+		+emptyseq
+}
+;---------------------------------------
+		*= curPC + $100
+arp1		!8 0
+
+;---------------------------------------
+		*= arp1+$0100
+arp2		!8 0
+
+;---------------------------------------
+		*= arp2+$0100
+inst		!fi 48*8,0
+
+
+;;; (more or less) dynamic tables follow......
+		*= inst+$0200
+supertab
+cmd1		!8 $00
+		*= cmd1+$40
+cmd2		!8 $0f
+		*= cmd2+$40
+cmd3		!8 $00
+		*= cmd3+$40
+		
+;---------------------------------------
+		
+;---------------------------------------
+		*= supertab+$0100
+filttab		!8 $7f,$00,$ff,$7f
+
+;---------------------------------------
+		*= filttab+$0100
+pulstab		!8 $7f,$00,$ff,$7f
+
+		*= pulstab+$0100
+chord		!fi 128,0
+chordindex	!fi 32,0
+
+		
