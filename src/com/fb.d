@@ -24,6 +24,27 @@ const SDL_Color[] PALETTE = [
 	{ 27 << 2,23 << 2,45 << 2 },
 	{ 37 << 2,37 << 2,37 << 2 } ];
 
+const FONT_X = 8, FONT_Y = 14;
+ubyte[] font;
+int mode;
+bool isDirty = false;
+int border = 1;
+
+const CHECKX = "assert(x >= 0 && x < width);";
+const CHECKY = "assert(y >= 0 && y < height);";
+const CHECKS = "assert(x + y >= 0 && x + y < width*height);";
+
+static this() {
+	void[] arr;
+	font.length = 256*16;
+	// realign font data
+	const rawfont = import("font.psf");
+	for(int i=0;i<256;i++) {
+		font[i*16..i*16+14] = cast(ubyte[])rawfont[i*FONT_Y+4..i*FONT_Y+4+FONT_Y];
+	}
+}
+
+
 abstract class Video {
 	protected {
 		SDL_Surface* surface;
@@ -485,26 +506,6 @@ class Screen {
 class DisplayError : Error {
 	this(string msg) {
 		super(msg ~ "SDL Error");
-	}
-}
-
-const FONT_X = 8, FONT_Y = 14;
-ubyte[] font;
-int mode;
-bool isDirty = false;
-int border = 1;
-
-const CHECKX = "assert(x >= 0 && x < width);";
-const CHECKY = "assert(y >= 0 && y < height);";
-const CHECKS = "assert(x + y >= 0 && x + y < width*height);";
-
-static this() {
-	void[] arr;
-	font.length = 256*16;
-	// realign font data
-	const rawfont = import("font.psf");
-	for(int i=0;i<256;i++) {
-		font[i*16..i*16+14] = cast(ubyte[])rawfont[i*FONT_Y+4..i*FONT_Y+4+FONT_Y];
 	}
 }
 

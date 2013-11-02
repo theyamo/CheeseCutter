@@ -200,7 +200,7 @@ void setMultiplier(int m) {
 	if(m < 1 || m > 16) return;
 	
 	song.multiplier = m;
-	audio.audio.setMultiplier(m);
+	audio.audio.setCallMultiplier(m);
 }
 
 void decMultiplier() {

@@ -191,7 +191,6 @@ extern "C" {
 			result = sid->clock(tdelta, ptr, samples);
 		
 		total += result;
-		if(total > os) abort();
 		assert(total <= os);
 		return total;
 	}

@@ -16,11 +16,17 @@ __gshared int freq = 48000, bufferSize = 2048;
 __gshared private int callbackCounter = 0;
 __gshared private int bufferUsed; // in samples
 __gshared private int callbackInterval;
-__gshared private short* mixbuf;
+__gshared private short* mixbuf = null;
 
 
 extern(C) {
+	extern __gshared char[0x19] sidreg;
+	extern __gshared int residdelay;
+	extern __gshared int sid_init(int, Filterparams*, int, int, int, int, int);
+	extern __gshared int sid_fillbuffer(short *, int, int);
+	extern __gshared int sid_close();
 	__gshared void function() callback;
+
 
 	int audio_init(int fr, void function() cb) {
 		SDL_AudioSpec requested;
@@ -55,7 +61,7 @@ extern(C) {
 		}
 		bufferSize = audiospec.samples;
 		mixbuf = cast(short *)malloc(bufferSize * short.sizeof * MIXBUF_MUL);
-		setMultiplier(1);
+		setCallMultiplier(1);
 		return 0;
 	}
 
@@ -69,7 +75,7 @@ extern(C) {
 		bufferUsed = callbackCounter = 0;
 	}
 
-	void setMultiplier(int m) {
+	void setCallMultiplier(int m) {
 		if(m < 1 || m > 16) return;
 		if(m == multiplier) return;
 		SDL_LockAudio();
@@ -134,12 +140,4 @@ extern(C) {
 			*(pi++) = *(po++);
 		}
 	}
-}
-
-extern(C) {
-	extern __gshared char[0x19] sidreg;
-	extern __gshared int residdelay;
-	__gshared int sid_init(int, Filterparams*, int, int, int, int, int);
-	__gshared int sid_fillbuffer(short *, int, int);
-	__gshared int sid_close();
 }
