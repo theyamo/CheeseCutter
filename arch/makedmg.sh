@@ -1,11 +1,12 @@
 #!/bin/bash
 
+VERSION=$(shell cat ../Version)
 applicationName="CheeseCutter.app"
 backgroundPictureName="background.png"
 source="dist"
-title="CheeseCutter 2.5.1"
+title="CheeseCutter ${VERSION}"
 size=10000
-finalDMGName="CheeseCutter_2.5.1.dmg"
+finalDMGName="CheeseCutter_${VERSION}.dmg"
 
 mkdir "${source}"
 cp -r "${applicationName}" "${source}"

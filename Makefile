@@ -4,6 +4,7 @@ DEBUG=0
 LIBS=-ldl -lstdc++
 #COMFLAGS= -mmacosx-version-min=10.7
 DLINK=$(COMFLAGS)
+VERSION=$(shell cat Version)
 DFLAGS=-I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font
 CFLAGS=$(COMFLAGS) 
 CXXFLAGS=$(CFLAGS) -I./src -O2
@@ -162,7 +163,7 @@ release: all
 
 dist:	release
 	rm -rf dist
-	rm -rf CheeseCutter_2.5.1.dmg
+	rm -rf CheeseCutter_$(VERSION).dmg
 	arch/makedmg.sh
 
 clean: 
@@ -172,11 +173,11 @@ clean:
 dclean: clean
 	rm -rf dist
 	rm -rf CheeseCutter.app
-	rm -rf CheeseCutter_2.5.1.dmg
+	rm -rf CheeseCutter_$(VERSION).dmg
 
 
 tar:
-	git archive master --prefix=cheesecutter-2.5.1/ | bzip2 > cheesecutter-2.5.1-macosx-src.tar.bz2
+	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-macosx-src.tar.bz2
 # --------------------------------------------------------------------------------
 
 src/c64/player.bin: src/c64/player_v400.acme
