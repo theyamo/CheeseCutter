@@ -200,6 +200,7 @@ ubyte[] packToSid(Song insong, address relocTo, int defaultSubtune, bool verbose
 		data[PSID_PLAY_OFFSET .. PSID_PLAY_OFFSET + 2] = cast(ubyte[])[ custPlay >> 8, custPlay & 255 ];
 		data[PSID_DATA_START + 2 + custTimerlo - custBase] = cast(ubyte)((PAL_CLOCK / sng.multiplier) & 255);
 		data[PSID_DATA_START + 2 + custTimerhi - custBase] = cast(ubyte)((PAL_CLOCK / sng.multiplier) >> 8);
+		data[PSID_DATA_START + 2 + custPlay - custBase + 5] = cast(ubyte)(sng.multiplier - 1);
 	}
 	else {
 		data[PSID_INIT_OFFSET .. PSID_INIT_OFFSET + 2] = cast(ubyte[])[ relocTo >> 8, relocTo & 255 ];
