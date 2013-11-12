@@ -1,6 +1,7 @@
 module main;
 import derelict.sdl.sdl;
 import com.fb;
+import com.kbd;
 import ui.ui;
 import ui.input;
 import audio.player;
@@ -79,13 +80,14 @@ void mainloop() {
 				key = evt.key.keysym.sym;
 				unicode = evt.key.keysym.unicode;
 				mods &= 0xffff - KMOD_NUM;
-				
+				auto keyinfo = Keyinfo(key, mods, unicode);
+				//com.kbd.translate(keyinfo);
 				version(darwin) {
 					if (key == SDLK_q && evt.key.keysym.mod & KMOD_META)
 						quit=true;
 				}	
 				
-				if(mainui.keypress(Keyinfo(key, mods, unicode)) == EXIT)
+				if(mainui.keypress(keyinfo) == EXIT)
 					quit = true;
 
 				mainui.update();
@@ -95,7 +97,9 @@ void mainloop() {
 				key = evt.key.keysym.sym;
 				unicode = evt.key.keysym.unicode;
 				mods &= 0xffff - KMOD_NUM;
-				mainui.keyrelease(Keyinfo(key, mods, unicode));
+				Keyinfo keyinfo = Keyinfo(key, mods, unicode);
+				com.kbd.translate(keyinfo);
+				mainui.keyrelease(keyinfo);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				switch(evt.button.button) {

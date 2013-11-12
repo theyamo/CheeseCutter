@@ -461,6 +461,7 @@ final private class RootWindow : WindowSwitcher {
 		case '}':
 			audio.player.setMultiplier(song.multiplier + 1);
 			return OK;
+/+
 		case '(':
 			if(octave > 0)
 				octave--;
@@ -468,7 +469,7 @@ final private class RootWindow : WindowSwitcher {
 	 	case ')':
 			 if(octave < 6)
 			 	octave++;
-			return OK;
+			return OK;+/
 		default:
 			break;
 		}
