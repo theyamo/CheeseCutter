@@ -2,6 +2,7 @@ module ui.dialogs;
 import derelict.sdl.sdl;
 import main;
 import com.fb;
+import com.util;
 import ui.help;
 import ui.ui;
 import ct.base;
@@ -148,7 +149,7 @@ class DebugDialog : Window {
 	int keypress(Keyinfo key) {
 		switch(key.unicode) {
 		case SDLK_SPACE:
-			com.fb.hexdump(seq.compact(),16);
+			com.util.hexdump(seq.compact(),16);
 		case 0:
 			break;
 		default:

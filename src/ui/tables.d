@@ -4,7 +4,7 @@ import ui.dialogs;
 import ui.input;
 import ui.help;
 import main;
-import com.fb;
+import com.util;
 import ct.base;
 import derelict.sdl.sdl;
 import std.string;
@@ -203,7 +203,7 @@ protected:
 	
 	void showByteDescription(PetString pet) {
 		if(song.ver < 9 || !displayHelp) return;
-		string[] s = com.fb.petscii2D(pet).splitLines();
+		string[] s = com.util.petscii2D(pet).splitLines();
 		string outstr = s[0];
 		if(s.length > 1)
 			outstr ~= " `01[F12 for more]";

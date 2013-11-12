@@ -4,8 +4,6 @@ import std.string;
 import std.stdio;
 import std.file;
 
-alias char* PetString;
-
 const SDL_Color[] PALETTE = [
 	{ 0,0,0 },       
 	{ 63 << 2,63 << 2,63 << 2 },
@@ -518,14 +516,6 @@ void disableKeyRepeat() {
 
 }
 
-int paddedStringLength(string s, char padchar) {
-	int i;
-	for(i = cast(int)(s.length - 1); i >= 0; i--) {
-		if(s[i] != padchar) return cast(int)(i+1);
-	}
-	return 0;
-}
-
 Uint16 readkey() {
 	SDL_Event evt;
 	bool loop = true;
@@ -545,39 +535,5 @@ Uint16 readkey() {
 	}
 	return evt.key.keysym.unicode;
 }
-
-void hexdump(ubyte[] buf, int rowlen) {
-	int c;
-	foreach(b; buf) {
-		writef("%02X ", b);
-		c++;
-		if(c >= rowlen) {
-			c = 0;
-			writef("\n");
-		}
-	}
-	writef("\n");
-}
-
-string petscii2D(PetString petstring) {
-	char[] s;
-	int idx;
-	s.length = 512;
-	while(*petstring != '\0') {
-		char c = *(petstring++);
-		if(c == '&') {
-			s[idx] = '\n';
-			s[idx + 1 .. idx + 6] = ' ';
-			idx += 6;
-		}
-		else s[idx++] = c;
-	}
-	s.length = idx;
-	return format(s);
-}
-
-int clamp(int n, int l, int h) { return n > h ? h : n < l ? l : n; }
-
-
 
 

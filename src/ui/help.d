@@ -1,7 +1,7 @@
 module ui.help;
 
 import std.string;
-import com.fb;
+import com.util;
 
 struct ContextHelp {
 	string title;
