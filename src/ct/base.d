@@ -1334,10 +1334,12 @@ class Song {
 		int crd, p;
 		for(int i = 0; i < 128; i++) {
 			if(chordTable[i] >= 0x80) {
-				chordIndexTable[crd++] = cast(ubyte)p;
+				chordIndexTable[crd] = cast(ubyte)p;
+				if(++crd >= 31) throw new Error("Chord index overflow");
 				p = i + 1;
 			}
 		}
+		chordIndexTable[crd++] = cast(ubyte)(p);
 	}
 
 	void importData(Song insong) {

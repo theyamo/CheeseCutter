@@ -431,7 +431,7 @@ protected:
 		}
 		else switch(key.raw)
 			 {
-			 case SDLK_KP_ENTER, SDLK_KP0, SDLK_BACKSPACE, SDLK_PLUS:
+			 case SDLK_KP0, SDLK_BACKSPACE, SDLK_PLUS:
 				 setPositionMark();
 				 break;
 			 default:

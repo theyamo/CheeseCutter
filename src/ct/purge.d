@@ -254,6 +254,8 @@ class Purger {
 			}
 			assert(0);
 		}
+
+		song.generateChordIndex();
 		int np;
 		Chunk[] chunks;
 		chunks ~= Chunk(song.chordTable[0 .. song.chordIndexTable[1]].dup, 0);

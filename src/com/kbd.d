@@ -3,18 +3,11 @@ import derelict.sdl.sdl;
 import ui.input;
 
 void translate(ref Keyinfo key) {
-	version(darwin) {
-		switch(key.key) {
-		case SDLK_LESS:
-			key.key = SDLK_MINUS;
-			key.unicode = "-";
-			break;
-		case SDLK_GREATER:
-			key.key = SDLK_PLUS;
-			key.unicode = "+";
-			break;
-		default: break;
-		}
+	switch(key.key) {
+	case SDLK_KP_ENTER: // for shitty laptops and apple computers...
+		key.key = SDLK_INSERT;
+		break;
+	default: break;
 	}
 	// do this last since platform specific translations need to be done 1st
 	translate_super(key);
