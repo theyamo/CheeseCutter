@@ -552,13 +552,11 @@ final private class RootWindow : WindowSwitcher {
 			{
 			 case SDLK_PLUS:
 			 case SDLK_KP_PLUS:
-				 if(song.speed < 32) 
-					 song.speed = song.speed + 1;
+				 song.speed = clamp(song.speed + 1, 0, 31);
 				 break;
 			 case SDLK_MINUS:
 			 case SDLK_KP_MINUS:
-				 if(song.speed > 0) 
-					 song.speed = song.speed - 1; 
+				 song.speed = clamp(song.speed - 1, 0, 31);
 				 break;
 			case SDLK_TAB:
 				key.mods & KMOD_SHIFT ? activeWindowNum-- : activeWindowNum++ ;

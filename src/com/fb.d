@@ -575,3 +575,9 @@ string petscii2D(PetString petstring) {
 	s.length = idx;
 	return format(s);
 }
+
+int clamp(int n, int l, int h) { return n > h ? h : n < l ? l : n; }
+
+
+
+

@@ -81,7 +81,7 @@ void mainloop() {
 				unicode = evt.key.keysym.unicode;
 				mods &= 0xffff - KMOD_NUM;
 				auto keyinfo = Keyinfo(key, mods, unicode);
-				//com.kbd.translate(keyinfo);
+				com.kbd.translate(keyinfo);
 				version(darwin) {
 					if (key == SDLK_q && evt.key.keysym.mod & KMOD_META)
 						quit=true;

@@ -819,6 +819,12 @@ final class InputSeq : Newinput {
 			UI.statusline.display(format("Instrument autoinsert mode ",
 										  autoinsertInstrument ? "enabled." : "disabled."));
 			return OK;
+		case SDLK_LESS:
+			octave = clamp(--octave, 0, 6);
+			break;
+		case SDLK_GREATER:
+			octave = clamp(++octave, 0, 6);
+			break;
 		default:
 			break;
 		}
