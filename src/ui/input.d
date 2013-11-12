@@ -495,7 +495,7 @@ abstract class Newinput : Input {
 	}
 
 	int keypress(Keyinfo key, string keytab) {
-		if(key.mods & KMOD_SHIFT || key.mods & KMOD_CTRL || key.mods & KMOD_ALT)
+		if(key.mods & KMOD_CTRL || key.mods & KMOD_ALT)
 			return OK;
 		switch(key.unicode) {
 		case ' ':

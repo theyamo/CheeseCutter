@@ -98,7 +98,7 @@ void mainloop() {
 				unicode = evt.key.keysym.unicode;
 				mods &= 0xffff - KMOD_NUM;
 				Keyinfo keyinfo = Keyinfo(key, mods, unicode);
-				com.kbd.translate(keyinfo);
+//				com.kbd.translate(keyinfo);
 				mainui.keyrelease(keyinfo);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
