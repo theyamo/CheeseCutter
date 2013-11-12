@@ -442,9 +442,8 @@ protected:
 		switch(key.raw)
 		{
 		case SDLK_DOWN:
-			if(key.mods & KMOD_SHIFT) {
-				step(stepValue);
-			}
+			if(key.mods & KMOD_SHIFT) 
+				goto case SDLK_PAGEDOWN;
 			else if(key.mods & KMOD_CTRL) {
 				scroll(1);
 				step(-1);
@@ -453,7 +452,7 @@ protected:
 			break;
 		case SDLK_UP:
 			if(key.mods & KMOD_SHIFT)
-				step(-stepValue);
+				goto case SDLK_PAGEUP;
 			else if(key.mods & KMOD_CTRL) {
 				scroll(-1);
 				step(1);
