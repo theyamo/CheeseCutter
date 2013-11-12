@@ -62,7 +62,7 @@ dclean: clean
 
 
 tar:
-	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-macosx-src.tar.bz2
+	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-src.tar.bz2
 # --------------------------------------------------------------------------------
 
 src/c64/player.bin: src/c64/player_v400.acme

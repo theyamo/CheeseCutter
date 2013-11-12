@@ -2,6 +2,7 @@ DEBUG=0
 
 LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL 
 COMFLAGS= -mmacosx-version-min=10.7
+VERSION=$(shell cat Version)
 DLINK=$(COMFLAGS)
 DFLAGS=-I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font
 CFLAGS=$(COMFLAGS) -D-version=2
@@ -57,7 +58,7 @@ dclean: clean
 
 
 tar:
-	git archive master --prefix=cheesecutter-2.5.1/ | bzip2 > cheesecutter-2.5.1-macosx-src.tar.bz2
+	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-macosx-src.tar.bz2
 # --------------------------------------------------------------------------------
 
 src/c64/player.bin: src/c64/player.acme
