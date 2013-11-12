@@ -442,9 +442,10 @@ protected:
 		switch(key.raw)
 		{
 		case SDLK_DOWN:
-			if(key.mods & KMOD_SHIFT)
+			if(key.mods & KMOD_SHIFT) {
 				step(stepValue);
-			if(key.mods & KMOD_CTRL) {
+			}
+			else if(key.mods & KMOD_CTRL) {
 				scroll(1);
 				step(-1);
 			}
