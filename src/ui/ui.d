@@ -149,15 +149,15 @@ class WindowSwitcher : Window {
 		refresh();
 	}
 
-	void update() {
+	override void update() {
 		activeWindow.update();
 	}
 
-	void activate() {
+	override void activate() {
 		activeWindow.activate();
 	}
 
-	void deactivate() {
+	override void deactivate() {
 		activeWindow.deactivate();
 	}
 
@@ -165,7 +165,7 @@ class WindowSwitcher : Window {
 		foreach(w; windows) w.refresh();
 	}
 	
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_ALT) {
 			foreach(i, hk; hotkeys) {
 				if(key.raw == hk) {
@@ -292,12 +292,12 @@ class Statusline : Window {
 		update();
 	}
 	
-	void deactivate() {
+	override void deactivate() {
 		counter = 0;
 		update();
 	}
 
-	void update() {
+	override void update() {
 		if(counter)
 			screen.fprint(4, 2, "`0f " ~ message);
 		else screen.clrtoeol(2, 0);
@@ -446,7 +446,7 @@ final private class RootWindow : WindowSwitcher {
 		return null;
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		switch(key.unicode) {
 		case ']':
 			if(song.speed < 32) 
@@ -607,7 +607,7 @@ final private class RootWindow : WindowSwitcher {
 		return OK;
 	}	
 
-	int keyrelease(Keyinfo key) {
+	override int keyrelease(Keyinfo key) {
 		if(keyjamStatus == true) {
 			inputKeyjam.keyrelease(key);
 		}
@@ -629,7 +629,7 @@ final private class RootWindow : WindowSwitcher {
 		sequencer.resetMark();
 	}
 
-	void refresh() {
+	override void refresh() {
 		foreach(t; windows) {
 			t.refresh();
 			t.update();
@@ -639,7 +639,7 @@ final private class RootWindow : WindowSwitcher {
 		activeWindow.activate();
 	}
 	
-	void update() {
+	override void update() {
 		foreach(t; windows) {
 			t.update();
 		}

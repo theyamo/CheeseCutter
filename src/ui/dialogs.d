@@ -32,7 +32,7 @@ protected class QueryDialog : Window {
 		super(a);
     }
 	
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_ALT) return OK;
 		int r = input.keypress(key);
 		if(r == WRAP &&
@@ -52,7 +52,7 @@ protected class QueryDialog : Window {
 		return r;
 	}
 
-	void update() {
+	override void update() {
 		int x = cast(int)(screen.width / 2 - (query.length + 6 )/2);
 		int y = cast(int)(screen.height / 2 - 11);
 		drawFrame(Rectangle(x, y, 5, cast(int)(query.length + 9)));
@@ -60,7 +60,7 @@ protected class QueryDialog : Window {
 		input.setCoord(cast(int)(x + 4 + query.length), cast(int)( y + 2));
 	}
 
-	void activate() { return; }
+	override void activate() { return; }
 }
 
 class HelpDialog : Window {
@@ -81,7 +81,7 @@ class HelpDialog : Window {
 		txt_x = area.x + (area.width / 2 - MAX_LINE_LENGTH / 2);
 	}
 
-	void update() {
+	override void update() {
 		int ypos = area.y + 2;
 		drawFrame(area);
 		screen.cprint(area.x + 2, area.y, 1, 0, format(" %s %d/%d (press SPACE for more) ", title,
@@ -101,7 +101,7 @@ class HelpDialog : Window {
 		
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		int k = key.unicode;
 		if(k == SDLK_SPACE ||
 		   k == SDLK_PLUS ||
@@ -127,7 +127,7 @@ class DebugDialog : Window {
 		super(a);
 	}
 
-	void update() {
+	override void update() {
 		assert(seq !is null);
 		int y,pos;
 		string str;
@@ -146,7 +146,7 @@ class DebugDialog : Window {
 		}
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		switch(key.unicode) {
 		case SDLK_SPACE:
 			com.util.hexdump(seq.compact(),16);
@@ -173,7 +173,7 @@ class AboutDialog : Window {
 		super(a);
 	}
   
-	void update() {
+	override void update() {
 		string[] logo = std.string.splitLines(LOGO);
 		int y;
 
@@ -193,7 +193,7 @@ class AboutDialog : Window {
 		screen.fprint(area.x + 1, y++," ".center(area.width-2));
 	}
   
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods) return OK;
 		if(key.unicode == SDLK_ESCAPE ||
 			key.unicode == SDLK_SPACE ||
@@ -220,7 +220,7 @@ class FileSelector : Window {
 		refresh();
 	}
 
-	void refresh() {
+	override void refresh() {
 		if(!exists(directory)) {
 			UI.statusline.display("Directory not found!");
 		}
@@ -234,7 +234,7 @@ class FileSelector : Window {
 		fpos.offset = fpos.pos = 0;
 	}
 
-	void update() { 
+	override void update() { 
 		int y, i;
 		for(y = area.y, i = 0; i < area.height; y++,i++) {
 			int ofs = fpos.offset + i;
@@ -281,7 +281,7 @@ class FileSelector : Window {
 		return RETURN;
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		switch(key.raw) 
 		{
 		case SDLK_UP:
@@ -413,18 +413,18 @@ class FileSelectorDialogString : Window {
 		super(a);
 	}
 
-	string toString() { return toString(false); }
+	override string toString() { return toString(false); }
 	string toString(bool p) { return (cast(InputString)input).toString(p); }
 	void setString(string s) {
 		(cast(InputString)input).setOutput(s);
 	}
 	alias setString setOutputString;
 
-	void update() {
+	override void update() {
 		input.update();
 	}
 
-	int keypress(Keyinfo key) { input.keypress(key); return OK; }
+	override int keypress(Keyinfo key) { input.keypress(key); return OK; }
 }
 		
 class FileSelectorDialog : WindowSwitcher {
@@ -463,16 +463,16 @@ class FileSelectorDialog : WindowSwitcher {
 		return sfile.toString();
 	}
 
-	void activate() {
+	override void activate() {
 		refresh();
 		fsel.refresh();
 	}
 
-	void refresh() { 
+	override void refresh() { 
 		update();
 	}
 	
-	void update() {
+	override void update() {
 		int x,y,i;
 
 		for(y = area.y; y < area.y+area.height; y++) {
@@ -498,7 +498,7 @@ class FileSelectorDialog : WindowSwitcher {
 		input = active.input;
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods && !key.mods & KMOD_SHIFT) return OK;
 		switch(key.raw)
 		{
@@ -548,7 +548,7 @@ class LoadFileDialog : FileSelectorDialog {
 		cbimport = cbimp;
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.raw == SDLK_RETURN && (key.mods & KMOD_SHIFT)) {
 			return returnPressed(cbimport);
 		}

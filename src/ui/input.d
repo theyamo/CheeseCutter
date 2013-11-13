@@ -157,7 +157,7 @@ class InputValue : Input {
 		super(p, len);
 	}
 
-	void setOutput(ubyte[] p) {
+	override void setOutput(ubyte[] p) {
 		super.setOutput(p);
 		// initialize value
 		for(int i=0; i < inputLength; i++) {
@@ -167,7 +167,7 @@ class InputValue : Input {
 		}
 	}
 	
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		int v;
 		if(key.mods & KMOD_CTRL) return 0;
 		if(key.raw == SDLK_RETURN)
@@ -177,7 +177,7 @@ class InputValue : Input {
 		return keypressStepHandler(key, cast(char[])"0123456789abcdef");
 	}
 
-	int setValue(int v) {
+	override int setValue(int v) {
 		inarray[nibble] = cast(ubyte)v;
 		int c = toInt();
 		for(int i = cast(int)(inputLength/2-1); i >= 0; i--) {
@@ -187,7 +187,7 @@ class InputValue : Input {
 		return OK;
 	}
 	
-	void update() {
+	override void update() {
 		string fmt = std.string.format("0%dX",inputLength);
         screen.cprint(x, y, 1, -1, format("%" ~ fmt,toInt()));
 		cursor.set(x + nibble, y);
@@ -205,7 +205,7 @@ class InputBoundedByte : InputValue {
 		super(p, 2);
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		int v;
 		if(key.mods & KMOD_CTRL) return 0;
 		if(key.raw == SDLK_RETURN)
@@ -229,7 +229,7 @@ class InputBoundedByte : InputValue {
 		}
 	}
 	
-	int step(int st) {
+	override int step(int st) {
         nibble += st;
         if(nibble < 0) 
 			nibble = 0;
@@ -238,7 +238,7 @@ class InputBoundedByte : InputValue {
         return OK;
 	}
 
-	void update() {
+	override void update() {
 		screen.cprint(x, y, 1, -1, format("%02X ", toInt()));
 		cursor.set(x + nibble, y);
 	}
@@ -272,14 +272,14 @@ class InputTrack : InputWord {
  		trk.setValue(buf[0], buf[1]);
 	}
 	
-	int setValue(int v) {
+	override int setValue(int v) {
 		super.setValue(v);
 		buf[] = valueCheckNoWrap(buf[0], buf[1]);
 		super.setOutput(buf); 
 		return OK;
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_ALT) return OK;
 		switch(key.unicode)
 		{
@@ -355,7 +355,7 @@ class InputString : Input {
 		setOutput(s);
 	}
 
-	void setOutput(ubyte[] p) {
+	override void setOutput(ubyte[] p) {
 		assert(0);
 	}
 	
@@ -371,7 +371,7 @@ class InputString : Input {
 			nibble = inputLength - 1;
 	}
 	
-	string toString() {
+	override string toString() {
 		return toString(false);
 	}
 
@@ -381,7 +381,7 @@ class InputString : Input {
 		return cast(string)(instring);
 	}
 
-	void update() {
+	override void update() {
 		screen.cprint(x, y, 1, 0, toString(true));
 		cursor.set(x + nibble, y);
 	}
@@ -390,7 +390,7 @@ class InputString : Input {
 		instring[nibble] = cast(char)value;
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		int i;
 
 		switch(key.raw)
@@ -477,7 +477,7 @@ abstract class Newinput : Input {
 		super(w);
 	}
 
-	int step(int st) {
+	override int step(int st) {
 		nibble += st;
 		if(nibble >= width) {
 			nibble = width - 1;
@@ -491,7 +491,7 @@ abstract class Newinput : Input {
 	}
 
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		return keypress(key, "0123456789abcdef");
 	}
 
@@ -554,7 +554,7 @@ protected:
 		element = e;
 	}
 
-	void update() {
+	override void update() {
 		assert(0);
 	}
 	
@@ -573,7 +573,7 @@ protected:
 }
 
 class InputOctave : Newinput {
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		return super.keypress(key,"012345678");
 	}	
 
@@ -589,13 +589,13 @@ class InputOctave : Newinput {
 
 class InputInstrument : Newinput {
 	this() { super(2); }
-	void clearRow() {
+	override void clearRow() {
 		super.clearRow();
 		element.instr = 0xc0;
 		invalue = 0x30;
 	}
 
-	void setElement(Element e) {
+	override void setElement(Element e) {
 		super.setElement(e);
 		if(e.instr.value < 0x30)
 			invalue = e.instr.value;
@@ -622,17 +622,17 @@ class InputInstrument : Newinput {
 class InputCmd : Newinput {
 	this() { super(2); }
 
-	void clearRow() {
+	override void clearRow() {
 		super.clearRow();
 		element.cmd = 0;
 	}
 
-	void setElement(Element e) {
+	override void setElement(Element e) {
 		super.setElement(e);
 		invalue = e.cmd.rawValue;
 	}
 
-	void setRowValue(int v) {
+	override void setRowValue(int v) {
 		element.cmd = cast(ubyte)v;
 	}
 }
@@ -645,7 +645,7 @@ class InputNote : Newinput {
 		keyjam = new InputKeyjam();
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL || key.mods & KMOD_ALT) {
 			switch(key.raw) {
 			case SDLK_g:
@@ -689,14 +689,14 @@ class InputNote : Newinput {
 		return r;
 	}
 
-	void clearRow() {
+	override void clearRow() {
 		super.clearRow();
 		element.note = 0;
 		element.note.setTied(false);
 		element.instr = 0x80;
 	}
 
-	void setRowValue(int value) {
+	override void setRowValue(int value) {
 		if(value < 0) return;
 		switch(value) {
 		case 0:
@@ -727,7 +727,7 @@ class InputNote : Newinput {
 		}
 	}
 	
-	int step(int st) {
+	override int step(int st) {
 		if(st >= 0) return WRAPR;
 		return WRAPL;
 	}
@@ -740,7 +740,7 @@ class InputKeyjam : Newinput {
 		super();
 	}
 
-	void setRowValue(int value) {
+	override void setRowValue(int value) {
 		if(value < 0) return;
 		switch(value) {
 		case 0:
@@ -766,7 +766,7 @@ class InputKeyjam : Newinput {
 		audio.player.playNote(element);
 	}
 	
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		return super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p");
 	}
 
@@ -804,16 +804,16 @@ final class InputSeq : Newinput {
 			pointerY = y;
 	}
 
-	void setCoord(int x, int y) {
+	override void setCoord(int x, int y) {
 		setPointer(x, y);
 	}
 
-	void setElement(Element e) {
+	override void setElement(Element e) {
 		element = e;
 		activeInput.setElement(e);
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		switch(key.unicode) {
 		case SDLK_SEMICOLON:
 			autoinsertInstrument ^= 1;
@@ -864,7 +864,7 @@ final class InputSeq : Newinput {
 		}
 	}
 
-	int step(int st) {
+	override int step(int st) {
 		int r = activeInput.step(st);
 		if(r == WRAPR) {
 			//activeInput.nibble = 0;
@@ -899,7 +899,7 @@ final class InputSeq : Newinput {
 		return OK;
 	}
 
-	void update() {
+	override void update() {
 		screen.cprint(pointerX, pointerY, 1, -1, element.toPlainString());
 		
 		assert(activeInput == inputters[activeInputNo]);
@@ -913,15 +913,15 @@ class InputSpecial : InputValue {
 		super(p, 5);
 	}
 
-	void setOutput(ubyte[] p) {
+	override void setOutput(ubyte[] p) {
 	}
 	
-	int setValue(int v) {
+	override int setValue(int v) {
 		inarray[nibble] = v & 15;
 		return OK;
 	}
 	
-	void update() {
+	override void update() {
 		const int[] xoffs = [0, 2, 3, 5, 6];
         screen.cprint(x, y, 1, -1, format("%01X-%02X %02X",inarray[0],toInt(inarray[1..3]),toInt(inarray[3..5])));
 		cursor.set(pointerX + xoffs[nibble], pointerY);

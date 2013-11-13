@@ -40,7 +40,7 @@ class HexTable : Table {
 		super(a,tbl,c,r);
 	}
 
-	void activate() {
+	override void activate() {
 		initializeInput();
 	}
 
@@ -129,7 +129,7 @@ class HexTable : Table {
 		column = c;
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL || key.mods & KMOD_ALT || 
 		   key.mods & KMOD_META) return OK;
 
@@ -225,7 +225,7 @@ class InsValueTable : HexTable {
 		data = song.instrumentTable; 
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_ALT) return OK;
 		if(key.mods & KMOD_CTRL) {
 			switch(key.raw)  {
@@ -278,7 +278,7 @@ class InsValueTable : HexTable {
 		super.activate();
 	}
 
-	void update() {
+	override void update() {
 		int b = 0;
 		int i, j, ofs;
 		int myrow = row;
@@ -307,14 +307,14 @@ class InsValueTable : HexTable {
 		}
 	}
 
-	void initializeInput() {
+	override void initializeInput() {
 		super.set();
 		assert(row < 48);
 		int ofs = column * 48 + row;
 		input.setOutput(data[ofs .. ofs+1]);
 	}
 
-	void stepRow(int n) {
+	override void stepRow(int n) {
 		super.stepRow(n);
 		UI.activateInstrument(row);
 	}
@@ -360,11 +360,11 @@ class InsTable : Window {
 	void stepRow(int n) { insinput.stepRow(n); }
 	void seekRow(int r) { insinput.seekRow(r); }
 
-	void activate() {
+	override void activate() {
 		activateInsValueTable();
 	}
 
-	void deactivate() {
+	override void deactivate() {
 		if(active == insdesc) {
 			string s = insdesc.toString(false);
 			song.insLabels[insinput.row][0..s.length] = s;
@@ -389,7 +389,7 @@ class InsTable : Window {
 		initializeInput();
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_ALT) return OK;
 		if(key.unicode == SDLK_RETURN || key.unicode == SDLK_TAB) {
 			if(active == insinput) {
@@ -407,7 +407,7 @@ class InsTable : Window {
 		return r;
 	}
 
-	void update() {
+	override void update() {
 		active.update();
 	}
 
@@ -431,7 +431,7 @@ class CmdTable : HexTable {
 		input = new InputSpecial(song.superTable);
 	}
 
-	void update() {
+	override void update() {
 		int i;
 		if(shortTitles)
 			screen.fprint(area.x,area.y, "`01Co`b1m`01mand");
@@ -447,7 +447,7 @@ class CmdTable : HexTable {
 		}
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_ALT) return OK;
 		switch(key.raw) {
 		case SDLK_LEFT:
@@ -487,7 +487,7 @@ class CmdTable : HexTable {
 		return OK;
 	}
 
-	void initializeInput() {
+	override void initializeInput() {
 		super.initializeInput();
 		input.inarray[0] = song.superTable[position];
 		input.inarray[1] = song.superTable[position+64] >> 4;
@@ -496,7 +496,7 @@ class CmdTable : HexTable {
 		input.inarray[4] = song.superTable[position+128] & 15;
 	}
 
-	void seekTableEnd() {
+	override void seekTableEnd() {
 		for(int i = 63; i >= 1; i--) {
 			if(data[i-1] > 0) {
 				seekRow(i);
@@ -530,7 +530,7 @@ class ChordTable : HexTable {
 		data = song.chordTable;
 	}
 
-	void seekTableEnd() {
+	override void seekTableEnd() {
 		for(int i = 127; i >= 1; i--) {
 			if(data[i-1] > 0) {
 				seekRow(i);
@@ -539,7 +539,7 @@ class ChordTable : HexTable {
 		}
 	}
 
-	void update() {
+	override void update() {
 		int i;
 		if(shortTitles)
 			screen.fprint(area.x,area.y, "`01Chor`b1d`01");
@@ -590,13 +590,13 @@ class ChordTable : HexTable {
 		}
 	}
 
-	void initializeInput() {
+	override void initializeInput() {
 		super.initializeInput();
 		input.setOutput(data[row .. row + 1]);
 		song.generateChordIndex();
 	}
 
-	void insertRow() {
+	override void insertRow() {
 		ubyte[] tmp = data[row .. $-1].dup;
 		foreach(i, c; tmp) {
 			if(c >= (0x80 + row) && ++c < 0x100)
@@ -607,7 +607,7 @@ class ChordTable : HexTable {
 		initializeInput();
 	}
 
-	void deleteRow() {
+	override void deleteRow() {
 		ubyte[] tmp = data[row + 1 .. $].dup;
 		foreach(i, c; tmp) {
 			if(c >= (0x80 + row) && --c >= 0x80)
@@ -640,7 +640,7 @@ class WaveTable : HexTable {
 		data = song.waveTable;
 	}
 
-	void seekTableEnd() {
+	override void seekTableEnd() {
 		for(int i = 255; i >= 1; i--) {
 			if(data[i-1] > 0) {
 				seekRow(i);
@@ -653,7 +653,7 @@ class WaveTable : HexTable {
 		seekRow(song.instrumentTable[ui.ui.activeInstrument + 7 * 48]);
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_SHIFT) {
 			switch(key.raw)
 			{
@@ -700,7 +700,7 @@ class WaveTable : HexTable {
 		return super.keypress(key);
 	}
 
-	void update() {
+	override void update() {
 		int i;
 		int t1, t2;
 		if(shortTitles)
@@ -718,13 +718,13 @@ class WaveTable : HexTable {
 		}
 	}
 
-	void initializeInput() {
+	override void initializeInput() {
 		int offset = column ? (256 + row) : row;
 		(cast(InputByte)input).setOutput(data[offset..offset+1]);
 		super.set();
 	}
 
-	void stepColumnWrap(int n) {
+	override void stepColumnWrap(int n) {
 		stepRow(1);
 		adjustView();
 	}
@@ -749,7 +749,7 @@ class SweepTable : HexTable {
 		super(a, d, 4, 64);
 	}
 
-	void update() {
+	override void update() {
 		for(int i=0; i < visibleRows; i++) {
 			int p = ((i + viewOffset) & 63) * 4;
 			string col = "`05";
@@ -761,7 +761,7 @@ class SweepTable : HexTable {
 		}
 	}
 
-	void initializeInput() {
+	override void initializeInput() {
 		InputByte i = cast(InputByte)input;
 		int ofs = row * 4 + column;
 		i.setOutput(data[ofs..ofs+1]);
@@ -769,7 +769,7 @@ class SweepTable : HexTable {
 		
 	}
 
-	void seekTableEnd() {
+	override void seekTableEnd() {
 		for(int i = 63; i >= 0; i--) {
 			ubyte[] arr = data[i * 3 .. i * 3 + 3];
 			bool flag;
@@ -795,7 +795,7 @@ class PulseTable : SweepTable {
 		data = song.pulseTable;
 	}
 
-	void update() {
+	override void update() {
 		if(shortTitles)
 			screen.fprint(area.x, area.y, "`b1P`01ulse");
 		else
@@ -828,7 +828,7 @@ class FilterTable : SweepTable {
 		data = song.filterTable;
 	}
 
-	void update() {
+	override void update() {
 		if(shortTitles)
 			screen.fprint(area.x, area.y, "`b1F`01ilter");
 		else 

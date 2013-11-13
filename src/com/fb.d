@@ -237,7 +237,7 @@ class VideoYUV : Video {
 		screen.refresh();
 	}
 
-	void updateFrame() {
+	override void updateFrame() {
 		int x, y;
 		int a,b,c;
 		static Uint32[32] pixbuf;

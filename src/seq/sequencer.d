@@ -302,7 +302,7 @@ public:
 
 
 protected:
-	void update();
+	override void update();
 	void refreshPointer()  {
 		refreshPointer(pos.pointerOffset);
 	}
@@ -851,18 +851,18 @@ public:
 	}
 
 protected:
-	void update() {
+	override void update() {
 		activeView.update();
 		input = activeView.input;
 	}
 
-	void activate() {}
+	override void activate() {}
 
-	void deactivate() {
+	override void deactivate() {
 		activeView.deactivate();
 	}
 
-	void refresh() {
+	override void refresh() {
 	  foreach(b; voiceTables) {
 	    b.refresh();
 	  }
@@ -907,7 +907,7 @@ protected:
 		activeView.step(0);
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		if(key.raw >= SDLK_KP1 && key.raw <= SDLK_KP9) {
 			stepValue = key.raw - SDLK_KP1 + 1;
 			return OK;
@@ -1012,7 +1012,7 @@ protected:
 		return OK;
 	}
 
-	int keyrelease(Keyinfo key) {
+	override int keyrelease(Keyinfo key) {
 		stepCounter = 0;
 		return OK;
 	}

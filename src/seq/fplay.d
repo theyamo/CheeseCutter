@@ -14,7 +14,7 @@ protected class FPlayVoice : SeqVoice {
 		assert(pos !is null);
 	}
 
-	protected void scroll(int steps) {
+	override protected void scroll(int steps) {
 		int lasttrk = tracks.getListLength();
 		int seqofs = pos.seqOffset + steps;
 		int trkofs2 = pos.trkOffset;
@@ -64,7 +64,7 @@ protected class FPlayVoiceTable : SequenceTable {
 		}
 	}
 
-	void step(int st) {
+	override void step(int st) {
 		foreach(v; cast(FPlayVoice[])voices) {
 			v.scroll(st);
 		}
@@ -87,11 +87,11 @@ class Fplay : Window {
 		if(c > 0) ftable.step(c);
 	}
 
-	void update() {
+	override void update() {
 		ftable.update();
 	}
 
-	int keypress(Keyinfo key) {
+	override int keypress(Keyinfo key) {
 		switch(key.raw)
 		{
 		case SDLK_HOME:
