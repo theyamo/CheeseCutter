@@ -6,6 +6,7 @@ import audio.callback;
 import std.stdio;
 import std.c.stdlib;
 import std.c.string;
+import std.conv;
 
 const MIXBUF_MUL = 2;
 __gshared SDL_AudioSpec audiospec;
@@ -52,7 +53,7 @@ extern(C) {
 		requested.userdata = null;
 		callback = cb;
 		if(SDL_OpenAudio(&requested, &audiospec) < 0) {
-			writeln("Could not open audio: ", SDL_GetError());
+			writeln("Could not open audio: ", to!string(SDL_GetError()));
 			return -1;
 		}
 		if(audiospec.format != AUDIO_S16LSB) {
