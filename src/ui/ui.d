@@ -1128,7 +1128,6 @@ final class UI {
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
 		fn = fn[ind..$];
-		writeln(fn);
 		ui.ui.filename = fn;
 		infobar.refresh();
 		
