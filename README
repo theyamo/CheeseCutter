@@ -1,5 +1,4 @@
 CheeseCutter 2
---------------
 
 http://theyamo.kapsi.fi/ccutter
 
@@ -15,14 +14,7 @@ libSDL by the SDL team.
 
 derelict, http://www.dsource.org/projects/derelict
 
-ACME assembler by Marco Baye
-
 Special thanks to Vent/Triad, Blackspawn, Mr Ammo, Scarzix/Offence, 
 SuperNoise, Wisdom/Crescent and the forgotten ones...
 
 Licensed under GNU General Public License (see the file COPYING for details).
-
-
-
-
-
