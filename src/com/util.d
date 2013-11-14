@@ -1,6 +1,7 @@
 module com.util;
 import std.stdio;
 import std.string;
+import std.conv;
 
 alias char* PetString;
 
@@ -43,6 +44,5 @@ string petscii2D(PetString petstring) {
 }
 
 int clamp(int n, int l, int h) { return n > h ? h : n < l ? l : n; }
-
-
-
+// 0-terminated string to d string
+string ztos(char[] str) { return to!string(&str[0]); }

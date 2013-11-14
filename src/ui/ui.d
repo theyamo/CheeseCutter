@@ -234,7 +234,7 @@ class Infobar : Window {
 		//screen.fprint(x2,area.y,format("`05  `b1T`01itle: `0d%-32s", std.string.toString(cast(char *)song.title))); 
 		screen.fprint(x2,area.y,format("`05%s `0d%-32s", (["  `b1T`01itle:", " `01Author:", "`01Release:" ])[idx],
 									song.title));
-		screen.fprint(x2,area.y+2,format("`05 Player: `0d%s", to!string(&song.playerID[0])));
+		screen.fprint(x2,area.y+2,format("`05 Player: `0d%s", ztos(song.playerID)));
 	}
 
 	override void refresh() {
