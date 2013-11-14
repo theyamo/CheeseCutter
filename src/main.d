@@ -152,16 +152,16 @@ void printheader() {
 	derr.writefln("Usage: ccutter [OPTION]... [FILE]");
 	derr.writef("\n");
 	derr.writefln("Options:");
-	derr.writefln("  -b [value]     Set playback buffer size (def=%d)", audio.audio.bufferSize);
-	derr.writefln("  -f             Start in fullscreen mode");
-	derr.writefln("  -nofp          Do not use resid-fp emulation");
-	derr.writefln("  -fpr [x]       Specify filter preset. x = 0..16 for 6581 and 0..1 for 8580");
-	derr.writefln("  -i             Disable resid interpolation (use fast mode instead)");
-	derr.writefln("  -m [0|1]       Specify SID model for reSID (6581/8580) (def=0)");
-	derr.writefln("  -n             Enable NTSC mode");
-	derr.writefln("  -r [value]     Set playback frequency (def=48000)");
-	derr.writefln("  -y             Use a YUV video overlay");
-	derr.writefln("  -ya            Keep real aspect ratio on YUV overlay (implies -y)");
+	derr.writefln("  -b [value]       Set playback buffer size (def=%d)", audio.audio.bufferSize);
+	derr.writefln("  -f               Start in fullscreen mode");
+	derr.writefln("  -nofp            Do not use resid-fp emulation");
+	derr.writefln("  -fpr [x]         Specify filter preset. x = 0..16 for 6581 and 0..1 for 8580");
+	derr.writefln("  -i               Disable resid interpolation (use fast mode instead)");
+	derr.writefln("  -m [0|1]         Specify SID model for reSID (6581/8580) (def=0)");
+	derr.writefln("  -n               Enable NTSC mode");
+	derr.writefln("  -r [value]       Set playback frequency (def=48000)");
+	derr.writefln("  -y               Use a YUV video overlay");
+	derr.writefln("  -ya              Keep real aspect ratio on YUV overlay (implies -y)");
 	derr.writef("\n");
 }
 
