@@ -340,11 +340,12 @@ protected:
 }
 
 protected abstract class VoiceTable : Window {
-protected:
-	Voice[3] voices;
-	Voice active;
-	alias active activeVoice;
-	PosinfoTable posTable;
+	protected {
+		Voice[3] voices;
+		Voice active;
+		alias active activeVoice;
+		PosinfoTable posTable;
+	}
 
 	this(Rectangle a, PosinfoTable pi) {
 		super(a);
