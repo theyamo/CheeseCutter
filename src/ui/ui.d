@@ -682,8 +682,9 @@ final private class RootWindow : WindowSwitcher {
 	private void optimizeSong() {
 		if(++optimizecounter > 1) {
 			refresh();
-			Purger p = new Purger(song,true);
-			p.purgeAll();
+			//Purger p = new Purger(song,true);
+			//p.purgeAll();
+			(new Purger(song,true)).purgeAll();
 			refresh();
 			UI.statusline.display("Song data optimized.");
 			optimizecounter = 0;

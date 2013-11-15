@@ -5,7 +5,7 @@ LIBS=-ldl -lstdc++
 #COMFLAGS= -mmacosx-version-min=10.7
 DLINK=$(COMFLAGS)
 VERSION=$(shell cat Version)
-DFLAGS=-I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font
+DFLAGS=-g -I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font
 CFLAGS=$(COMFLAGS) 
 CXXFLAGS=$(CFLAGS) -I./src -O2
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@

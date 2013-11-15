@@ -3,6 +3,7 @@ import derelict.sdl.sdl;
 import std.string;
 import std.stdio;
 import std.file;
+import std.cstream;
 
 const SDL_Color[] PALETTE = [
 	{ 0,0,0 },       
@@ -443,8 +444,8 @@ class Screen {
 	}
 	
 	void cprint(int x, int y, int fg, int bg, char[] txt) {
+		derr.writefln("FORMATC");
 		cprint(x,y,fg,bg,format(txt));
-	
 	}
 	
 	void cprint(int x, int y, int fg, int bg, string txt) {
@@ -466,6 +467,7 @@ class Screen {
 	}
 
 	void fprint(int x, int y, char[] str) {
+		derr.writefln("FORMATF");
 		fprint(x,y,format(str));
 	}
 

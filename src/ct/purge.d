@@ -3,6 +3,7 @@ import ct.base;
 import ct.base : Sequence;
 import std.stdio;
 import std.string;
+import com.util;
 
 alias writefln w;
 
@@ -192,6 +193,7 @@ class Purger {
 
 	void purgePulseFilter() {
 		int i;
+		pulse_used[] = false;
 		filter_used[0] = true;
 		pulse_used[0] = true;
 		void seekNMark(ref ubyte[] table, bool* usedflags, int pointer) {
@@ -226,12 +228,31 @@ class Purger {
 				
 			});
 
-		for(i = 0; i < 64; i++) {
-			if(!pulse_used[i]) 
-				song.pulseTable[i * 4 .. i * 4 + 4] = 0;
+		for(i = 0; i < 63; i++) {
+			if(!pulse_used[i]) {
+				int j = i+1, pos = i+1;
+				do {
+					ubyte[] tmp = song.pulseTable[j * 4 .. $].dup;
+					song.pulseTable[i * 4 .. $ - (j - i) * 4] =
+						tmp;
+					bool[] tmp2 = pulse_used[j .. $].dup;
+					pulse_used[i .. $ - 1] = tmp2;
+					for(int k = i; k < 64; k++) {
+						int wrap = song.pulseTable[k * 4 + 3];
+						if(wrap >= k && wrap < 0x7f) {
+							song.pulseTable[k * 4 + 3]--;
+						}
+					}
+					++pos;
+				} while(pos < 64 && !pulse_used[i]);
+//				com.util.hexdump(song.pulseTable[0..64], 4);
+
+			}
 			if(!filter_used[i])
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
+
 		}
+		writeln(pulse_used);
 	}
 
 	void purgeChordtable() {
