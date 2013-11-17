@@ -109,6 +109,7 @@ C_OBJS	= $(C_SRCS:.c=.o)
 UTILOBJS = src/ct2util.o \
 	src/ct/base.o \
 	src/com/cpu.o \
+	src/com/util.o \
 	src/ct/pack.o \
 	src/ct/purge.o \
 	src/ct/dump.o
