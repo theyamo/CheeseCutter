@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <resid/sid.h>
 #include <resid-fp/sidfp.h>
-#include <assert.h>
+//#include <assert.h>
 #include <stdio.h>
 
 extern "C" {
@@ -191,7 +191,7 @@ extern "C" {
 			result = sid->clock(tdelta, ptr, samples);
 		
 		total += result;
-		assert(total <= os);
+//		assert(total <= os);
 		return total;
 	}
 }

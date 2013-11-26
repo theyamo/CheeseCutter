@@ -243,7 +243,7 @@ protected:
 		return state.cyc;
 	}
 
-	void dumpOpcode(State state) {
+	void dumpOpcode(ref State state) {
 		int addrmode, arg, value, opcode;
 		opcode = state.opcode;
 		addrmode = state.addrmode;
@@ -264,7 +264,7 @@ protected:
 	}
 
 
-	void dumpline(State state) {
+	void dumpline(ref State state) {
 	}
 
 	string dumpRegs() {
@@ -592,7 +592,7 @@ protected:
 	    }
 	}
 
-    address fetchAddress(State st) {
+    address fetchAddress(ref State st) {
         int am = st.addrmode;
         ushort arg = cast(ushort)st.arg;
         switch(am)
@@ -615,7 +615,7 @@ protected:
         assert(0);
     }
 
-	ushort fetch(State st) {
+	ushort fetch(ref State st) {
 		int am = st.addrmode;
         ubyte arg = cast(ubyte)st.arg;
         switch(am)

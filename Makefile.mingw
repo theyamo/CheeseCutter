@@ -1,13 +1,14 @@
 DEBUG=0
 
-COMFLAGS=-g
+COMFLAGS=-g -m32
 LIBS=-lstdc++
-DLINK=$(COMFLAGS)
+DLINK=-m32 $(COMFLAGS)
 VERSION=$(shell cat Version)
-DFLAGS=-g -I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font
-CFLAGS=$(COMFLAGS) 
+DFLAGS=-g -m32 -I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font
+CFLAGS=$(COMFLAGS)
 CXXFLAGS=$(CFLAGS) -I./src -O2
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@
+COMPILE.c = $(CC) $(CFLAGS) -c -o $@
 OUTPUT_OPTION = 
 DC=gdc-win
 CXX=g++-win
@@ -25,7 +26,7 @@ $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .c.o : $(C_SRCS)
-	$(CC) -c $< -o $@
+	gcc-win -c $< -o $@
 
 ct: $(C64OBJS) $(CTOBJS)
 

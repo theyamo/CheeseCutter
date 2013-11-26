@@ -93,7 +93,7 @@ private class DataRelocator : CPU {
 		chunk[2] = highbyte(cast(ushort)newaddr);
 	}
 
-	override ushort fetch(State st) {
+	override ushort fetch(ref State st) {
 		ushort arg = cast(ushort)st.arg;
 		switch(st.addrmode) {
 		case Am.ABSOLUTE:
