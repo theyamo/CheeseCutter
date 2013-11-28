@@ -300,7 +300,7 @@ class InsValueTable : HexTable {
 			string label = insName(p)[0..width];
 			if(paddedStringLength(label, 32) == 0) 
 				screen.cprint(area.x + 27, area.y + 1 + i, 11, 0,
-						  format("No description",std.array.replicate(" ", width-14)));
+						  format("No description" ~ std.array.replicate(" ", width-14)));
 			else
 				screen.cprint(area.x + 27, area.y + 1 + i, 15, 0,
 						  label);
