@@ -22,9 +22,12 @@ $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
 .cpp.o : $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+.c.o : $(C_SRCS)
+	$(CC) -c $< -o $@
+
 ct: $(C64OBJS) $(CTOBJS)
 
-ct2util: $(C64OBJS) $(UTILOBJS)
+ct2util: $(C64OBJS) $(UTILOBJS) $(C_OBJS)
 	$(CC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS)
 
 c64: $(C64OBJS)
@@ -44,7 +47,7 @@ release: all
 
 dist:	release
 	rm -rf dist
-	rm -rf CheeseCutter_2.5.1.dmg
+	rm -rf CheeseCutter_$(VERSION).dmg
 	arch/makedmg.sh
 
 clean: 
@@ -54,7 +57,7 @@ clean:
 dclean: clean
 	rm -rf dist
 	rm -rf CheeseCutter.app
-	rm -rf CheeseCutter_2.5.1.dmg
+	rm -rf CheeseCutter_$(VERSION).dmg
 
 
 tar:
