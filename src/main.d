@@ -38,7 +38,7 @@ class ArgumentError : Exception {
 	}
 }
 
-void initVideo(bool useFullscreen, int m, bool yuv, bool aspect, string title) {
+void initVideo(bool useFullscreen, int m, bool yuv, bool aspect) {
 	int mx, my;
 
 	if( SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -55,7 +55,7 @@ void initVideo(bool useFullscreen, int m, bool yuv, bool aspect, string title) {
 
 	SDL_EnableKeyRepeat(200, 10);
 	SDL_EnableUNICODE(1);
-	SDL_WM_SetCaption(title.toStringz(),title.toStringz());
+	SDL_WM_SetCaption("CheeseCutter".toStringz(),"CheeseCutter".toStringz());
 }
 
 
@@ -245,7 +245,7 @@ int main(char[][] args) {
 		}
 		i++;
 	}
-	initVideo(fs, display, yuvOverlay, keepAspect, "CheeseCutter");
+	initVideo(fs, display, yuvOverlay, keepAspect);
 	audio.player.init();
 	com.session.initialize();
 	mainui = new UI();
