@@ -1,3 +1,7 @@
+/*
+CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
+*/
+
 module ui.input;
 import derelict.sdl.sdl;
 import com.fb;

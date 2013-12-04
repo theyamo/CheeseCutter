@@ -1,3 +1,7 @@
+/*
+CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
+*/
+
 import com.cpu;
 import ct.base;
 import ct.purge;

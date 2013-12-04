@@ -1,3 +1,7 @@
+/*
+CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
+*/
+
 import std.stdio;
 import std.string;
 import std.file;

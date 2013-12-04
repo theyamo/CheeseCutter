@@ -1,3 +1,7 @@
+/*
+CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
+*/
+
 module audio.audio;
 import derelict.sdl.sdl;
 import audio.resid.filter;
@@ -118,7 +122,6 @@ extern(C) {
 	}
 
 	__gshared void audio_callback_2(void *data, ubyte* stream, int len) {
-
 		int samplesRequested = cast(int) (len / short.sizeof);
 		int i,t;
 		if(!audio.player.isPlaying()) return;

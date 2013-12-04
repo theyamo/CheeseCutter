@@ -1,3 +1,7 @@
+/*
+CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
+*/
+
 module audio.callback;
 import derelict.sdl.sdl;
 import audio.player;

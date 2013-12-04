@@ -1,3 +1,7 @@
+/*
+CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
+*/
+
 module seq.fplay;
 import ui.ui;
 import seq.sequencer;
