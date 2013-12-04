@@ -315,21 +315,18 @@ class Statusline : Window {
 }
 
 final private class RootWindow : WindowSwitcher {
-	private  {
-		InputKeyjam inputKeyjam;
-		InsTable instable;
-		CmdTable cmdtable;
-		WindowSwitcher bottomTabSwitcher;
-		WaveTable wavetable;
-		PulseTable pulsetable;
-		FilterTable filtertable;
-		ChordTable chordtable;
-		Sequencer sequencer;
-		Fplay fplay;
-		UI ui;
-		Hotspot[] hotspots;
-	}
-
+	InputKeyjam inputKeyjam;
+	InsTable instable;
+	CmdTable cmdtable;
+	WindowSwitcher bottomTabSwitcher;
+	WaveTable wavetable;
+	PulseTable pulsetable;
+	FilterTable filtertable;
+	ChordTable chordtable;
+	Sequencer sequencer;
+	Fplay fplay;
+	UI ui;
+	Hotspot[] hotspots;
 	struct Clip {
 		int trans, no;
 	}
@@ -401,22 +398,6 @@ final private class RootWindow : WindowSwitcher {
 		refresh();
 	}
 
-	bool fplayEnabled() { return followplay; }
-
-	void activateByCoord(int x, int y) {
-		foreach(idx, win; windows) { 
-			if(win.area.overlaps(x, y)) {
-				activateWindow(idx);
-			}
-		}
-		foreach(idx, win; bottomTabSwitcher.windows) {
-			if(win.area.overlaps(x, y)) {
-				bottomTabSwitcher.activateWindow(idx);
-				break;
-			}
-		}
-	}
-
 	override void clickedAt(int x, int y, int b) {
 		foreach(idx, win; windows) { 
 			if(win.area.overlaps(x, y)) {
@@ -435,18 +416,6 @@ final private class RootWindow : WindowSwitcher {
 			if(spot.area.overlaps(x, y))
 				spot.callback(b);
 		}
-	}
-
-	void timerEvent() {
-		fplay.timerEvent();
-	}
-
-	Window windowByCoord(int x, int y) {
-		foreach(idx, win; windows ~ bottomTabSwitcher.windows) {
-			if(win.area.overlaps(x, y))
-				return win;
-		}
-		return null;
 	}
 
 	override int keypress(Keyinfo key) {
@@ -617,21 +586,6 @@ final private class RootWindow : WindowSwitcher {
 		return activeWindow.keyrelease(key);
 	}
 
-	void playFromCursor() {
-		Voice[] v = sequencer.getVoices();
-		auto d1 = v[0].activeRow;
-		auto d2 = v[1].activeRow;
-		auto d3 = v[2].activeRow;
-		audio.player.start([d1.trkOffset,d2.trkOffset,d3.trkOffset],
-					  [d1.seqOffset,d2.seqOffset,d3.seqOffset]);
-		fplay.startFromCursor();
-	}
-	
-	void reset() {
-		sequencer.reset();
-		sequencer.resetMark();
-	}
-
 	override void refresh() {
 		foreach(t; windows) {
 			t.refresh();
@@ -646,6 +600,50 @@ final private class RootWindow : WindowSwitcher {
 		foreach(t; windows) {
 			t.update();
 		}
+	}
+
+	bool fplayEnabled() { return followplay; }
+
+	void activateByCoord(int x, int y) {
+		foreach(idx, win; windows) { 
+			if(win.area.overlaps(x, y)) {
+				activateWindow(idx);
+			}
+		}
+		foreach(idx, win; bottomTabSwitcher.windows) {
+			if(win.area.overlaps(x, y)) {
+				bottomTabSwitcher.activateWindow(idx);
+				break;
+			}
+		}
+	}
+
+
+	void timerEvent() {
+		fplay.timerEvent();
+	}
+
+	Window windowByCoord(int x, int y) {
+		foreach(idx, win; windows ~ bottomTabSwitcher.windows) {
+			if(win.area.overlaps(x, y))
+				return win;
+		}
+		return null;
+	}
+
+	void playFromCursor() {
+		Voice[] v = sequencer.getVoices();
+		auto d1 = v[0].activeRow;
+		auto d2 = v[1].activeRow;
+		auto d3 = v[2].activeRow;
+		audio.player.start([d1.trkOffset,d2.trkOffset,d3.trkOffset],
+					  [d1.seqOffset,d2.seqOffset,d3.seqOffset]);
+		fplay.startFromCursor();
+	}
+	
+	void reset() {
+		sequencer.reset();
+		sequencer.resetMark();
 	}
 
 	void startFp() {
