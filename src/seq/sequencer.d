@@ -4,6 +4,7 @@ import com.fb;
 import ui.ui;
 import ct.base;
 import com.session;
+import com.util;
 import ui.input;
 import ui.dialogs;
 private {
@@ -474,15 +475,9 @@ protected abstract class VoiceTable : Window {
 				pastAll = false;
 		}
 		if(pastAll) return;
-		int nv = activeVoiceNum + i;
-		//int column_reset = (nv - activeVoiceNum) > 0 ? 0 : 1;
-		if(nv > 2) nv = 0;
-		else if(nv < 0) nv = 2;
-        
+		int nv = umod(activeVoiceNum + i, 0, 2);
 		while(voices[nv].pastEnd(posTable.pointerOffset)) {
-			nv += i;
-			if(nv > 2) nv = 0;
-			else if(nv < 0) nv = 2;
+			nv = umod(nv + i, 0, 2);
 		}
 		activateVoice(nv);
 	}
@@ -492,7 +487,6 @@ protected abstract class VoiceTable : Window {
 	}
 
 	void activateVoice(int voice) {
-		assert(voice >= 0 && voice < 3);
 		deactivate();
 		activeVoiceNum = voice;
 		activate();

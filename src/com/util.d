@@ -44,5 +44,6 @@ string petscii2D(PetString petstring) {
 }
 
 int clamp(int n, int l, int h) { return n > h ? h : n < l ? l : n; }
+int umod(int n, int l, int h) { return n > h ? l : n < l ? h : n; }
 // 0-terminated string to d string
 string ztos(char[] str) { return to!string(&str[0]); }

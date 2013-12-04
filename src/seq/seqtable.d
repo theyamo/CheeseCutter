@@ -2,6 +2,7 @@ module seq.seqtable;
 import main;
 import ui.ui;
 import com.fb;
+import com.util;
 import seq.sequencer;
 import com.session;
 import ct.base;
@@ -228,8 +229,7 @@ protected class SequenceTable : VoiceTable {
 	override void stepVoice(int i) {
 		int n = activeVoiceNum + i;
 		int c = (n - activeVoiceNum) > 0 ? 0 : 1;
-		if(n > 2) n = 0;
-		else if(n < 0) n = 2;
+		n = umod(n, 0, 2);
 		if(!voices[n].atEnd())
 			super.stepVoice(i);
 
