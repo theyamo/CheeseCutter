@@ -1364,5 +1364,10 @@ class Song {
 
 		generateChordIndex();
 	}
+
+	// hack to help sequencer rowcounting 
+	Sequence sequence(Track t) {
+		return seqs[t.no()];
+	}
 }
 

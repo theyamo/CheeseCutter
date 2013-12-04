@@ -75,9 +75,7 @@ protected class Posinfo {
 		// TODO... find out why the following doesn't cause problems
 		for(int i = 0; i <= trkOffset; i++) {
 			Track t = tracks[i];
-			//seq = t.sequence();
-			//counter += seq.rows;
-			counter += .sequence(t).rows;
+			counter += song.sequence(t).rows;
 		}
 		return counter + seqOffset;
 	}
@@ -281,12 +279,12 @@ public:
 		}
 	}
 
-	// TODO: move to vpos!
+	// TODO: move elsewhere...
 	int getRowcounter(int trkofs) {
 		int counter = 0;
 		for(int i = 0; i < trkofs; i++) {
 			Track t = tracks[i];
-			counter += sequence(t).rows;
+			counter += song.sequence(t).rows;
 		}
 		return counter;
 	}
@@ -1018,9 +1016,4 @@ protected:
 		}
 	}
 
-}
-
-// stupid, but... 
-Sequence sequence(Track t) {
-	return song.seqs[t.no()];
 }
