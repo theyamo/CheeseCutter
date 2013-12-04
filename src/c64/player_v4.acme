@@ -1,15 +1,46 @@
 ;;; ----------------------------------------
 ;;; CCUTTER 2.5.x musicplayer by abad
 ;;; Based on JCH NP 21.G4 by Laxity/VIB
-;;; Export version - editor specific code & data removed
 ;;; ----------------------------------------
-LOCATION	= $1000
+;;; 
+;;; Here's how to use this in your program:
+;;; 
+;;; - set EXPORT to TRUE (takes all editor specific code out)
+;;; 
+;;; - set the INCLUDE flags to match what you used in your song
+;;; 
+;;; - set the 'editorflag' byte near the end of the program code to
+;;; value other than 0
+;;; 
+;;; - set INSNO to match the actual number of instruments in your tune
+;;; (note that ct2util currently dumps the whole instrument table, you have
+;;; to manually shorten it to match the actual amount)
+;;; 
+;;; - remove the template tables (starting from where the program counter
+;;; gets set to $2000)
+;;; 
+;;; - paste in your dumped tune data
+;;; 
+;;; - assemble & enjoy
+
 ZREG		= $fb
 FALSE		= 0
 TRUE		= 1
 EXPORT		= FALSE				; if TRUE, editor specific code will be left out
 MULTISPEED	= TRUE				; support for multispeed playback
 INSNO		= 48				; number of instruments used
+		
+;;; ----------------------------------------
+;;; instr table enums
+;;; ----------------------------------------
+INS_AD		= 0				;
+INS_SR		= 1 * INSNO
+INS_HR		= 2 * INSNO			; $x0 = HR type, $0x arp delay count
+INS_4		= 3 * INSNO			; HR waveform
+INS_FLTP	= 4 * INSNO			; 
+INS_PULSP	= 5 * INSNO			; 
+INS_7		= 6 * INSNO			; 
+INS_ARP		= 7 * INSNO
 ;;; ----------------------------------------
 ;;; assembly conditionals
 ;;; ----------------------------------------
@@ -36,17 +67,6 @@ INCLUDE_VIBRAFEEL	= TRUE
 INCLUDE_BREAKSPEED	= TRUE
 INCLUDE_CHORD		= TRUE
 ;;; ----------------------------------------
-;;; instr table enums
-;;; ----------------------------------------
-INS_AD		= 0				;
-INS_SR		= 1 * INSNO
-INS_HR		= 2 * INSNO			; $x0 = HR type, $0x arp delay count
-INS_4		= 3 * INSNO			; HR waveform
-INS_FLTP	= 4 * INSNO			; 
-INS_PULSP	= 5 * INSNO			; 
-INS_7		= 6 * INSNO			; 
-INS_ARP		= 7 * INSNO
-;;; ----------------------------------------
 ;;; new effect commands
 ;;; ----------------------------------------
 CMD_SLIDE_UP	= $00				
@@ -60,8 +80,183 @@ CMD_PORTAMENTO	= $07
 CMD_STOP	= $08				;stop portamento/slide
 ;;; ----------------------------------------
 SUPERHIGH = CMD_SET_OFFSET
+;;; ----------------------------------------
+;;; the following data describes the player features
+;;; for the editor
+;;; ----------------------------------------
+!if EXPORT = FALSE {
+*=$e00
+features		= *
+requestedTables	!8 %00001111
+;;; 1 = points to wave table
+;;; 2 = points to cmd table (NOT IMPLEMENTED)
+;;; 3 = points to pulse table
+;;; 4 = points to filter table
+;;; ...
+instrumentFlags	!8 0,0,0,0,4,3,0,1
+;;; 1 = points to wave table
+;;; 3 = points to pulse table
+;;; 4 = points to filter table
+cmdFlags	!8 0,0,0,0,0,0,0,0
+		!8 0,0,0,0,0,0,0,0
+
+instrumentDescriptionsHeader
+        !16 idescr0,idescr1,idescr2,idescr3,idescr4,idescr5,idescr6,idescr7
+pulseDescriptionsHeader
+	!16 pdescr0,pdescr1,pdescr2,pdescr3
+filterDescriptionsHeader
+	!16 fdescr0,fdescr1,fdescr2,fdescr3
+waveDescriptionsHeader
+	!16 wdescr0,wdescr1
+cmdDescriptionsHeader
+	!16 mdescr0,mdescr1
+}
+
+;;; ----------------------------------------
+;;; some pointers for the editor
+;;; ----------------------------------------
+!if EXPORT = FALSE {
+		 *= $0fa0
+ofa0		!16 features
+ofa2		!16 volume
+ofa4		!16 editorflag
+ofa6		!16 songsets
+ofa8		!16 playspeed
+ofaa		!16 subnoteplay
+ofac		!16 submplayplay
+ofae		!16 instrumentDescriptionsHeader
+ofb0		!16 pulseDescriptionsHeader
+ofb2		!16 filterDescriptionsHeader
+ofb4		!16 waveDescriptionsHeader
+ofb6		!16 cmdDescriptionsHeader
+ofb8		!16 dummy
+ofba		!16 dummy
+ofbc		!16 arp1	
+ofbe		!16 arp2	
+ofc0		!16 filttab	
+ofc2		!16 pulstab	
+ofc4		!16 inst	
+ofc6		!16 track1	
+ofc8		!16 track2	
+ofca		!16 track3	
+ofcc		!16 seqlo	
+ofce		!16 seqhi	
+ofd0		!16 cmd1    
+ofd2		!16 s0	 
+ofd4		!16 speed	 
+ofd6		!16 tracklo
+ofd8		!16 voice	 ;voice 1c X, for voice on/of flagging
+ofda		!16 gate
+ofdc		!16 chord
+ofde		!16 trans
+ofe0		!16 chordindex
+ofe2		!16 shtrans
+ofe6		!16 dummy
+ofe8		!16 dummy
+ofea		!16 dummy
+ofec		!16 dummy
+ofee		!16 newseq
+version		!pet "cc4.01"
+}
+;;; ----------------------------------------
+;;; editor specific player routines, will be 
+;;; left out from a finalized tune
+;;; ----------------------------------------
+!if EXPORT = FALSE {
+*=$f000
+idescr0 !raw "Attack / Decay.",0
+idescr1 !raw "Sustain / Release.",0
+idescr2 !raw "Restart type / arpeggio speed.&$00 = 3 Frame Restart.&$40 = Soft restart.&$80 = Hard Restart. &$00-$0F = Arpeggio delay value.",0
+idescr3 !raw "Hard Restart waveform.",0
+idescr4 !raw "Filter Table pointer.",0
+idescr5 !raw "Pulse Table pointer.",0
+idescr6 !raw "Hard restart SR envelope value.",0
+idescr7 !raw "Wave Table pointer.",0
 	
-		 *= LOCATION
+pdescr0	!raw "Duration and direction.&$00-$7F = Add n frames.&$80-$FF = Subtract n frames.",0
+pdescr1	!raw "Add value.",0
+pdescr2	!raw "Initial pulse value.&Note: Nibbles are reversed! $48 = $8400",0
+pdescr3	!raw "Pointer to next set ($00-$3F) or $7F = stop pulse program.",0
+
+fdescr0	!raw "Duration or filter type.&$00-$7f = Duration or $90-$F0 select filter type.",0
+fdescr1	!raw "Add value or filter resonance and channel mask.",0
+fdescr2	!raw "Initial filter value or $FF = skip.",0
+fdescr3	!raw "Pointer to next set ($00-$3F) or $7F = stop filter program.",0
+
+;;; wave table help
+wdescr0 !raw "Transpose value / Loop.&$00-$5F = Relative transpose up,&"
+	!raw "$80-$DF = Absolute tuning (unaffected by note/transpose value).&"
+	!raw "$7E = loop to previous row, $7F = loop to row",0
+wdescr1 !raw "Waveform / Wave delay / Loop pointer&"
+	!raw "$00 = Do nothing.&"
+	!raw "$01 - $0F = Override instrument's Wave Delay value for this row.&"
+	!raw "$10 - $DF = Waveform; SID Control Register value.&"
+	!raw "$E0 - $EF = SID Control Register value $00 - $0F.&"
+	!raw "$00 - $FF = Loop pointer, if Byte 1 = $7F.",0
+
+
+;;; Command table help
+mdescr0 !raw "Command number.&"
+	!raw "$0 = Slide up.&"
+	!raw "$1 = Slide down.&"
+	!raw "$2 = Hi-fi Vibrato.&"
+	!raw "$3 = Detune current note.&"
+	!raw "$4 = Set ADSR for the current note.&"
+	!raw "$5 = Lo-fi vibrato.&"
+	!raw "$6 = Set wave.&"
+	!raw "$7 = Portamento a tie note.&"
+	!raw "$8 = Stop portamento",0
+mdescr1 !raw "Parameter values.&"
+	!raw "Slide up/down: Slide speed (signed 16-bit).&"
+	!raw "Vibrato: 1st byte, lonibble: vibrato 'feel'&"
+	!raw "    2nd byte, hinibble: Speed.&"
+	!raw "              lonibble: Depth divider (bigger value = narrower vibrato).&"
+	!raw "Detune: (signed 16-bit).&"
+	!raw "ADSR: (self-explanatory).&"
+	!raw "Lo-fi vibrato: Speed / Depth."
+	!raw "&Set waveform (in the last parameter byte).&"
+;;; 	!raw "Portamento: (Portamento must be applied to tie notes only and reset with e.g. No command 8-00 00).",0	
+	!raw "Portamento: Portamento speed. Runs until a command 8-00 00 is given).",0	
+
+	
+	
+*=$f800
+submplayplay	lda #$80
+		sta state
+		ldx #2
+		jmp updsound
+
+;;; ----------------------------------------
+;;; used for triggering a note from th editor
+;;; ----------------------------------------
+subnoteplay	
+		sta shnote,x
+		cmp #3
+		lda #0
+		rol
+		eor #1
+		sta tienote,x
+		tya
+		sta shinst,x
+
+		lda #2
+		sta tsync,x
+		lda #0
+		sta synccnt,x
+		lda #1
+		sta newinsflag,x
+		lda #0
+		sta effstate,x
+		sta chordvalue,x
+		lda #$80
+		sta state
+		sta chordtpos,x
+		
+		jmp updsound
+}
+		
+
+		 *= $1000
 
 init		jmp subinit
 play		jmp subplay
@@ -88,6 +283,17 @@ subinit0	lda songsets,y
 		bne subinit0
 		lda songsets,y			;set song speed
 		sta speed
+!if EXPORT = FALSE {
+		cmp #2
+		bcs subinit00
+		sty inittemp
+		tay
+		lda chord,y
+		ldy inittemp
+subinit00	sta playspeed
+}
+		lda editorflag	
+		beq subinit3	
 
 		ldx #2
 subinit1	lda songsets+1,y
@@ -366,7 +572,7 @@ syncnottied	lda tsync,x
 
 		lda cmd2			;Set adsr for HR
 		sta ad,x			
-laxhr		lda cmd3
+laxhr		lda inst+INS_7,y
 		sta sr,x
 syncnohr	lda #$fe
 		sta gate,x
@@ -1202,6 +1408,9 @@ filterskip	lda filtlo
 		
 		rts
 
+dummy		!8 0
+		!8 $fc,$3d	; end-of-code mark for packer
+
 ;---------------------------------------
 freqtable_lo
 		!8 $16,$27,$38,$4b,$5f,$73
@@ -1240,6 +1449,7 @@ freqtable_hi
 ;---------------------------------------
  ;Registers
 voicon		!8 1,1,1			;flags channels on and off
+editorflag	!8 0				; set to >0 from packer
 		
 state		!8 0
 inittemp	= state		; real state value overrides temp at the end of init
@@ -1375,21 +1585,90 @@ plo		!8 0,0,0
 phi		!8 0,0,0
 }
 clrlast		 ;Clear variables to here
+		!8 $fc,$3c
 
-songsets
-seqlo
-seqhi
-track1
-track2
-track3
-seq
-arp1
-arp2
-inst
-cmd1
-cmd2
-cmd3
-filttab
-pulstab
-chord
-chordindex
+*=$2000
+;---------------------------------------
+songsets	!16 track1,track2,track3
+		!8 5,7
+
+;---------------------------------------
+		*= songsets + $200
+track1		!8 $a0,$00,$f0,0
+		!for .v, $1fe {
+				!8 $f0,00
+		}
+
+		*= track1+$0400
+track2		!8 $a0,$00,$f0,0
+		!for .v, $1fe {
+				!8 $f0,00
+		}
+
+		*= track2+$0400
+track3		!8 $a0,$00,$f0,0
+		!for .v, $1fe {
+				!8 $f0,00
+		}
+		
+
+;---------------------------------------
+		*= track3 + $400
+seqlo		!fi 128, <s0
+seqhi		!for .v, 128 {
+			!8 >s0+((.v-1)*256)
+ 		}
+		
+;---------------------------------------
+		*= seqlo+$0100
+
+!macro emptyseq {
+		!8 $f0,$f0,$60,$00
+		!8 $bf
+}
+		
+s0		+emptyseq
+!set curPC = s0
+!for .v, 128-1 {
+		*= curPC + $100
+		!set curPC = *
+		+emptyseq
+}
+;---------------------------------------
+		*= curPC + $100
+arp1		!8 0
+
+;---------------------------------------
+		*= arp1+$0100
+arp2		!8 0
+
+;---------------------------------------
+		*= arp2+$0100
+inst		!fi 48*8,0
+
+
+;;; (more or less) dynamic tables follow......
+		*= inst+$0200
+supertab
+cmd1		!8 $00
+		*= cmd1+$40
+cmd2		!8 $0f
+		*= cmd2+$40
+cmd3		!8 $00
+		*= cmd3+$40
+		
+;---------------------------------------
+		
+;---------------------------------------
+		*= supertab+$0100
+filttab		!8 $7f,$00,$ff,$7f
+
+;---------------------------------------
+		*= filttab+$0100
+pulstab		!8 $7f,$00,$ff,$7f
+
+		*= pulstab+$0100
+chord		!fi 128,0
+chordindex	!fi 32,0
+
+		

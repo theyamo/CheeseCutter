@@ -64,7 +64,7 @@ tar:
 	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-src.tar.bz2
 # --------------------------------------------------------------------------------
 
-src/c64/player.bin: src/c64/player_v400.acme
+src/c64/player.bin: src/c64/player_v4.acme
 	acme -f cbm --outfile $@ $<
 
 src/c64/custplay.bin: src/c64/custplay.acme
