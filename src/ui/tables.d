@@ -3,9 +3,8 @@ import ui.ui;
 import ui.dialogs;
 import ui.input;
 import ui.help;
-import main;
+import com.session;
 import com.util;
-import ct.base;
 import derelict.sdl.sdl;
 import std.string;
 

@@ -45,6 +45,7 @@ OBJS=   src/derelict/util/compat.o \
 	src/com/fb.o \
 	src/com/cpu.o \
 	src/com/kbd.o \
+	src/com/session.o \
 	src/com/util.o \
 	src/main.o \
 	src/ui/tables.o \

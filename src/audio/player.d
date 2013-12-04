@@ -1,6 +1,8 @@
 module audio.player;
 import com.cpu;
-import ct.base;
+//import ct.base;
+import com.session;
+import ct.base : Element, Offsets;
 import audio.timer;
 import audio.callback;
 import audio.audio;

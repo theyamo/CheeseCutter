@@ -1,6 +1,7 @@
 module main;
 import derelict.sdl.sdl;
 import com.fb;
+import com.session;
 import com.kbd;
 import ui.ui;
 import ui.input;
@@ -26,11 +27,6 @@ version(darwin) {
 version(Win32) {
 	const DIR_SEPARATOR = '\\';
 }
-
-
-UI mainui;
-Video video;
-Screen screen;
 
 class ArgumentError : Exception {
 	this(string msg) {
@@ -247,8 +243,8 @@ int main(char[][] args) {
 	}
 	initVideo(fs, display, yuvOverlay, keepAspect, "CheeseCutter");
 	audio.player.init();
+	com.session.initialize();
 	mainui = new UI();
-
 	loadFile(filename);
 	
 	video.updateFrame();

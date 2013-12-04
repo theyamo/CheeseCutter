@@ -3,6 +3,7 @@ import main;
 import seq.sequencer;
 import seq.seqtable;
 import com.fb;
+import com.session;
 import ui.ui;
 import ui.input;
 import derelict.sdl.sdl;

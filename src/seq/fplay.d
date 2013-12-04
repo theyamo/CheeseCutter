@@ -4,6 +4,7 @@ import seq.sequencer;
 import seq.seqtable;
 import ui.input;
 import ct.base;
+import com.session;
 import derelict.sdl.sdl;
 
 private int mode;
@@ -54,13 +55,13 @@ protected class FPlayVoice : SeqVoice {
 
 protected class FPlayVoiceTable : SequenceTable {
 	this(Rectangle a) {
-		super(a, fpPos);
+		super(a, fplayPos);
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0;v<3;v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 			voices[v] = new FPlayVoice(VoiceInit(song.tracks[v],
-												 na, fpPos[v]));
+												 na, fplayPos[v]));
 		}
 	}
 
@@ -76,7 +77,7 @@ class Fplay : Window {
 		FPlayVoiceTable ftable;
 	}
 	this(Rectangle a) { 
-		assert(fpPos !is null);
+		assert(fplayPos !is null);
 		ftable = new FPlayVoiceTable(a);
 		super(a); 
 	}
@@ -97,9 +98,9 @@ class Fplay : Window {
 		case SDLK_HOME:
 			int m1, m2, m3;
 			if(!key.mods & KMOD_CTRL) break;
-			m1 = fpPos.pos[0].mark;
-			m2 = fpPos.pos[1].mark;
-			m3 = fpPos.pos[2].mark;
+			m1 = fplayPos.pos[0].mark;
+			m2 = fplayPos.pos[1].mark;
+			m3 = fplayPos.pos[2].mark;
 			stop();
 			audio.player.start([m1, m2, m3], [0, 0, 0]);
 			ftable.jump(Jump.ToMark,true);
@@ -107,9 +108,9 @@ class Fplay : Window {
 		/+ jump forward/backward disabled for now ...
 		case SDLK_PLUS:
 			int m1, m2, m3;
-			m1 = ++fpPos.pos[0].trkOffset;
-			m2 = ++fpPos.pos[1].trkOffset;
-			m3 = ++fpPos.pos[2].trkOffset;
+			m1 = ++fplayPos.pos[0].trkOffset;
+			m2 = ++fplayPos.pos[1].trkOffset;
+			m3 = ++fplayPos.pos[2].trkOffset;
 			stop();
 			audio.player.start([m1, m2, m3], [0, 0, 0]);
 			int[] m = [m1 , m2, m3];
@@ -118,9 +119,9 @@ class Fplay : Window {
 			break;
 		case SDLK_MINUS:
 			int m1, m2, m3;
-			m1 = --fpPos.pos[0].trkOffset;
-			m2 = --fpPos.pos[1].trkOffset;
-			m3 = --fpPos.pos[2].trkOffset;
+			m1 = --fplayPos.pos[0].trkOffset;
+			m2 = --fplayPos.pos[1].trkOffset;
+			m3 = --fplayPos.pos[2].trkOffset;
 			stop();
 			audio.player.start([m1, m2, m3], [0, 0, 0]);
 			int[] m = [m1 , m2, m3];
@@ -138,13 +139,13 @@ class Fplay : Window {
 	}
 
 	void start(int p) {
-		fpPos.dup(tPos);
+		fplayPos.dup(seqPos);
 		ftable.jump(p,true);
 		mode = p;
 	}
 
 	void startFromCursor() {
-		fpPos.dup(tPos);
+		fplayPos.dup(seqPos);
 		ftable.centerTo(0);
 		mode = Jump.ToBeginning;
 	}

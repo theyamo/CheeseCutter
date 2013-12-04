@@ -3,6 +3,7 @@ import main;
 import ui.ui;
 import com.fb;
 import seq.sequencer;
+import com.session;
 import ct.base;
 import ui.input;
 import derelict.sdl.sdl;
@@ -211,7 +212,7 @@ protected class SequenceTable : VoiceTable {
 		if(!audio.player.isPlaying || audio.player.keyjamEnabled) return;
 		// trackbar
 		for(int i = 0 ; i < 3; i++) {
-			Posinfo fp = fpPos[i];
+			Posinfo fp = fplayPos[i];
 			Posinfo vp = posTable[i];
 			int tp = fp.rowCounter - vp.rowCounter + anchor;
 			if(tp >= 0 && tp < area.height) {

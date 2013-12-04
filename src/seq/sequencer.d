@@ -3,6 +3,7 @@ import main;
 import com.fb;
 import ui.ui;
 import ct.base;
+import com.session;
 import ui.input;
 import ui.dialogs;
 private {
@@ -21,7 +22,6 @@ const int playbackBarColor = 6;
 const int wrapBarColor = 4;
 
 bool displaySequenceRowcounter = true;
-PosinfoTable fpPos, tPos;
 int stepValue = 1;
 int highlight = 4;
 int highlighOffset;
@@ -30,15 +30,6 @@ int stepCounter;
 
 int tableTop = 15, tableBot = -16, tableScrMid = 0;
 int anchor = 16;
-
-static this() {
-	tPos = new PosinfoTable();
-	fpPos = new PosinfoTable();
-	for(int i = 0; i < 3; i++) {
-		tPos[i].tracks = song.tracks[i];
-		fpPos[i].tracks = song.tracks[i];
-	}
-}
 
 private {
 	bool useRelativeNotes = true;
@@ -799,9 +790,9 @@ final class Sequencer : Window {
 		int h = screen.height - 10;
 		super(a,ui.help.HELPSEQUENCER);
 		mainUI = m;
-		trackmapTable = new TrackmapTable(a, tPos);
-		sequenceTable = new SequenceTable(a, tPos);
-		trackTable = new TrackTable(a, tPos);
+		trackmapTable = new TrackmapTable(a, seqPos);
+		sequenceTable = new SequenceTable(a, seqPos);
+		trackTable = new TrackTable(a, seqPos);
 		voiceTables = [cast(VoiceTable)trackmapTable, sequenceTable, trackTable];
 		activeView = sequenceTable;
 		activeView.activate();

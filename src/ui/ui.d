@@ -2,7 +2,9 @@ module ui.ui;
 import derelict.sdl.sdl;
 import std.conv;
 import main;
-import ct.base;
+//import ct.base;
+import com.session;
+import ct.base : Song;
 import ct.purge;
 import ui.help;
 import ui.input;
@@ -843,16 +845,16 @@ final class UI {
 			}
 			else if(rootwin.fplayEnabled()) { // drop tracking
 				stop(false);
-				seq.sequencer.tPos.dup(seq.sequencer.fpPos);
+				seqPos.dup(fplayPos);
 				rootwin.stopFp();
 				return;
 			}
 			// song is playing but plain F1 pressed; restart
 		}
 		int m1, m2, m3;
-		m1 = seq.sequencer.tPos.pos[0].mark;
-		m2 = seq.sequencer.tPos.pos[1].mark;
-		m3 = seq.sequencer.tPos.pos[2].mark;
+		m1 = seqPos.pos[0].mark;
+		m2 = seqPos.pos[1].mark;
+		m3 = seqPos.pos[2].mark;
 		stop();
 		if(!fromStart) {
 			audio.player.start([m1, m2, m3], [0, 0, 0]);
@@ -996,7 +998,7 @@ final class UI {
 				 if(!audio.player.isPlaying) break;
 				 if(rootwin.fplayEnabled()) {
 					 stop(false);
-					 tPos.dup(fpPos);
+					 seqPos.dup(fplayPos);
 					 rootwin.stopFp();
 					 statusline.display("Tracking off.");
 					 break;
@@ -1010,7 +1012,7 @@ final class UI {
 				 break;
 			 case SDLK_F4:
 				 if(rootwin.fplayEnabled()) 
-					 tPos.dup(fpPos);
+					 seqPos.dup(fplayPos);
 				 stop();
 				 if(rootwin.fplayEnabled())
 					 rootwin.stopFp();

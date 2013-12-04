@@ -1,7 +1,7 @@
 module audio.timer;
 
 import audio.audio;
-import ct.base;
+import com.session;
 
 __gshared int sec, min;
 __gshared private int clockCounter;

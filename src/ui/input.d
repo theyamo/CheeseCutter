@@ -1,15 +1,16 @@
 module ui.input;
 import derelict.sdl.sdl;
 import com.fb;
-import ct.base;
+import com.session;
 import com.util;
+import ct.base;
 import seq.sequencer;
 import audio.player;
 import ui.ui;
 import main;
 import std.string;
 import std.utf;
-import std.stdio;
+// import std.stdio;
 
 enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT }
 
@@ -441,7 +442,7 @@ class InputString : Input {
 				try {
 					validate(instring);
 				}
-				catch(UtfException e) {
+				catch(UTFException e) {
 					instring = old.dup;
 					break;
 				}

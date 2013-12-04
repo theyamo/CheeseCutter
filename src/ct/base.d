@@ -1,10 +1,10 @@
 module ct.base;
-
 import std.stdio;
 import std.string;
 import std.file;
 import std.zlib;
 import com.cpu;
+import com.session;
 
 enum Offsets {
 	Features, Volume, Editorflag, 
@@ -1364,12 +1364,5 @@ class Song {
 
 		generateChordIndex();
 	}
-}
-
-/+ vars +/
-__gshared Song song;
-
-static this() {
-	song = new Song();
 }
 

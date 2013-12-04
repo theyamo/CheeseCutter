@@ -1,6 +1,7 @@
 module seq.trackmap;
 import main;
 import com.fb;
+import com.session;
 import ui.ui;
 import seq.sequencer;
 import seq.tracktable;
@@ -30,7 +31,7 @@ protected class TrackmapVoice : TrackVoice {
 		}
 		
 		void printTrack() {
-			int fpCounter = fpPos.rowCounter;
+			int fpCounter = fplayPos.rowCounter;
 			int delta = fpCounter - counter; 
 			int fgcol = (delta >= 0 && delta < wseq.seq.rows) ? 13 : 5;
 			int trk = wseq.trk.getValue2();
