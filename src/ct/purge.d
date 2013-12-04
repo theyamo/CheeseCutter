@@ -246,13 +246,11 @@ class Purger {
 					++pos;
 				} while(pos < 64 && !pulse_used[i]);
 //				com.util.hexdump(song.pulseTable[0..64], 4);
-
 			}
 			if(!filter_used[i])
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 
 		}
-		writeln(pulse_used);
 	}
 
 	void purgeChordtable() {

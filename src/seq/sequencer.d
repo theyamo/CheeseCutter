@@ -70,9 +70,7 @@ protected class Posinfo {
 	int rowCounter;
 	Tracklist tracks;
 	int getRowCounter() {
-		int counter = 0;
-		// for(int i = 0; i <= trkOffset; i++) 
-		// TODO... find out why the following doesn't cause problems
+		int counter;
 		for(int i = 0; i <= trkOffset; i++) {
 			Track t = tracks[i];
 			counter += song.sequence(t).rows;
@@ -107,7 +105,7 @@ protected class PosinfoTable {
 		foreach(ref p; pos) { p.rowCounter = o; }
 		return 0;
 	}
-	//int anchor() { return pos[0].anchor; }
+
 	void dup(PosinfoTable pt) {
 		for(int i = 0 ; i < 3; i++) {
 			Posinfo p = pos[i];
@@ -329,13 +327,11 @@ protected:
 }
 
 protected abstract class VoiceTable : Window {
-	protected {
-		Voice[3] voices;
-		Voice active;
-		alias active activeVoice;
-		PosinfoTable posTable;
-	}
-
+	Voice[3] voices;
+	Voice active;
+	alias active activeVoice;
+	PosinfoTable posTable;
+	
 	this(Rectangle a, PosinfoTable pi) {
 		super(a);
 		posTable = pi;
@@ -694,7 +690,7 @@ protected abstract class VoiceTable : Window {
 		doStep(true,extra);
 	}
 
-	void superSstep(int st, int extra, int height) {
+	deprecated void superSstep(int st, int extra, int height) {
 		bool wrapOk = true;
 		bool atBeg = activeVoice.atBeg();
 		
@@ -761,8 +757,7 @@ protected abstract class VoiceTable : Window {
 
 	// helper for trackcopy/paste
 	Tracklist getTracklist(Voice v) {
-		return v.tracks[v.activeRow.trkOffset..v.tracks.length];
-//		return v.tracks[activeVoice.activeRow.trkOffset..activeVoice.tracks.length];
+		return v.tracks[v.activeRow.trkOffset .. v.tracks.length];
 	}
 
 	Tracklist getTracklist() {
