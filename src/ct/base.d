@@ -1,14 +1,12 @@
 /*
 CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
-
 module ct.base;
 import std.stdio;
 import std.string;
 import std.file;
 import std.zlib;
 import com.cpu;
-import com.session;
 import com.util;
 
 enum Offsets {
@@ -369,7 +367,6 @@ struct Tracklist {
 	}
 
 	void wrapOffset(address offset) {
-		if(song.ver < 6) return;
 		if((offset & 0xff00) >= 0xfe00) return;
 		assert(offset >= 0 && offset < 0x400);
 		if(offset >= getListLength())
@@ -904,6 +901,8 @@ class Song {
 		ubyte[] debuf = cast(ubyte[])std.zlib.uncompress(inbuf[3..$],167832);
 		int offset = 65536;
 		ver = debuf[offset++];
+		if(ver < 6) 
+			throw new Exception("The song is incompatible (too old) for this version of the editor.");
 		clock = debuf[offset++];
 		multiplier = debuf[offset++];
 		sidModel = debuf[offset++];
