@@ -130,11 +130,11 @@ protected:
 		Track trk = activeRow.track; // FIX
 		trackinput.flush();
 		{
-			if(!doInsert)
+			if(!doInsert) {
 				tracks.expand();
+			}
 			else {
 				tracks.insertAt(activeRow.trkOffset);
-				activeRow.track.setValue(0x80, 0);
 				if(pos.trkOffset <= pos.mark)
 					pos.mark++;
 			}
@@ -186,8 +186,8 @@ protected:
 }
 
 protected abstract class BaseTrackTable : VoiceTable {
-protected:
 	this(Rectangle a, PosinfoTable pi) { super(a, pi); }
+
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL) {
 			switch(key.raw)

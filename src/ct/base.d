@@ -336,12 +336,31 @@ struct Tracklist {
 		deleteAt(getListLength()-1);
 	}
 
+	// returns transpose value other than 0x80 above idx OR below(if idx == 0)
+	ubyte getTrans(int idx) {
+		if(idx > 0) {
+			do {
+				if(list[idx].trans > 0x80 &&
+				   list[idx].trans < 0xc0)
+					return list[idx].trans;
+			} while(idx-- > 0);
+		}
+		else if(idx == 0) {
+			do {
+				if(list[idx].trans > 0x80 &&
+				   list[idx].trans < 0xc0)
+					return list[idx].trans;
+			} while(idx++ < getListLength());
+		}
+		return 0xa0;
+	}
+
 	void insertAt(int offset) {
 		assert(offset >= 0 && offset < list.length);
 		for(int i = cast(int)(list.length - 2); i >= offset; i--) {
 			list[i+1] = list[i].dup;
 		}
-		list[offset].setTrans(0x80);
+		list[offset].setTrans(getTrans(offset));
 		list[offset].setNo(0);
 		if(wrapOffset() >= offset) {
 			wrapOffset( cast(address)(wrapOffset() + 1));
