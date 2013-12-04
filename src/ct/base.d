@@ -5,6 +5,7 @@ import std.file;
 import std.zlib;
 import com.cpu;
 import com.session;
+import com.util;
 
 enum Offsets {
 	Features, Volume, Editorflag, 
@@ -443,8 +444,7 @@ struct Track {
 	}
 
 	void setValue(int tr, int no) {
-		if(tr < 0x80) tr = 0x80;
-		if(tr > 0xf3) tr = 0xf3;
+		tr = clamp(tr, 0x80, 0xf3);
 		if(no < 0) no = 0;
 		if(no >= MAX_SEQ_NUM) no = MAX_SEQ_NUM-1;
 		data[0] = tr & 255;
@@ -472,9 +472,7 @@ struct Track {
 	void transpose(int val) {
 		if(trans == 0x80 || trans >= 0xf0) return;
 		int t = trans + val;
-		if(t > 0xbf) setTrans(0xbf);
-		else if(t < 0x80) setTrans(0x80);
-		else setTrans(cast(ubyte)t);
+		setTrans(cast(ubyte)clamp(t, 0x80, 0xbf));
 	}
 }
 
@@ -1127,8 +1125,7 @@ class Song {
 	}
 
 	void splitSequence(int seqno, int seqofs) {
-		if(seqno == 0) return;
-		if(seqofs == 0) return;
+		if(seqno == 0 || seqofs == 0) return;
 		int suborig = subtune;
 		int newseqno = getFreeSequence(0);
 		Sequence s = seqs[seqno];

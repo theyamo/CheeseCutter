@@ -829,63 +829,6 @@ public:
 		return activeView.voices;
 	}
 
-protected:
-	override void update() {
-		activeView.update();
-		input = activeView.input;
-	}
-
-	override void activate() {}
-
-	override void deactivate() {
-		activeView.deactivate();
-	}
-
-	override void refresh() {
-	  foreach(b; voiceTables) {
-	    b.refresh();
-	  }
-	}
-
-	void insertCallback(int param) {
-		if(param >= MAX_SEQ_NUM) return;
-		SequenceRowData s = activeView.getRowData();
-		Sequence fr = song.seqs[param];
-		Sequence to = s.seq;
-		to.insertFrom(fr, s.seqOffset);
-		activeView.step(0);
-	}
-
-	void copyCallback(int param) {
-		if(param >= MAX_SEQ_NUM) return;
-		SequenceRowData s = activeView.getRowData();
-		Sequence fr = song.seqs[param];
-		Sequence to = s.seq; 
-		to.copyFrom(fr);
-		activeView.step(0);
-	}
-
-	void clipCallback(int num) {
-		Tracklist tr = activeView.getTracklist()[0..num];
-		clip.length = tr.length;
-		for(int i = 0; i < tr.length; i++) {
-			clip[i].trans = tr[i].trans;
-			clip[i].no = tr[i].no;
-		}
-	}
-  
-	void pasteCallback() {
-		// FIX: ADD .dup operator to Tracklist
-		Tracklist vtr = activeView.getTracklist()[0..clip.length];
-		for(int i = 0; i < clip.length; i++) {
-			vtr[i].setValue(clip[i].trans,clip[i].no);
-		}
-		// reinitialize trackinput for voices
-		refresh();
-		// make sure cursor not past track end
-		activeView.step(0);
-	}
-
 	override int keypress(Keyinfo key) {
 		if(key.raw >= SDLK_KP1 && key.raw <= SDLK_KP9) {
 			stepValue = key.raw - SDLK_KP1 + 1;
@@ -1005,4 +948,61 @@ protected:
 		}
 	}
 
+protected:
+	override void update() {
+		activeView.update();
+		input = activeView.input;
+	}
+
+	override void activate() {}
+
+	override void deactivate() {
+		activeView.deactivate();
+	}
+
+	override void refresh() {
+	  foreach(b; voiceTables) {
+	    b.refresh();
+	  }
+	}
+
+private:
+	void insertCallback(int param) {
+		if(param >= MAX_SEQ_NUM) return;
+		SequenceRowData s = activeView.getRowData();
+		Sequence fr = song.seqs[param];
+		Sequence to = s.seq;
+		to.insertFrom(fr, s.seqOffset);
+		activeView.step(0);
+	}
+
+	void copyCallback(int param) {
+		if(param >= MAX_SEQ_NUM) return;
+		SequenceRowData s = activeView.getRowData();
+		Sequence fr = song.seqs[param];
+		Sequence to = s.seq; 
+		to.copyFrom(fr);
+		activeView.step(0);
+	}
+
+	void clipCallback(int num) {
+		Tracklist tr = activeView.getTracklist()[0..num];
+		clip.length = tr.length;
+		for(int i = 0; i < tr.length; i++) {
+			clip[i].trans = tr[i].trans;
+			clip[i].no = tr[i].no;
+		}
+	}
+  
+	void pasteCallback() {
+		// FIX: ADD .dup operator to Tracklist
+		Tracklist vtr = activeView.getTracklist()[0..clip.length];
+		for(int i = 0; i < clip.length; i++) {
+			vtr[i].setValue(clip[i].trans,clip[i].no);
+		}
+		// reinitialize trackinput for voices
+		refresh();
+		// make sure cursor not past track end
+		activeView.step(0);
+	}
 }
