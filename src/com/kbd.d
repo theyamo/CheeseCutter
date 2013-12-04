@@ -14,7 +14,7 @@ void translate(ref Keyinfo key) {
 }
 
 void translate_super(ref Keyinfo key) {
-	if(key.mods & KMOD_META) {
+	if(key.mods & KMOD_META || key.mods & KMOD_RALT) {
         switch(key.key) {
         case SDLK_1: key.key = SDLK_KP1; break;
         case SDLK_2: key.key = SDLK_KP2; break;
@@ -31,7 +31,10 @@ void translate_super(ref Keyinfo key) {
             key.mods |= KMOD_CTRL | KMOD_SHIFT;
             break;
         }
-        key.mods ^= KMOD_META; // meta off                                                                                          
+		if(key.mods & KMOD_META)
+			key.mods ^= KMOD_META; // meta off
+		if(key.mods & KMOD_RALT)
+			key.mods ^= KMOD_RALT; // ralt off
     }
 }
 

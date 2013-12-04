@@ -75,7 +75,7 @@ void mainloop() {
 				mods = evt.key.keysym.mod;
 				key = evt.key.keysym.sym;
 				unicode = evt.key.keysym.unicode;
-				mods &= 0xffff - KMOD_NUM;
+				mods &= 0xffffff - KMOD_NUM;
 				auto keyinfo = Keyinfo(key, mods, unicode);
 				com.kbd.translate(keyinfo);
 				version(darwin) {
