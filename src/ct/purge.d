@@ -231,7 +231,7 @@ class Purger {
 					seekNMark(song.filterTable, &filter_used[0], e.cmd.value - 0x60);
 				
 			});
-
+/+ TODO: table optimizer 
 		for(i = 0; i < 63; i++) {
 			if(!pulse_used[i]) {
 				int j = i+1, pos = i+1;
@@ -249,12 +249,20 @@ class Purger {
 					}
 					++pos;
 				} while(pos < 64 && !pulse_used[i]);
-//				com.util.hexdump(song.pulseTable[0..64], 4);
 			}
 			if(!filter_used[i])
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 
 		}
+		+/
+
+		for(i = 0; i < 64; i++) {
+			if(!pulse_used[i]) 
+				song.pulseTable[i * 4 .. i * 4 + 4] = 0;
+			if(!filter_used[i])
+				song.filterTable[i * 4 .. i * 4 + 4] = 0;
+		}
+		
 	}
 
 	void purgeChordtable() {

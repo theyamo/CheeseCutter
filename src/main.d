@@ -174,7 +174,7 @@ int main(char[][] args) {
 
 	DerelictSDL.load();
 	scope(exit) SDL_Quit();
-	
+
 	i = 1;
 	while(i < args.length) {
 		switch(args[i])
