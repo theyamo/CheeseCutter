@@ -331,10 +331,6 @@ final private class Toplevel : WindowSwitcher {
 	Fplay fplay;
 	UI ui;
 	Hotspot[] hotspots;
-	struct Clip {
-		int trans, no;
-	}
-	Clip[] clip;
 	bool followplay;
 
  	this(UI ui) {

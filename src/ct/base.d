@@ -318,7 +318,8 @@ struct Tracklist {
 		}
 		assert(0);
 	}
-	
+	alias getListLength trackLength;
+
 	int getHighestTrackNo(int voice) {
 		int i, highest;
 		for(i = 0; i < length; i++) {

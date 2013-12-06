@@ -163,6 +163,7 @@ public:
 		return (trk.trans >= 0xf0);
 	}
 
+	// TODO: remove this, use tracklist.trackLength instead
 	int getVoiceEnd() {
 		for(int i = 0; i < TRACK_LIST_LENGTH; i++) {
 			if(tracks[i].trans >= 0xf0) return i;
@@ -796,11 +797,11 @@ final class Sequencer : Window {
 								&copyCallback, 0x80);
 		
 		queryClip = new QueryDialog("Copy number of tracks to clipboard: $",
-								&clipCallback, 0x40);
+								&clipCallback, 0x80);
 		
 		// top & bottom
-		tableBot = -area.height/2;
-		tableTop = area.height/2;
+		tableBot = -area.height / 2;
+		tableTop = area.height / 2;
 		tableScrMid = area.y + area.height / 2 + 1;
 		sequenceTable.centerTo(0);
 	}
@@ -893,7 +894,7 @@ public:
 				 }
 				 if(activeView != trackTable) {
 					 activateTracktable();
-					 trackTable.displayTracklist((key.mods & KMOD_SHIFT) > 0 ? true : false);
+					 trackTable.displayTracklist = (key.mods & KMOD_SHIFT) > 0;
 					 break;
 				 }
 				 if(key.mods & KMOD_SHIFT) {
@@ -991,8 +992,13 @@ private:
 
 	void clipCallback(int num) {
 		Tracklist tr = activeView.getTracklist()[0..num];
-		clip.length = tr.length;
-		for(int i = 0; i < tr.length; i++) {
+		int length = tr.length;
+		int trackLength = activeView.activeVoice.tracks.trackLength;
+		if(activeView.activeVoice.activeRow.trkOffset + num >=
+		   trackLength)
+			length = trackLength;
+		clip.length = length;
+		for(int i = 0; i < length; i++) {
 			clip[i].trans = tr[i].trans;
 			clip[i].no = tr[i].no;
 		}
