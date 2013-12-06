@@ -318,7 +318,7 @@ class Statusline : Window {
 	}
 }
 
-final private class RootWindow : WindowSwitcher {
+final private class Toplevel : WindowSwitcher {
 	InputKeyjam inputKeyjam;
 	InsTable instable;
 	CmdTable cmdtable;
@@ -337,8 +337,8 @@ final private class RootWindow : WindowSwitcher {
 	Clip[] clip;
 	bool followplay;
 
- 	this(UI pui) {
-		ui = pui;
+ 	this(UI ui) {
+		this.ui = ui;
 		int zone1x = 0;
 		int zone2x = screen.width / 2 + zone1x - 1;
 		int zone1y = 4;
@@ -739,11 +739,11 @@ final class UI {
 	}
 	static Statusline statusline;
 	static Infobar infobar;
-	static RootWindow rootwin;
+	static Toplevel toplevel;
 
 	this() {
 		statusline = new Statusline(Rectangle(0, 2, 1));
-		rootwin = new RootWindow(this);
+		toplevel = new Toplevel(this);
 
 		infobar = new Infobar(Rectangle(4, screen.height - 4, 1, screen.width - 8));
 	
@@ -768,14 +768,14 @@ final class UI {
 
 		if(com.fb.mode > 0)
 			ui.tables.shortTitles = false;
-		rootwin.activate();
+		toplevel.activate();
 		activateDialog(aboutdialog);
 		update();
 	}
 
 	Window activeWindow() {
 		if(dialog) return dialog;
-		return rootwin.activeWindow;
+		return toplevel.activeWindow;
 	}
 
 	Input activeInput() {
@@ -800,7 +800,7 @@ final class UI {
 			infobar.update();
 			if(dialog) dialog.update();
 			tickcounter1 = 0;
-			rootwin.timerEvent();
+			toplevel.timerEvent();
 
 			if(audio.player.isPlaying || audio.player.keyjamEnabled) {
 				if(printSIDDump) {
@@ -833,7 +833,7 @@ final class UI {
 
 	void update() {
 		infobar.update();
-		rootwin.update();
+		toplevel.update();
 		if(dialog)
 			dialog.update();
 	}
@@ -842,13 +842,13 @@ final class UI {
 		if(audio.player.isPlaying) {
 			if(key.mods & KMOD_SHIFT) { // already playing, reinit tracking
 				stop(false);
-				rootwin.startFp();
+				toplevel.startFp();
 				return;
 			}
-			else if(rootwin.fplayEnabled()) { // drop tracking
+			else if(toplevel.fplayEnabled()) { // drop tracking
 				stop(false);
 				seqPos.dup(fplayPos);
-				rootwin.stopFp();
+				toplevel.stopFp();
 				return;
 			}
 			// song is playing but plain F1 pressed; restart
@@ -861,16 +861,16 @@ final class UI {
 		if(!fromStart) {
 			audio.player.start([m1, m2, m3], [0, 0, 0]);
 			if(key.mods & KMOD_SHIFT) {
-				rootwin.startFp();
+				toplevel.startFp();
 			}
-			rootwin.startPlayback(Jump.ToMark);
+			toplevel.startPlayback(Jump.ToMark);
 		}
 		else {
 			audio.player.start();
 			if(key.mods & KMOD_SHIFT) {
-				rootwin.startFp(Jump.ToBeginning);
+				toplevel.startFp(Jump.ToBeginning);
 			}
-			rootwin.startPlayback(Jump.ToBeginning);
+			toplevel.startPlayback(Jump.ToBeginning);
 		}
 	}
 
@@ -879,7 +879,7 @@ final class UI {
 		if(key.mods & KMOD_ALT && key.mods & KMOD_CTRL && key.raw == SDLK_KP0) {
 			if(++restartcounter > 1) {
 				song = new Song();
-				rootwin.sequencer.reset();
+				toplevel.sequencer.reset();
 				refresh();
 				clearcounter = 0;
 				UI.statusline.display("Editor restarted.");
@@ -994,30 +994,30 @@ final class UI {
 				 F1orF2(key, true);
 				 break;
 			 case SDLK_F3:
-				 rootwin.playFromCursor();
+				 toplevel.playFromCursor();
 				 break;
 			 case SDLK_SCROLLOCK:
 				 if(!audio.player.isPlaying) break;
-				 if(rootwin.fplayEnabled()) {
+				 if(toplevel.fplayEnabled()) {
 					 stop(false);
 					 seqPos.dup(fplayPos);
-					 rootwin.stopFp();
+					 toplevel.stopFp();
 					 statusline.display("Tracking off.");
 					 break;
 				 }
 				 else {
 					 stop(false);
-					 rootwin.startFp();
+					 toplevel.startFp();
 					 statusline.display("Tracking on.");
 					 break;
 				 }
 				 break;
 			 case SDLK_F4:
-				 if(rootwin.fplayEnabled()) 
+				 if(toplevel.fplayEnabled()) 
 					 seqPos.dup(fplayPos);
 				 stop();
-				 if(rootwin.fplayEnabled())
-					 rootwin.stopFp();
+				 if(toplevel.fplayEnabled())
+					 toplevel.stopFp();
 				 break;
 			 case SDLK_F8:
 				 if(key.mods & KMOD_SHIFT)
@@ -1059,27 +1059,20 @@ final class UI {
 			}
 		}
 		else {
-			rootwin.keypress(key);
+			toplevel.keypress(key);
 		}
 		return OK;
 	}	
 
 	int keyrelease(Keyinfo key) {
-		rootwin.keyrelease(key);
+		toplevel.keyrelease(key);
 		return OK;
 	}
 
 	void clickedAt(int x, int y, int b) {
 		if(dialog)
 			dialog.clickedAt(x, y, b);
-		else rootwin.clickedAt(x, y, b);
-	}
-
-	static void activateInstrument(int ins) {
-		if(ins > 47) ins = 47;
-		if(ins < 0) ins = 0;
-		rootwin.instable.seekRow(ins % 48);
-		activeInstrument = ins % 48;
+		else toplevel.clickedAt(x, y, b);
 	}
 
 	private void saveCallback(string s) {
@@ -1108,7 +1101,7 @@ final class UI {
 
 	void loadCallback(string s, bool doImport) {
 		stop();
-		rootwin.reset();
+		toplevel.reset();
 		if(std.file.exists(s) == 0 || std.file.isDir(s)) {
 			statusline.display("File not found! " ~ s);
 			return;
@@ -1177,6 +1170,13 @@ final class UI {
 		keyjamStatus = enable;
 	}
 
+	void activateInstrumentTable(int ins) {
+		UI.activateInstrument(ins);
+		// just hacking away.....
+		toplevel.activateWindow(2);
+		toplevel.keypress(Keyinfo(SDLK_i, KMOD_ALT, 0));
+	}
+
 	static void stop() {
 		stop(true);
 	}
@@ -1186,19 +1186,19 @@ final class UI {
 			audio.player.stop();
 		}
 		infobar.update();
-		rootwin.stopPlayback();
+		toplevel.stopPlayback();
 	}
 
 	static void refresh() {
 		screen.clrscr();
-		rootwin.refresh();
+		toplevel.refresh();
 		UI.statusline.update();
 	}
 
-	void activateInstrumentTable(int ins) {
-		UI.activateInstrument(ins);
-		// just hacking away.....
-		rootwin.activateWindow(2);
-		rootwin.keypress(Keyinfo(SDLK_i, KMOD_ALT, 0));
+	static void activateInstrument(int ins) {
+		if(ins > 47) ins = 47;
+		if(ins < 0) ins = 0;
+		toplevel.instable.seekRow(ins % 48);
+		activeInstrument = ins % 48;
 	}
 }
