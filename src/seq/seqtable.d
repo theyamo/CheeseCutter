@@ -106,7 +106,7 @@ protected class SeqVoice : Voice {
 		int scry = area.y + area.height;
 		int trkofs = pos.trkOffset, seqofs = pos.seqOffset - anchor;
 		int lasttrk = tracks.getListLength();
-		int hcount = pos.rowCounter + area.height - 1, hl = highlight, hlofs = highlighOffset, row = area.height;
+		int hcount = pos.rowCounter + area.height - 1, hl = highlight, hlofs = highlightOffset, row = area.height;
 		Sequence seq;
 
 		seqofs += area.height;// - pos.delta;

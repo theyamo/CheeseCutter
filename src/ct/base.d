@@ -8,12 +8,14 @@ import std.file;
 import std.zlib;
 import com.cpu;
 import com.util;
+import com.session;
 
-enum Offsets {
+enum Offsets
+{
 	Features, Volume, Editorflag, 
 	Songsets, PlaySpeed, Subnoteplay, Submplayplay, InstrumentDescriptionsHeader,
-		PulseDescriptionsHeader, FilterDescriptionsHeader, WaveDescriptionsHeader,
-		CmdDescriptionsHeader, FREQTABLE, FINETUNE, Arp1, Arp2,
+	PulseDescriptionsHeader, FilterDescriptionsHeader, WaveDescriptionsHeader,
+	CmdDescriptionsHeader, FREQTABLE, FINETUNE, Arp1, Arp2,
 	FILTTAB, PULSTAB, Inst, Track1, Track2, Track3, SeqLO, SeqHI,
 	CMD1, S00, SPEED, TRACKLO, VOICE, GATE, ChordTable, TRANS, ChordIndexTable, 
 	SHTRANS, FOO3, NEXT, CURINST, GEED, NEWSEQ
@@ -43,7 +45,7 @@ enum {
 	TRACK_LIST_LENGTH = 0x200,
 	OFFSETTAB_LENGTH = 16 * 6,
 	SEQ_END_MARK = 0xbf,
-	SONG_REVISION = 10,
+	SONG_REVISION = 11,
 	NOTE_KEYOFF = 1,
 	NOTE_KEYON = 2,
 }
@@ -722,11 +724,11 @@ class Song {
 		this(string msg) { super(msg); }
 	}
 
-	enum DatafileOffsets {
+	enum DatafileOffset {
 		Binary, Header = 65536, 
-			Title = Header + 256 + 5, Author = Title + 32, Release = Author + 32,
-			Insnames = Title + 40 * 4,
-			Subtunes = Insnames + 1024 * 2
+		Title = Header + 256 + 5, Author = Title + 32, Release = Author + 32,
+		Insnames = Title + 40 * 4,
+		Subtunes = Insnames + 1024 * 2
 	}
 	
 	private {
@@ -931,19 +933,23 @@ class Song {
 			songspeeds[0..32] = debuf[offset .. offset+32];
 			offset += 32;
 		}
-		offset = DatafileOffsets.Title;
+		if(ver > 10) {
+			com.session.highlight = debuf[offset++];
+			com.session.highlightOffset = debuf[offset++];
+		}
+		offset = DatafileOffset.Title;
 		title[0..32] = cast(char[])debuf[offset .. offset + 32];
 		author[0..32] = cast(char[])debuf[offset + 32 .. offset + 64];
 		release[0..32] = cast(char[])debuf[offset + 64 .. offset + 96];
 		offset += 40 * 4;
-		assert(DatafileOffsets.Insnames == offset);
-		offset = DatafileOffsets.Insnames;
+		assert(DatafileOffset.Insnames == offset);
+		offset = DatafileOffset.Insnames;
 
 		ubyte[] insnames = 
 			cast(ubyte[])(&insLabels)[0..1];
 		insnames[] = debuf[offset .. offset + 48*32];
-		
-		assert(DatafileOffsets.Subtunes == offset + 1024 * 2);
+
+		assert(DatafileOffset.Subtunes == offset + 1024 * 2);
 		offset += 1024 * 2;
 		int len = 1024*3*32;
 		subtunes = new Subtunes(debuf[offset .. offset + len]);
@@ -1125,21 +1131,24 @@ class Song {
 		}
 		
 		b[offset .. offset+32] = songspeeds[];
-		offset = DatafileOffsets.Title;
+		offset += 32;
+		b[offset++] = cast(ubyte)com.session.highlight;
+		b[offset++] = cast(ubyte)com.session.highlightOffset;
+
+		offset = DatafileOffset.Title;
 
 		foreach(str; [title, author, release, message]) {
 			b[offset .. offset + 32] = cast(ubyte[])str[];
 			offset += 32;
 		}
 
+		offset = DatafileOffset.Insnames;
 		ubyte[] arr;
-		offset = DatafileOffsets.Insnames;
-
 		arr = cast(ubyte[])(&insLabels)[0..1]; 
 		b[offset .. offset + arr.length] = arr[];
 		offset += arr.length;
-		offset += 32 * 32 - 0x200;
 
+		offset += 32 * 32 - 0x200;
 		arr = cast(ubyte[])(&subtunes.subtunes)[0..1]; 
 		b[offset .. offset + arr.length] = arr[];
 		offset += arr.length;

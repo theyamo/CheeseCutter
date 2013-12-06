@@ -28,8 +28,6 @@ const int wrapBarColor = 4;
 
 bool displaySequenceRowcounter = true;
 int stepValue = 1;
-int highlight = 4;
-int highlighOffset;
 int activeVoiceNum;
 int stepCounter;
 
@@ -402,7 +400,7 @@ protected abstract class VoiceTable : Window {
 					highlight--;
 				break;
 			case SDLK_0:
-				highlighOffset = posTable.rowCounter+posTable.pointerOffset;
+				highlightOffset = posTable.rowCounter+posTable.pointerOffset;
 				break;
 			case SDLK_r:
 				displaySequenceRowcounter ^= 1;
