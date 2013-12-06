@@ -106,11 +106,11 @@ protected class SeqVoice : Voice {
 		int scry = area.y + area.height;
 		int trkofs = pos.trkOffset, seqofs = pos.seqOffset - anchor;
 		int lasttrk = tracks.getListLength();
-		int hcount = pos.rowCounter + area.height - 1, hl = highlight, hlofs = highlightOffset, row = area.height;
+		int hcount = pos.rowCounter - anchor + area.height - 1;
+		int row = area.height;
 		Sequence seq;
 
 		seqofs += area.height;// - pos.delta;
-
 		wseq = getRowData(trkofs, seqofs);
 		trkofs = wseq.trkOffset2;
 		seqofs = wseq.seqOffset;
@@ -165,7 +165,7 @@ protected class SeqVoice : Voice {
 					if(i == 0) printTrack();
 					else {
 						if(.seq.sequencer.displaySequenceRowcounter == true) {
-							int c = (hcount - hlofs) % hl ? 11 : 12;
+							int c = (hcount - highlightOffset) % highlight ? 11 : 12;
 							screen.cprint(area.x, scry, c, 0, format(" %02X ", i));
 						}
 						else screen.cprint(area.x, scry, 0, 0, "    ");
