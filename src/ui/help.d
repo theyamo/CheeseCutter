@@ -103,6 +103,7 @@ Ctrl-Q/A................Transpose semitone up/down
 Ctrl-M/N................Increase/decrease row highlight value
 Ctrl-0(zero)............Reset highlighting to current row
 Ctrl-R..................Show/hide row counters for sequences
+Ctrl-T..................Toggle notes relative to current transpose
 Ctrl-P..................Split current sequence into two from cursor pos.
                         `+dUse with caution.
 
