@@ -174,7 +174,12 @@ int main(char[][] args) {
 
 	DerelictSDL.load();
 	scope(exit) SDL_Quit();
-
+	scope(failure) {
+		if(song !is null) {
+			derr.writefln("Crashed! Saving backup...");
+			song.save("_backup.ct");
+		}
+	}
 	i = 1;
 	while(i < args.length) {
 		switch(args[i])
@@ -247,7 +252,7 @@ int main(char[][] args) {
 	}
 	initVideo(fs, display, yuvOverlay, keepAspect);
 	audio.player.init();
-	com.session.initialize();
+	initSession();
 	mainui = new UI();
 	loadFile(filename);
 	

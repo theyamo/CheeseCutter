@@ -15,7 +15,7 @@ Video video;
 Screen screen;
 PosinfoTable fplayPos, seqPos;
 
-void initialize() {
+void initSession() {
 	song = new Song();
 	seqPos = new PosinfoTable();
 	fplayPos = new PosinfoTable();
