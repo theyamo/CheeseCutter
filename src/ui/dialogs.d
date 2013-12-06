@@ -8,7 +8,7 @@ import main;
 import com.fb;
 import com.util;
 import com.session;
-import ct.base : Sequence;
+private import ct.base;
 import ui.help;
 import ui.ui;
 import ui.input;

@@ -12,8 +12,6 @@ import std.string;
 import std.conv;
 import std.stdio;
 
-alias writefln w;
-
 enum Command { None, ExportPRG, ExportSID, Dump, Import, Init }
 const string[] exts = [ "", "prg", "sid", "s", "ct", "ct" ];
 
@@ -88,7 +86,7 @@ string defineOutfn(int cmd, string infn) {
 void doPurge(ref Song sng) {
 	if(noPurge) return;
 	explain("Purging data...");
-	Purger p = new Purger(sng, verbose);
+	Purge p = new Purge(sng, verbose);
 	p.purgeAll();
 }
 

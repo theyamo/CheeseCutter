@@ -34,7 +34,7 @@ protected class SeqVoice : Voice {
 			{
 			case SDLK_RETURN:
 				int r = activeRow.seq.rows;
-				int t = 4 * highlight;
+				int t = 4 * song.highlight;
 				activeRow.seq.expand(activeRow.seqOffset,
 								   (t - (r + t) % t));
 				break;
@@ -165,7 +165,8 @@ protected class SeqVoice : Voice {
 					if(i == 0) printTrack();
 					else {
 						if(.seq.sequencer.displaySequenceRowcounter == true) {
-							int c = (hcount - highlightOffset) % highlight ? 11 : 12;
+							int c = (hcount - song.highlightOffset) %
+								song.highlight ? 11 : 12;
 							screen.cprint(area.x, scry, c, 0, format(" %02X ", i));
 						}
 						else screen.cprint(area.x, scry, 0, 0, "    ");

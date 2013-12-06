@@ -5,7 +5,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 module audio.player;
 import com.cpu;
 import com.session;
-import ct.base : Element, Offsets;
+private import ct.base;
 import audio.timer;
 import audio.callback;
 import audio.audio;

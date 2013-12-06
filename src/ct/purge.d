@@ -9,9 +9,7 @@ import std.stdio;
 import std.string;
 import com.util;
 
-alias writefln w;
-
-class Purger {
+class Purge {
 	Song song;
 	private {
 		bool[0x80] seqUsed;

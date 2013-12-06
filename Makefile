@@ -9,7 +9,7 @@ CFLAGS=$(COMFLAGS)
 CXXFLAGS=$(CFLAGS) -I./src -O2
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@
 OUTPUT_OPTION = 
-DC=gdc-4.8
+DC=gdc
 EXE=
 TARGET=ccutter
 OBJCOPY=objcopy
@@ -27,8 +27,8 @@ $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
 
 ct: $(C64OBJS) $(CTOBJS)
 
-ct2util: $(C64OBJS) $(UTILOBJS) $(C_OBJS)
-	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(C_OBJS) $(LIBS) 
+ct2util: $(C64OBJS) $(UTILOBJS)
+	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS) 
 
 c64: $(C64OBJS)
 

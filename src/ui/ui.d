@@ -6,9 +6,8 @@ module ui.ui;
 import derelict.sdl.sdl;
 import std.conv;
 import main;
-//import ct.base;
+import ct.base;
 import com.session;
-import ct.base : Song;
 import ct.purge;
 import ui.help;
 import ui.input;
@@ -24,10 +23,8 @@ import std.array;
 import com.fb;
 import com.util;
 import seq.sequencer;
-import ct.purge;
 import audio.audio;
 
-alias writefln w;
 const PAGESTEP = 16;
 const CONFIRM_TIMEOUT = 90;
 const UPDATE_RATE = 2; // 50 / n times per second
@@ -680,9 +677,7 @@ final private class Toplevel : WindowSwitcher {
 	private void optimizeSong() {
 		if(++optimizecounter > 1) {
 			refresh();
-			//Purger p = new Purger(song,true);
-			//p.purgeAll();
-			(new Purger(song,true)).purgeAll();
+			(new Purge(song,true)).purgeAll();
 			refresh();
 			UI.statusline.display("Song data optimized.");
 			optimizecounter = 0;

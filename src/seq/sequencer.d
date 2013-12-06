@@ -373,10 +373,10 @@ protected abstract class VoiceTable : Window {
 				jump(Jump.ToEnd,true);
 				break;
 			case SDLK_PAGEUP:
-				step(-PAGESTEP * 2 * highlight);
+				step(-PAGESTEP * 2 * song.highlight);
 				break;
 			case SDLK_PAGEDOWN:
-				step(PAGESTEP * 2 * highlight);
+				step(PAGESTEP * 2 * song.highlight);
 				break;
 			default:
 				break;
@@ -392,15 +392,15 @@ protected abstract class VoiceTable : Window {
 				centralize();
 				break;
 			case SDLK_m:
-				if(highlight < 16) 
-					highlight++;
+				if(song.highlight < 16) 
+					song.highlight++;
 				break;
 			case SDLK_n:
-				if(highlight > 1)
-					highlight--;
+				if(song.highlight > 1)
+					song.highlight--;
 				break;
 			case SDLK_0:
-				highlightOffset = posTable.rowCounter+posTable.pointerOffset;
+				song.highlightOffset = posTable.rowCounter+posTable.pointerOffset;
 				break;
 			case SDLK_r:
 				displaySequenceRowcounter ^= 1;
@@ -450,10 +450,10 @@ protected abstract class VoiceTable : Window {
 			else step(-1);
 			break;
 		case SDLK_PAGEUP:
-			step(-PAGESTEP * highlight);
+			step(-PAGESTEP * song.highlight);
 			break;
 		case SDLK_PAGEDOWN:
-			step(PAGESTEP * highlight);
+			step(PAGESTEP * song.highlight);
 			break;
 		case SDLK_TAB:
 			foreach(v; voices) { v.input.nibble = 0; }

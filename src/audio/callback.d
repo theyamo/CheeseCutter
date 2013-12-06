@@ -7,6 +7,7 @@ import derelict.sdl.sdl;
 import audio.player;
 import com.session;
 import com.cpu;
+import ct.base;
 
 /+ holds the state of cpu and memory for frame debug dumps. not implemented for now. +/
 class SongState {

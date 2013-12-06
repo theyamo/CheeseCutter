@@ -8,7 +8,6 @@ import std.file;
 import std.zlib;
 import com.cpu;
 import com.util;
-import com.session;
 
 enum Offsets
 {
@@ -892,6 +891,9 @@ class Song {
 	char[] playerID;
 	int subtune;
 	Subtunes subtunes;
+	// these used to be sequencer vars but they're here now since they get saved with the tune
+	int highlight = 4;
+	int highlightOffset = 0;
 
 	this() {
 		this(cast(ubyte[])import("player.bin"));
@@ -934,8 +936,8 @@ class Song {
 			offset += 32;
 		}
 		if(ver > 10) {
-			com.session.highlight = debuf[offset++];
-			com.session.highlightOffset = debuf[offset++];
+			highlight = debuf[offset++];
+			highlightOffset = debuf[offset++];
 		}
 		offset = DatafileOffset.Title;
 		title[0..32] = cast(char[])debuf[offset .. offset + 32];
@@ -1132,8 +1134,8 @@ class Song {
 		
 		b[offset .. offset+32] = songspeeds[];
 		offset += 32;
-		b[offset++] = cast(ubyte)com.session.highlight;
-		b[offset++] = cast(ubyte)com.session.highlightOffset;
+		b[offset++] = cast(ubyte)highlight;
+		b[offset++] = cast(ubyte)highlightOffset;
 
 		offset = DatafileOffset.Title;
 
