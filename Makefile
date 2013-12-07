@@ -1,7 +1,7 @@
 #LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL 
 LIBS=-ldl -lstdc++
 #COMFLAGS= -mmacosx-version-min=10.7
-COMFLAGS=-g -m32
+COMFLAGS=-g
 DLINK=$(COMFLAGS)
 VERSION=$(shell cat Version)
 DFLAGS=$(COMFLAGS) -I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font

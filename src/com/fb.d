@@ -66,12 +66,12 @@ abstract class Video {
 		width = 800; height = 600;
 		useFullscreen = fs;
 	}
-/+
+
 	~this() {
 		if(surface !is null)
 			SDL_FreeSurface(surface);
 	}
-+/	
+
 	abstract void enableFullscreen(bool fs);
 
 	protected void resize(bool maxres) {
@@ -199,12 +199,12 @@ class VideoYUV : Video {
 			+/
 		enableFullscreen(fs > 0);
 	}
-/+
+
 	~this() {
 		if(overlay !is null)
 			SDL_FreeYUVOverlay(overlay);
 	}
-+/
+
 	override protected void resize(bool maxres) {
 		if(maxres) {
 			if(keepAspect) {

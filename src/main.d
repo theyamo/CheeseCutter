@@ -173,7 +173,11 @@ int main(char[][] args) {
 	bool fnDefined = false;
 
 	DerelictSDL.load();
-	scope(exit) SDL_Quit();
+	scope(exit) {
+		delete mainui;
+		delete video;
+		SDL_Quit();
+	}
 	scope(failure) {
 		if(song !is null) {
 			derr.writefln("Crashed! Saving backup...");
@@ -261,8 +265,6 @@ int main(char[][] args) {
 	SDL_PauseAudio(0);
 	mainloop();
 	audio.audio.audio_close();
-	delete mainui;
-	delete video;
 	return 0;   
 }
 
