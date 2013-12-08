@@ -84,7 +84,7 @@ Alt-Left/Right..........Activate previous/next subtune
 F5......................Enter to the track column
 Shift-F5................Display tracks alongside the sequences
 F6......................Enter to the note column
-F7......................Display tracks only ('track view mode')
+F7......................Display tracks only ('overview mode')
 
 Home/End................Move cursor to SEQ start/end OR screen top/bottom
 Shift-Home/End..........Move cursor to song start/end
