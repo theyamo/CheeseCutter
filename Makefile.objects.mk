@@ -119,3 +119,11 @@ C64OBJS = src/c64/player.bin \
 	src/c64/custplay.bin
 
 CTOBJS	=
+
+DIST_FILES = \
+	./ChangeLog \
+	./COPYING \
+	./README \
+	./ccutter$(EXE) \
+	./ct2util$(EXE) \
+	./tunes/*

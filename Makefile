@@ -1,10 +1,8 @@
-#LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL 
 LIBS=-ldl -lstdc++
-#COMFLAGS= -mmacosx-version-min=10.7
 COMFLAGS=-g
 DLINK=$(COMFLAGS)
 VERSION=$(shell cat Version)
-DFLAGS=$(COMFLAGS) -I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font
+DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font
 CFLAGS=$(COMFLAGS) 
 CXXFLAGS=$(CFLAGS) -I./src -O2
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@
@@ -38,27 +36,15 @@ release: all
 	strip ccutter$(EXE)
 	strip ct2util$(EXE)
 
-	rm -rf CheeseCutter.app
-	mkdir -p CheeseCutter.app/Contents/Frameworks
-	cp -r arch/MacOs/Contents CheeseCutter.app
-	cp -r /Library/Frameworks/SDL.framework CheeseCutter.app/Contents/Frameworks
-	cp $(TARGET) CheeseCutter.app/Contents/MacOS
-	cp ct2util CheeseCutter.app/Contents/MacOS
-
 dist:	release
-	rm -rf dist
-	rm -rf CheeseCutter_$(VERSION).dmg
-	arch/makedmg.sh
+	tar --transform 's,^\.,cheesecutter-$(VERSION),' -cvf cheesecutter-$(VERSION)-linux-x86.tar.gz $(DIST_FILES)
 
 clean: 
 	rm -f *.o *~ resid/*.o resid-fp/*.o ccutter ct2util \
 		$(C64OBJS) $(OBJS) $(CTOBJS) $(CXX_OBJS) $(UTILOBJS) $(C_OBJS)
 
 dclean: clean
-	rm -rf dist
-	rm -rf CheeseCutter.app
-	rm -rf CheeseCutter_$(VERSION).dmg
-
+	rm cheesecutter-$(VERSION)-linux-x86.tar.gz
 
 tar:
 	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-src.tar.bz2
