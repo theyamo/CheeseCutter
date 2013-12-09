@@ -320,15 +320,6 @@ struct Tracklist {
 		assert(0);
 	}
 
-	int highestTrackNo(int voice) {
-		int i, highest;
-		for(i = 0; i < length; i++) {
-			Track t = list[i];
-			if(t.no > highest) highest = t.no;
-		}
-		return highest;
-	}
-
 	void expand() {
 		insertAt(trackLength());
 	}
