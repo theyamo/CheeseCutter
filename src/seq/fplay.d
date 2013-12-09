@@ -20,7 +20,7 @@ protected class FPlayVoice : SeqVoice {
 	}
 
 	override protected void scroll(int steps) {
-		int lasttrk = tracks.getListLength();
+		int lasttrk = tracks.trackLength();
 		int seqofs = pos.seqOffset + steps;
 		int trkofs2 = pos.trkOffset;
 		Sequence seq;

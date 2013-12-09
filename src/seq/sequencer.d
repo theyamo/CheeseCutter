@@ -177,7 +177,7 @@ public:
 		static SequenceRowData s;
 		int trkofs2 = trkofs;
 		Sequence seq;
-		int lasttrk = tracks.getListLength();
+		int lasttrk = tracks.trackLength();
 		Sequence getSeq(Track t) {
 			if(t.trans >= 0xf0) return song.seqs[0];
 			else return song.seqs[t.no];

@@ -64,7 +64,7 @@ class TrackVoice : SeqVoice {
 		int y,i;
 		int trkofs = pos.trkOffset;
 		int rows = 0;
-		int lasttrk = tracks.getListLength();
+		int lasttrk = tracks.trackLength();
  		int counter;
 		int scry = area.y + 1; 
 
@@ -148,13 +148,13 @@ protected:
 		{
 			if(!doDelete) {
 				
-				if(tracks.getListLength() == 1) {
+				if(tracks.trackLength() == 1) {
 					tracks[0].setValue(0xa0, 0);
 				}
 				tracks.shrink();
 			}
 			else {
-				if(tracks.getListLength() == 1) {
+				if(tracks.trackLength() == 1) {
 					tracks[0].setValue(0xa0, 00);
 				}
 				else {
@@ -162,7 +162,7 @@ protected:
 
 					// TODO: add check that tracklist is not shrinked below trkOffset
 					/+
-					if(pos.trkOffset >= tracks.getListLength()-1) 
+					if(pos.trkOffset >= tracks.trackLength()-1) 
 						super.step(-1);+/
 				}
 			}
@@ -171,8 +171,8 @@ protected:
 		if(pos.mark > pos.trkOffset)
 			pos.mark--;
 		if(pos.mark < 0) pos.mark = 0;
-		if(pos.mark >= tracks.getListLength) {
-			pos.mark = tracks.getListLength - 1;
+		if(pos.mark >= tracks.trackLength) {
+			pos.mark = tracks.trackLength - 1;
 		}
 	}
 
@@ -210,7 +210,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 					for(int i = 0; i < voices.length; i++) {
 						auto v = cast(TrackVoice)voices[i];
 	
-//					if(v.pos.trkOffset < v.tracks.getListLength()-1)
+//					if(v.pos.trkOffset < v.tracks.trackLength()-1)
 							v.trackDelete((key.mods & KMOD_SHIFT) > 0);
 					} 
 				}
@@ -251,7 +251,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 			case SDLK_DELETE:
 				auto v = (cast(TrackVoice)activeVoice);
 				v.trackDelete(true);
-				if(v.pos.trkOffset >= v.tracks.getListLength()-1) 
+				if(v.pos.trkOffset >= v.tracks.trackLength()-1) 
 					jump(Jump.ToEnd,true);
 				return OK;
 			default: break;

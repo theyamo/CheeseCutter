@@ -25,7 +25,7 @@ protected class TrackmapVoice : TrackVoice {
 		int h = area.y + area.h + 1;
 		int y,i;
 		int trkofs = pos.trkOffset;
-		int lasttrk = tracks.getListLength();
+		int lasttrk = tracks.trackLength();
  		int counter;
 		int scry = area.y + 1;
 

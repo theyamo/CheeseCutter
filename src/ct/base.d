@@ -281,7 +281,7 @@ struct Tracklist {
 		return tl;
 	}
 
-	Track last() { return list[getListLength()]; }
+	Track last() { return list[trackLength()]; }
 
 	void opIndexAssign(Track t, size_t il) {
 		list[il] = t;
@@ -295,7 +295,7 @@ struct Tracklist {
 
 	int opApply(int delegate(ref Track) dg) {
 		int result;
-		for(int i = 0; i < getListLength(); i++) {
+		for(int i = 0; i < trackLength(); i++) {
 			result = dg(list[i]);
 			if(result) break;
 		}
@@ -311,7 +311,7 @@ struct Tracklist {
 		return result;
 	}
 
-	int getListLength() {
+	int trackLength() {
 		int i;
 		for(i = 0; i < length; i++) {
 			Track t = list[i];
@@ -319,9 +319,8 @@ struct Tracklist {
 		}
 		assert(0);
 	}
-	alias getListLength trackLength;
 
-	int getHighestTrackNo(int voice) {
+	int highestTrackNo(int voice) {
 		int i, highest;
 		for(i = 0; i < length; i++) {
 			Track t = list[i];
@@ -331,11 +330,11 @@ struct Tracklist {
 	}
 
 	void expand() {
-		insertAt(getListLength());
+		insertAt(trackLength());
 	}
 
 	void shrink() {
-		deleteAt(getListLength()-1);
+		deleteAt(trackLength()-1);
 	}
 
 	// returns transpose value other than 0x80 above idx OR below(if idx == 0)
@@ -352,7 +351,7 @@ struct Tracklist {
 				if(list[idx].trans > 0x80 &&
 				   list[idx].trans < 0xc0)
 					return list[idx].trans;
-			} while(idx++ < getListLength());
+			} while(idx++ < trackLength());
 		}
 		return 0xa0;
 	}
@@ -390,8 +389,8 @@ struct Tracklist {
 	void wrapOffset(address offset) {
 		if((offset & 0xff00) >= 0xfe00) return;
 		assert(offset >= 0 && offset < 0x400);
-		if(offset >= getListLength())
-			offset = cast(ushort)(getListLength() - 1);
+		if(offset >= trackLength())
+			offset = cast(ushort)(trackLength() - 1);
 		offset *= 2;
 		offset |= 0xf000;
 		last() = [(offset & 0xff00) >> 8, offset & 0x00ff];
