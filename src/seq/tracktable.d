@@ -51,7 +51,7 @@ class TrackVoice : SeqVoice {
 	override void deactivate() {
 		super.deactivate();
 		with(pos) {
-			if(trkOffset >= getVoiceEnd()) {
+			if(trkOffset >= tracks.trackLength()) {
 				trkOffset = 0; rowCounter = seqOffset;
 			}
 		}
@@ -387,7 +387,7 @@ protected class TrackTable : BaseTrackTable {
 		case SDLK_UP, SDLK_PAGEUP:
 			activeVoice.trackFlush(posTable.pointerOffset);
 			int t = activeVoice.activeRow.trkOffset;
-			if(t == 0) t = activeVoice.getVoiceEnd();
+			if(t == 0) t = activeVoice.tracks.trackLength();
 			SequenceRowData s = activeVoice.getRowData(t - 1, 0);
 			step(-s.seq.rows, 0, area.height);
 			centerTo(tableBot);

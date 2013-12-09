@@ -128,7 +128,7 @@ protected class TrackmapTable : BaseTrackTable {
 		}
 		else if(st < 0) {
 			int t = activeVoice.pos.trkOffset-1;
-			if(t < 0) t = activeVoice.getVoiceEnd()-1;
+			if(t < 0) t = activeVoice.tracks.trackLength()-1;
 			
 			s = activeVoice.getRowData(t,0);
 			rows = s.seq.rows;

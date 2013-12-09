@@ -203,7 +203,7 @@ protected class SequenceTable : VoiceTable {
 		foreach(Voice v; voices) {
 			with(v.pos) {
 				SequenceRowData s = v.getRowData(trkOffset);
-				if(trkOffset >= v.getVoiceEnd()) {
+				if(trkOffset >= v.tracks.trackLength()) {
 					trkOffset = 0;
 					rowCounter = -pointerOffset;
 				}

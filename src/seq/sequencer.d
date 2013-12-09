@@ -125,9 +125,7 @@ protected class PosinfoTable {
 // ------------------------------------------------------------------------
 
 abstract protected class Voice : Window {
-	protected {
-		Tracklist tracks;
-	}
+	Tracklist tracks;
 	Posinfo pos;
 	SequenceRowData activeRow;
 	Input input;
@@ -159,14 +157,6 @@ public:
 		if(t < 0) return false;
 		Track trk = tracks[t];
 		return (trk.trans >= 0xf0);
-	}
-
-	// TODO: remove this, use tracklist.trackLength instead
-	int getVoiceEnd() {
-		for(int i = 0; i < TRACK_LIST_LENGTH; i++) {
-			if(tracks[i].trans >= 0xf0) return i;
-		}
-		assert(0);
 	}
 
 	void trackFlush(int y) { return; }
@@ -253,7 +243,7 @@ public:
 			while(seqOffset + pointerOffset < 0) {
 				if(--trkOffset < 0) {
 					if(canWrap) {
-						trkOffset = getVoiceEnd() - 1;
+						trkOffset = tracks.trackLength() - 1;
 						rowCounter = getRowCounter();
 					}
 					else trkOffset = 0;
@@ -265,13 +255,13 @@ public:
 			while(seqOffset + pointerOffset >= s.clippedRows) {
 				seqOffset -= s.clippedRows;
 				steps -= s.clippedRows;
-				if(++trkOffset >= getVoiceEnd()) {
+				if(++trkOffset >= tracks.trackLength()) {
 					if(canWrap) {
 						trkOffset = 0;
 						rowCounter = seqOffset;
 					}
 					else { 
-						trkOffset = getVoiceEnd()-1; 
+						trkOffset = tracks.trackLength()-1; 
 						rowCounter = oldRowcounter;
 					}
 				}
@@ -574,7 +564,7 @@ protected abstract class VoiceTable : Window {
 				v.jump(Jump.ToBeginning);
 			}
 
-			int e = activeVoice.getVoiceEnd() - 1;
+			int e = activeVoice.tracks.trackLength() - 1;
 			
 			for(int i = 0; i < e; i++) {
 				activeVoice.refreshPointer(posTable.pointerOffset);
