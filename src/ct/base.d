@@ -1218,16 +1218,6 @@ class Song {
 		}
 	}
 
-	ubyte[] getDump(int s) {
-		subtunes.activate(s);
-		int upto;
-	
-		int lobyt = offsets[Offsets.SeqLO] + upto, hibyt = offsets[Offsets.SeqHI] + upto;
-		int lastaddr = memspace[lobyt] | (memspace[hibyt] << 8) + 256;
-		return memspace[0x1000 .. 0xbfff];
-	}
-
-	// deprecate
 	int numOfSeqs() {
 		int upto;
 		foreach(int i, s; seqs) {
