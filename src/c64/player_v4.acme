@@ -156,7 +156,7 @@ ofe8		!16 dummy
 ofea		!16 dummy
 ofec		!16 dummy
 ofee		!16 newseq
-version		!pet "cc4.01"
+version		!pet "cc4.02"
 }
 ;;; ----------------------------------------
 ;;; editor specific player routines, will be 
@@ -629,9 +629,17 @@ skipsetfrq	ldy shinst,x
 
 		lda inst+INS_PULSP,y		;set the pulse
 		beq setflt
-		asl				
+		bpl skippulsdir
+
+		and #$0f
+		sta pulsehi,x
+		lda #0
+		sta pulselo,x
+		jmp pulsdirset
+
+skippulsdir	asl				
 		asl
-		sta pulsenxt,x			;pointer
+pulsdirset	sta pulsenxt,x			;pointer
 		lda #0
 		sta pulsecnt,x
 
