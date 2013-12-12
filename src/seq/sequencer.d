@@ -979,16 +979,18 @@ private:
 	}
 
 	void clipCallback(int num) {
-		Tracklist tr = activeView.getTracklist()[0..num];
-		int length = tr.length;
-		int trackLength = activeView.activeVoice.tracks.trackLength;
-		if(activeView.activeVoice.activeRow.trkOffset + num >=
-		   trackLength)
-			length = trackLength;
+		const int trackLength = activeView.activeVoice.tracks.trackLength;
+		int curTrkOffset = activeView.activeVoice.activeRow.trkOffset;
+		Tracklist tl = activeView.getTracklist[0..num];
+		int length = tl.length;
+		
+		if(curTrkOffset + num >= trackLength)
+			length = trackLength - curTrkOffset;
+		assert(length >= 0);
 		clip.length = length;
 		for(int i = 0; i < length; i++) {
-			clip[i].trans = tr[i].trans;
-			clip[i].no = tr[i].no;
+			clip[i].trans = tl[i].trans;
+			clip[i].no = tl[i].no;
 		}
 	}
   

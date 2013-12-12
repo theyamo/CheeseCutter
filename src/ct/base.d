@@ -262,6 +262,7 @@ struct Tracklist {
 
 	Track opIndex(int i) {
 		if(i >= 0x400) i = 0;
+		assert(i >= 0 && i < length);
 		return list[i];
 	}
 
