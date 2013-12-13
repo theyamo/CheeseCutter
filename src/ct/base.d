@@ -1173,7 +1173,7 @@ class Song {
 			if(flag != requestedFlag) continue;
 			return table[insno + i * 48];
 		}
-		throw new Exception(format("Missing tablepointer %d.", requestedFlag));
+		throw new Exception("Missing tablepointer");
 	}
 	
 	int getWavetablePointer(int insno) {
