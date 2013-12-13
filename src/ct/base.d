@@ -330,7 +330,7 @@ struct Tracklist {
 	}
 
 	// returns transpose value other than 0x80 above idx OR below(if idx == 0)
-	ubyte getTrans(int idx) {
+	int getTrans(int idx) {
 		if(idx > 0) {
 			do {
 				if(list[idx].trans > 0x80 &&
@@ -353,8 +353,8 @@ struct Tracklist {
 		for(int i = cast(int)(list.length - 2); i >= offset; i--) {
 			list[i+1] = list[i].dup;
 		}
-		list[offset].setTrans(getTrans(offset));
-		list[offset].setNo(0);
+		list[offset].trans = (getTrans(offset));
+		list[offset].tracknum = 0;
 		if(wrapOffset() >= offset) {
 			wrapOffset( cast(address)(wrapOffset() + 1));
 		}
@@ -390,7 +390,7 @@ struct Tracklist {
 
 	ubyte[] compact() {
 		ubyte[] arr;
-		int p, trans = -1, wrapptr = wrapOffset() * 2;
+		int p, curtrans = -1, wrapptr = wrapOffset() * 2;
 
 		arr.length = 1024;
 		foreach(idx, track; list) {
@@ -400,14 +400,14 @@ struct Tracklist {
 				p += 2;
 				break;
 			}
-			if((track.trans != trans && track.trans != 0x80) || idx == wrapOffset()) {
-				trans = track.trans;
-				arr[p++] = cast(ubyte)trans;
+			if((track.trans != curtrans && track.trans != 0x80) || idx == wrapOffset()) {
+				curtrans = track.trans;
+				arr[p++] = cast(ubyte)curtrans;
 			} 
 			else if(idx < wrapOffset() ) {
 				wrapptr--;
 			}
-			arr[p++] = track.no;
+			arr[p++] = cast(ubyte) track.no;
 		}
 		return arr[0..p];
 	}
@@ -415,6 +415,12 @@ struct Tracklist {
 
 struct Track {
 	private ubyte[] data;
+
+	@property ubyte no() { return data[1]; }
+	@property ubyte no(int val) { return data[1] = cast(ubyte)val; }
+	alias no tracknum;
+	@property ubyte trans() { return data[0]; }
+	@property ubyte trans(int val) { return data[1] == cast(ubyte)val; }
 
 	static Track opCall(ubyte[] tr) {
 		Track t;
@@ -436,26 +442,18 @@ struct Track {
 		data = tr.data;
 	}
 
-	void setNo(ubyte no) {
-		data[1] = no;
-	}
-
-	void setTrans(ubyte t) {
-		data[0] = t;
-	}
-
 	ushort dup() {
-		return trans | (no << 8);
+		return cast(ubyte)trans | cast(ubyte)(no << 8);
 	}
 
 	ushort getValue2() { // "real" int value, trans = highbyte
-		return no | (trans << 8);
+		return cast(ubyte)no | cast(ubyte)(trans << 8);
 	}
-	
+/*	
 	void setValue(Track t) {
 		data = t.data;
 	}
-
+*/
 	void setValue(int tr, int no) {
 		tr = clamp(tr, 0x80, 0xf3);
 		if(no < 0) no = 0;
@@ -464,15 +462,6 @@ struct Track {
 		data[1] = no & 255;
 	}
 	
-	ubyte trans() {
-		return data[0];
-	}
-	alias trans getTrans;
-	ubyte no() {
-		return data[1];
-	}
-	alias no getNo;
-
 	string toString() {
 		string s = format("%02X%02X", trans, no);
 		return s;
@@ -485,7 +474,7 @@ struct Track {
 	void transpose(int val) {
 		if(trans == 0x80 || trans >= 0xf0) return;
 		int t = trans + val;
-		setTrans(cast(ubyte)clamp(t, 0x80, 0xbf));
+		trans = clamp(t, 0x80, 0xbf);
 	}
 }
 
@@ -1169,8 +1158,8 @@ class Song {
 					if(t.no == seqno) {
 						tracks[vIdx].insertAt(tIdx+1);
 						Track t2 = tracks[vIdx][tIdx+1];
-						t2.setTrans(0x80);
-						t2.setNo(cast(ubyte)newseqno);
+						t2.trans = 0x80;
+						t2.tracknum = newseqno;
 					}
 					
 				}
