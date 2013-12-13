@@ -1,8 +1,9 @@
-LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL 
+#LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL
+LIBS=/opt/ldc2/lib/libphobos-ldc.a /opt/ldc2/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL 
 COMFLAGS= -mmacosx-version-min=10.7
 VERSION=$(shell cat Version)
 DLINK=$(COMFLAGS)
-DFLAGS=-I./src -I./src/derelict/util -I./src/derelict/sdl -I./src/resid -I./src/player -I./src/font -J./src/c64 -J./src/font
+DFLAGS=-I./src -J./src/c64 -J./src/font
 CFLAGS=$(COMFLAGS)
 CXXFLAGS=$(CFLAGS) -I./src -O2
 COMPILE.d = $(DC) $(DFLAGS) -d -O2 -c -of=$@
@@ -60,7 +61,7 @@ tar:
 	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-macosx-src.tar.bz2
 # --------------------------------------------------------------------------------
 
-src/c64/player.bin: src/c64/player.acme
+src/c64/player.bin: src/c64/player_v4.acme
 	acme -f cbm --outfile $@ $<
 
 src/c64/custplay.bin: src/c64/custplay.acme

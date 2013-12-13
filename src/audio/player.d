@@ -164,9 +164,9 @@ void nextFP() {
 void setFP(int fp) {
     if (usefp) {
         if (sidtype) {
-			curfp8580 = fp % FP8580.length;
+			curfp8580 = cast(int)(fp % FP8580.length);
         } else {
-			curfp6581 = fp % FP6581.length;
+			curfp6581 = cast(int)(fp % FP6581.length);
         }
         initFP();
     }
@@ -177,10 +177,10 @@ void prevFP() {
     if (usefp) {
         if (sidtype) {
             --curfp8580;
-            if (curfp8580 < 0) curfp8580 = FP8580.length-1;
+            if (curfp8580 < 0) curfp8580 = cast(int)(FP8580.length-1);
         } else {
             --curfp6581;
-            if (curfp6581 < 0) curfp6581 = FP6581.length-1;
+            if (curfp6581 < 0) curfp6581 = cast(int)(FP6581.length-1);
         }
 
         initFP();

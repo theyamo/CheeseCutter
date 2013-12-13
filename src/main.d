@@ -200,8 +200,8 @@ int main(char[][] args) {
         	case "-fpr":
             		int fprarg = to!int(args[i+1]);
 
-            		sidtype ? (audio.player.curfp8580 = fprarg % FP8580.length) :
-                        	(audio.player.curfp6581 = fprarg % FP6581.length);
+            		sidtype ? (audio.player.curfp8580 = cast(int)(fprarg % FP8580.length)) :
+						(audio.player.curfp6581 = cast(int)(fprarg % FP6581.length));
             		i++;
 			break;
 		case "-i":

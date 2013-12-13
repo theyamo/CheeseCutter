@@ -374,11 +374,11 @@ struct Tracklist {
 		foreach(trk; list[s..e]) trk.transpose(t);
 	}
 
-	address wrapOffset() {
+	@property address wrapOffset() {
 		return (last.getValue2() / 2) & 0x7ff;
 	}
 
-	void wrapOffset(address offset) {
+	@property void wrapOffset(address offset) {
 		if((offset & 0xff00) >= 0xfe00) return;
 		assert(offset >= 0 && offset < 0x400);
 		if(offset >= trackLength())
