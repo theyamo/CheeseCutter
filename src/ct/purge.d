@@ -418,9 +418,8 @@ private:
 
 	void replaceTrackvalue(int find, int rep) {
 		trackIterator((Track t) {
-				if(t.tracknum == find)
-					t.tracknum = rep;
-					
+				if(t.no == find)
+					t.setNo(cast(ubyte)rep);
 			});
 	}
 
