@@ -7,6 +7,7 @@ import ct.base;
 import com.cpu;
 import std.stdio;
 import std.string;
+import com.util;
 
 const ubyte[] SIDHEADER = [
   0x50, 0x53, 0x49, 0x44, 0x00, 0x02, 0x00, 0x7c, 0x00, 0x00, 0x10, 0x00,
@@ -167,7 +168,7 @@ ubyte[] packToSid(Song insong, address relocTo, int defaultSubtune, bool verbose
 	int custBase, custInit, custPlay, custTimerlo, custTimerhi;
 	/+ SID default tune indicatior starts from value 1... +/
 	if(defaultSubtune > sng.subtunes.numOf)
-		throw new Error(format("This song only has %d subtunes", sng.subtunes.numOf));
+		throw new UserException(format("This song only has %d subtunes", sng.subtunes.numOf));
 	if(sng.multiplier > 1) {
 		ubyte[] custplay = SIDDriver.dup; 
 		int clock = PAL_CLOCK / sng.multiplier;
@@ -197,7 +198,7 @@ ubyte[] packToSid(Song insong, address relocTo, int defaultSubtune, bool verbose
 	data[PSID_NUM_SONGS + 1] = cast(ubyte)sng.subtunes.numOf();
 	data[PSID_START_SONG + 1] = cast(ubyte)defaultSubtune;
 	if(sng.multiplier > 1) {
-		if(relocTo != 0x1000) throw new Error("Relocating multispeed tunes not supported.");
+		if(relocTo != 0x1000) throw new UserException("Relocating multispeed tunes not supported.");
 		// mask speed bits to use custom cia
 		data[PSID_SPEED_OFFSET .. PSID_SPEED_OFFSET + 4] = 255;
 		data[PSID_INIT_OFFSET .. PSID_INIT_OFFSET + 2] = cast(ubyte[])[ custInit >> 8, custInit & 255 ];
@@ -210,7 +211,7 @@ ubyte[] packToSid(Song insong, address relocTo, int defaultSubtune, bool verbose
 		data[PSID_INIT_OFFSET .. PSID_INIT_OFFSET + 2] = cast(ubyte[])[ relocTo >> 8, relocTo & 255 ];
 		data[PSID_PLAY_OFFSET .. PSID_PLAY_OFFSET + 2] = cast(ubyte[])[ (relocTo + 3) >> 8, (relocTo + 3) & 255 ];
 		int endAddr = cast(int)(relocTo + data.length);
-		if(endAddr > 0xfff9) throw new Error(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9));
+		if(endAddr > 0xfff9) throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9));
 	}
 	data[PSID_FLAGS_OFFSET + 1] 
 		= cast(ubyte)(0x04 /+ PAL +/ | (sng.sidModel ? 0x20 : 0x10));
@@ -260,7 +261,7 @@ ubyte[] packSongdata(address reloc) {
 
 	int endsig = hunt(memspace[0x1000 .. 0x2000], [0xfc, 0x3c]);
 	if(endsig < 0) {
-		throw new Error("Could not determine player code end address."); 
+		throw new UserException("Could not determine player code end address."); 
 	}
 					  
 	dataStart = cast(ushort)(0x1000 + endsig);
