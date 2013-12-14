@@ -3,6 +3,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 import com.cpu;
+import com.util;
 import ct.base;
 import ct.purge;
 import ct.pack;
@@ -26,12 +27,6 @@ bool outfnDefined = false, infnDefined = false;
 bool verbose = true;
 int command;
 Song insong;
-
-class ArgumentError : Exception {
-	this(string msg) {
-		super("Argument error: " ~ msg);
-	}
-}
 
 int str2Value(string s) {
 	if(s[0] == 'x' || s[0] == '$') {
@@ -121,148 +116,155 @@ int main(string[] args) {
 		printheader();
 		return 0;
 	}
-	
-	switch(args[1]) {
-	case "prg":
-		command = Command.ExportPRG;
-		break;
-	case "sid":
-		command = Command.ExportSID;
-		break;
-	case "dump":
-		command = Command.Dump;
-		break;
-	case "import":
-		command = Command.Import;
-		break;
-	case "init":
-		command = Command.Init;
-		break;
-	default:
-		throw new Error(format("command '%s' not recognized.",args[1]));
-	}
-	int infncounter = 0;
 
-	if(args.length >= 2) {
-		for(int argp = 2; argp < args.length; argp++) {
-			string nextArg() {
-				if(argp+1 >= args.length || args[argp+1][0] == '-')
-					throw new ArgumentError("Missing value for option '" ~ args[argp] ~"'");
-				argp++;
-				return args[argp];
-			}
-			switch(args[argp]) {
-			case "-n":
-				noPurge = true;
-				break;
-			case "-r":
-				if(command != Command.ExportSID &&
-				   command != Command.ExportPRG)
-					throw new ArgumentError("Option available only with exporting commands.");
-				int r = str2Value(nextArg());
-				if(r > 0xffff)
-					throw new ArgumentError("-r: Address value too big.");
-				relocAddress = cast(ushort)r;
-				break;
-			case "-s":
-				if(command != Command.ExportSID &&
-				   command != Command.ExportPRG)
-					throw new ArgumentError("Option available only with exporting commands.");
-				parseList(speeds, nextArg());
-				break;
-			case "-c":
-				if(command != Command.ExportSID &&
-				   command != Command.ExportPRG)
-					throw new ArgumentError("Option available only with exporting commands.");
-				parseList(masks, nextArg());
-				break;
-			case "-d":
-				if(command != Command.ExportSID)
-					throw new ArgumentError("Option available only when exporting to SID.");
-				defaultTune = to!int(nextArg());
-				if(defaultTune <= 0)
-					throw new ArgumentError("Valid range for subtunes is 1 - 32.");
-				break;
-			case "-o":
-				if(outfnDefined)
-					throw new ArgumentError("Output file already defined.");
-				outfn = args[argp+1];
-				outfnDefined = true;
-				argp++;
-				break;
-			case "-q":
-				verbose = false;
-				break;
-			default:
-				if(args[argp][0] == '-')
-					throw new ArgumentError("Unrecognized option '" ~ args[argp] ~ "'");
-				if(infnDefined && command != Command.Import)
-					throw new ArgumentError("Input filename already defined.");
-				if(command == Command.Import) {
-					if(infncounter > 1)
-						throw new ArgumentError("Infile & import filename already defined.");
-					infns[infncounter++] = args[argp];
-					infn = infns[0];
+	try {
+		switch(args[1]) {
+		case "prg":
+			command = Command.ExportPRG;
+			break;
+		case "sid":
+			command = Command.ExportSID;
+			break;
+		case "dump":
+			command = Command.Dump;
+			break;
+		case "import":
+			command = Command.Import;
+			break;
+		case "init":
+			command = Command.Init;
+			break;
+		default:
+			throw new UserException(format("command '%s' not recognized.",args[1]));
+		}
+		int infncounter = 0;
+
+		if(args.length >= 2) {
+			for(int argp = 2; argp < args.length; argp++) {
+				string nextArg() {
+					if(argp+1 >= args.length || args[argp+1][0] == '-')
+						throw new ArgumentException("Missing value for option '" ~ args[argp] ~"'");
+					argp++;
+					return args[argp];
 				}
-				else infn = args[argp];
-				infnDefined = true;
-				break;
+				switch(args[argp]) {
+				case "-n":
+					noPurge = true;
+					break;
+				case "-r":
+					if(command != Command.ExportSID &&
+					   command != Command.ExportPRG)
+						throw new ArgumentException("Option available only with exporting commands.");
+					int r = str2Value(nextArg());
+					if(r > 0xffff)
+						throw new ArgumentException("-r: Address value too big.");
+					relocAddress = cast(ushort)r;
+					break;
+				case "-s":
+					if(command != Command.ExportSID &&
+					   command != Command.ExportPRG)
+						throw new ArgumentException("Option available only with exporting commands.");
+					parseList(speeds, nextArg());
+					break;
+				case "-c":
+					if(command != Command.ExportSID &&
+					   command != Command.ExportPRG)
+						throw new ArgumentException("Option available only with exporting commands.");
+					parseList(masks, nextArg());
+					break;
+				case "-d":
+					if(command != Command.ExportSID)
+						throw new ArgumentException("Option available only when exporting to SID.");
+					defaultTune = to!int(nextArg());
+					if(defaultTune <= 0)
+						throw new ArgumentException("Valid range for subtunes is 1 - 32.");
+					break;
+				case "-o":
+					if(outfnDefined)
+						throw new ArgumentException("Output file already defined.");
+					outfn = args[argp+1];
+					outfnDefined = true;
+					argp++;
+					break;
+				case "-q":
+					verbose = false;
+					break;
+				default:
+					if(args[argp][0] == '-')
+						throw new ArgumentException("Unrecognized option '" ~ args[argp] ~ "'");
+					if(infnDefined && command != Command.Import)
+						throw new ArgumentException("Input filename already defined.");
+					if(command == Command.Import) {
+						if(infncounter > 1)
+							throw new ArgumentException("Infile & import filename already defined.");
+						infns[infncounter++] = args[argp];
+						infn = infns[0];
+					}
+					else infn = args[argp];
+					infnDefined = true;
+					break;
+				}
 			}
 		}
-	}
-	assert(command != Command.None);
-	if(!infnDefined)
-		throw new ArgumentError("Input filename not defined.");
-	if(command == Command.Init && !outfnDefined) {
-		throw new ArgumentError("Command 'init' requires output filename to be defined (option -o).");
-	}
-	else if(command == Command.Import && !outfnDefined) {
-		throw new ArgumentError("Command 'import' requires output filename to be defined (option -o).");
-	}
+		assert(command != Command.None);
+		if(!infnDefined)
+			throw new ArgumentException("Input filename not defined.");
+		if(command == Command.Init && !outfnDefined) {
+			throw new ArgumentException("Command 'init' requires output filename to be defined (option -o).");
+		}
+		else if(command == Command.Import && !outfnDefined) {
+			throw new ArgumentException("Command 'import' requires output filename to be defined (option -o).");
+		}
 
-	if(!outfnDefined) {
-		outfn = defineOutfn(command, infn);
-	}
+		if(!outfnDefined) {
+			outfn = defineOutfn(command, infn);
+		}
 
-	explain("Input file: " ~ infn);
-	explain("Output file: " ~ outfn);
-	if(command == Command.ExportSID || command == Command.ExportPRG) {
-		explain(format("Relocating data to $%x", relocAddress));
-	}
+		explain("Input file: " ~ infn);
+		explain("Output file: " ~ outfn);
+		if(command == Command.ExportSID || command == Command.ExportPRG) {
+			explain(format("Relocating data to $%x", relocAddress));
+		}
 
-	switch(command) {
-	case Command.ExportPRG, Command.ExportSID:
-		insong = new Song;
-		insong.open(infn);
-		doPurge(insong);
-		ubyte[] data = (command == Command.ExportSID) ? packToSid(insong, relocAddress, defaultTune, verbose)
-			: pack(insong, relocAddress, verbose);
-		std.file.write(outfn, data);
-		break;
-	case Command.Import:
-		if(infncounter < 2)
-			throw new ArgumentError("Import song not defined.");
-		explain("Importing data from " ~ infns[1]);
-		insong = new Song;
-		insong.open(infns[0]);
-		Song importsong = new Song();
-		importsong.open(infns[1]);
-		insong.importData(importsong);
-		insong.save(outfn);
-		break;
-	case Command.Dump:
-		insong = new Song;
-		insong.open(infn);
-		doPurge(insong);
-		std.file.write(outfn, dumpData(insong, infn));
-		break;
-	case Command.Init:
-		insong = new Song(cast(ubyte[])std.file.read(infn));
-		insong.save(outfn);
-		break;
-	default:
-		assert(0);
+		switch(command) {
+		case Command.ExportPRG, Command.ExportSID:
+			insong = new Song;
+			insong.open(infn);
+			doPurge(insong);
+			ubyte[] data = (command == Command.ExportSID) ? packToSid(insong, relocAddress, defaultTune, verbose)
+				: pack(insong, relocAddress, verbose);
+			std.file.write(outfn, data);
+			break;
+		case Command.Import:
+			if(infncounter < 2)
+				throw new ArgumentException("Import song not defined.");
+			explain("Importing data from " ~ infns[1]);
+			insong = new Song;
+			insong.open(infns[0]);
+			Song importsong = new Song();
+			importsong.open(infns[1]);
+			insong.importData(importsong);
+			insong.save(outfn);
+			break;
+		case Command.Dump:
+			insong = new Song;
+			insong.open(infn);
+			doPurge(insong);
+			std.file.write(outfn, dumpData(insong, infn));
+			break;
+		case Command.Init:
+			insong = new Song(cast(ubyte[])std.file.read(infn));
+			insong.save(outfn);
+			break;
+		default:
+			assert(0);
+		}
 	}
+	catch(Exception e) {
+		writeln(e);
+		return -1;
+	}
+	
 	explain("Done.");
 	return 0;
 }
