@@ -7,6 +7,7 @@ import derelict.sdl.sdl;
 import com.fb;
 import com.session;
 import com.kbd;
+import com.util;
 import ui.ui;
 import ui.input;
 import audio.player;
@@ -30,12 +31,6 @@ version(darwin) {
 
 version(Win32) {
 	const DIR_SEPARATOR = '\\';
-}
-
-class ArgumentError : Exception {
-	this(string msg) {
-		super("Argument error: " ~ msg);
-	}
 }
 
 void initVideo(bool useFullscreen, int m, bool yuv, bool aspect) {
@@ -173,87 +168,97 @@ int main(char[][] args) {
 	bool fnDefined = false;
 
 	DerelictSDL.load();
+	
 	scope(exit) {
 		delete mainui;
 		delete video;
 		SDL_Quit();
 	}
+	
 	scope(failure) {
 		if(song !is null) {
 			derr.writefln("Crashed! Saving backup...");
 			song.save("_backup.ct");
 		}
 	}
-	i = 1;
-	while(i < args.length) {
-		switch(args[i])
-		{
-		case "-h", "-help", "--help", "-?":
-			printheader();
-			return 0;
-		case "-m":
-			sidtype = to!int(args[i+1]);
-			if(sidtype != 0 && sidtype != 1 && sidtype != 6581 && sidtype != 8580)
-				throw new ArgumentError("Incorrect SID type; specify 0 for 6581 or 1 for 8580");
-			i++;
-			break;
-        	case "-fpr":
-            		int fprarg = to!int(args[i+1]);
 
-            		sidtype ? (audio.player.curfp8580 = cast(int)(fprarg % FP8580.length)) :
-						(audio.player.curfp6581 = cast(int)(fprarg % FP6581.length));
-            		i++;
-			break;
-		case "-i":
-			audio.player.interpolate = 0;
-			break;
-		case "-l":
-			audio.player.badline = 1;
-			break;
-		case "-n":
-			audio.player.ntsc = 1;
-			break;
-		case "-r":
-			audio.audio.freq = to!int(args[i+1]);
-			i++;
-			break;
-		case "-b":
-			audio.audio.bufferSize = to!int(args[i+1]);
-			i++;
-			break;
-		case "-f","--full":
-			fs = true;
-			break;
-		case "-nofp":
-			audio.player.usefp = 0;
-			break;
-		case "-y":
-			yuvOverlay = true;
-			break;
-		case "-ya":
-			yuvOverlay = true;
-			keepAspect = true;
-			break;
-		default:
-			version (darwin) {
-				if (args[i].length > 3 && args[i][0..4] == "-psn"){
-					break;
+	try {
+		i = 1;
+		while(i < args.length) {
+			switch(args[i])
+			{
+			case "-h", "-help", "--help", "-?":
+				printheader();
+				return 0;
+			case "-m":
+				sidtype = to!int(args[i+1]);
+				if(sidtype != 0 && sidtype != 1 && sidtype != 6581 && sidtype != 8580)
+					throw new ArgumentException("Incorrect SID type; specify 0 for 6581 or 1 for 8580");
+				i++;
+				break;
+        	case "-fpr":
+				int fprarg = to!int(args[i+1]);
+
+				sidtype ? (audio.player.curfp8580 = cast(int)(fprarg % FP8580.length)) :
+					(audio.player.curfp6581 = cast(int)(fprarg % FP6581.length));
+				i++;
+				break;
+			case "-i":
+				audio.player.interpolate = 0;
+				break;
+			case "-l":
+				audio.player.badline = 1;
+				break;
+			case "-n":
+				audio.player.ntsc = 1;
+				break;
+			case "-r":
+				audio.audio.freq = to!int(args[i+1]);
+				i++;
+				break;
+			case "-b":
+				audio.audio.bufferSize = to!int(args[i+1]);
+				i++;
+				break;
+			case "-f","--full":
+				fs = true;
+				break;
+			case "-nofp":
+				audio.player.usefp = 0;
+				break;
+			case "-y":
+				yuvOverlay = true;
+				break;
+			case "-ya":
+				yuvOverlay = true;
+				keepAspect = true;
+				break;
+			default:
+				version (darwin) {
+					if (args[i].length > 3 && args[i][0..4] == "-psn"){
+						break;
+					}
 				}
-			}
-			if(args[i][0] == '-')
-				throw new ArgumentError(format("Unrecognized option %s", args[i]));
-			if(fnDefined)
-				throw new ArgumentError("Filename already defined.");
-			filename = cast(string)args[i].dup;
-			if(std.file.exists(filename) == 0 || std.file.isDir(filename)) {
-				throw new Error("File not found!");
-			}		
-			fnDefined = true;
+				if(args[i][0] == '-')
+					throw new ArgumentException(format("Unrecognized option %s", args[i]));
+				if(fnDefined)
+					throw new ArgumentException("Filename already defined.");
+				filename = cast(string)args[i].dup;
+				if(std.file.exists(filename) == 0 || std.file.isDir(filename)) {
+					throw new ArgumentException("File not found!");
+				}		
+				fnDefined = true;
 		
-			break;
+				break;
+			}
+			i++;
 		}
-		i++;
 	}
+	catch(ArgumentException e) {
+		writeln(e);
+		return -1;
+	}
+	
 	initVideo(fs, display, yuvOverlay, keepAspect);
 	audio.player.init();
 	initSession();

@@ -469,12 +469,12 @@ class Screen {
 		}
 		isDirty = true;
 	}
-
+/*
 	void fprint(int x, int y, char[] str) {
 		derr.writefln("FORMATF");
 		fprint(x,y,format(str));
 	}
-
+*/
 	void fprint(int x, int y, string str) {
 		mixin(CHECKS);
 		assert(str.length < 256);

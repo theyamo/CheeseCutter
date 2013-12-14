@@ -699,10 +699,6 @@ class Sequence {
 }
 
 class Song {
-	class PlayerError : Error {
-		this(string msg) { super(msg); }
-	}
-
 	enum DatafileOffset {
 		Binary, Header = 65536, 
 		Title = Header + 256 + 5, Author = Title + 32, Release = Author + 32,
@@ -890,7 +886,7 @@ class Song {
 		bin.length = 65536;
 		bin[0xdfe .. 0xdfe + player.length] = player;
 		if(bin[0xdfe .. 0xe00] != cast(ubyte[])[ 0x00, 0x0e ])
-			throw new PlayerError("Illegal loading address.");
+			throw new UserException("Illegal loading address.");
 		songspeeds[] = 5;
 		open(bin);
 		sidbuf = memspace[0xd400 .. 0xd419];
@@ -899,14 +895,14 @@ class Song {
 	void open(string fn) {
 		ubyte[] inbuf = cast(ubyte[])read(fn);
 		if(inbuf[0..3] != cast(ubyte[])"CC2"[0..3]) {
-			throw new Exception("Incorrect filetype.");
+			throw new UserException(format("%s: Incorrect filetype.", fn));
 		}
 
 		ubyte[] debuf = cast(ubyte[])std.zlib.uncompress(inbuf[3..$],167832);
 		int offset = 65536;
 		ver = debuf[offset++];
 		if(ver < 6) 
-			throw new Exception("The song is incompatible (too old) for this version of the editor.");
+			throw new UserException("The song is incompatible (too old) for this version of the editor.");
 		clock = debuf[offset++];
 		multiplier = debuf[offset++];
 		sidModel = debuf[offset++];
@@ -1173,7 +1169,7 @@ class Song {
 			if(flag != requestedFlag) continue;
 			return table[insno + i * 48];
 		}
-		throw new Exception("Missing tablepointer");
+		throw new UserException(std.string.format("Missing tablepointer %d", requestedFlag));
 	}
 	
 	int getWavetablePointer(int insno) {
