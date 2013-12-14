@@ -156,7 +156,6 @@ void printheader() {
 	derr.writefln("  -n               Enable NTSC mode");
 	derr.writefln("  -r [value]       Set playback frequency (def=48000)");
 	derr.writefln("  -y               Use a YUV video overlay");
-	derr.writefln("  -ya              Keep real aspect ratio on YUV overlay (implies -y)");
 	derr.writef("\n");
 }
 
@@ -226,10 +225,7 @@ int main(char[][] args) {
 			case "-nofp":
 				audio.player.usefp = 0;
 				break;
-			case "-y":
-				yuvOverlay = true;
-				break;
-			case "-ya":
+			case "-y", "-ya", "-yuv":
 				yuvOverlay = true;
 				keepAspect = true;
 				break;
