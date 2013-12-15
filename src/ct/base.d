@@ -1098,6 +1098,7 @@ class Song {
 		}
 		
 		subtunes.syncFromBuffer();
+		speed = songspeeds[0];
 		cpu.reset();
 		cpu.execute(0x1000);
 		tables = [ cast(string)"songsets":tSongsets, "wave1":tWave1, "wave2":tWave2,
