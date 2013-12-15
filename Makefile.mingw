@@ -1,4 +1,4 @@
-COMFLAGS=-m32 -mwindows
+COMFLAGS=-m32
 LIBS=-lstdc++
 DLINK=$(COMFLAGS)
 VERSION=$(shell cat Version)
@@ -18,7 +18,10 @@ OBJCOPY=objcopy
 include Makefile.objects.mk
 
 $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
-	$(DC) $(DLINK) -o $(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
+	$(DC) $(DLINK) -mwindows -o $(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
+
+ct2util: $(C64OBJS) $(UTILOBJS)
+	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS) 
 
 .cpp.o : $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -27,9 +30,6 @@ $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
 	gcc-win -c $< -o $@
 
 ct: $(C64OBJS) $(CTOBJS)
-
-ct2util: $(C64OBJS) $(UTILOBJS)
-	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS) 
 
 c64: $(C64OBJS)
 
