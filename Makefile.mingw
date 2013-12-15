@@ -1,8 +1,8 @@
-COMFLAGS=-m32
+COMFLAGS=-m32 -mwindows
 LIBS=-lstdc++
-DLINK=-m32 $(COMFLAGS)
+DLINK=$(COMFLAGS)
 VERSION=$(shell cat Version)
-DFLAGS=-m32 -I./src -J./src/c64 -J./src/font
+DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font
 CFLAGS=$(COMFLAGS)
 CXXFLAGS=$(CFLAGS) -I./src -O2
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@
