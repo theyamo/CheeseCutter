@@ -821,7 +821,7 @@ final class InputSeq : Newinput {
 		switch(key.unicode) {
 		case SDLK_SEMICOLON:
 			autoinsertInstrument ^= 1;
-			UI.statusline.display(format("Instrument autoinsert mode ",
+			UI.statusline.display(format("Instrument autoinsert mode %s",
 										  autoinsertInstrument ? "enabled." : "disabled."));
 			return OK;
 		case SDLK_LESS:
