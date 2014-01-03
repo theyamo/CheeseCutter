@@ -1189,7 +1189,9 @@ class Song {
 	}
 
 	int getPulsetablePointer(int insno) {
-		return getTablepointer(instrumentTable, features.instrumentFlags, 3, insno);
+		int ptr = getTablepointer(instrumentTable, features.instrumentFlags, 3, insno);
+		if(ptr >= 0x80) return 0;
+		return ptr;
 	}
 
 	int getFiltertablePointer(int insno) {
