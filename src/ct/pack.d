@@ -278,9 +278,11 @@ ubyte[] packSongdata(address reloc) {
 	}
 
 	sng.subtunes.activate(0);
+	
 
 	trackpointers.length = sng.subtunes.numOf();
-	packedTracks = sng.subtunes.compact();
+	packedTracks = sng.subtunes.compact();	
+
 	ushort trkOffset;
 	foreach(i, ref subtune; packedTracks) {
 		trackpointers[i].length = 3;

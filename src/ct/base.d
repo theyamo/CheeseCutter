@@ -828,22 +828,27 @@ class Song {
 			return 0;
 		}
 
+		// highly dubious coding here (actually, like most of this class..)
 		ubyte[][][] compact() {
 			ubyte[][][] arr;
-			
+//			sync();
 			arr.length = numOf();
-			
 			foreach(ref subarr; arr) {
 				subarr.length = 3;
 			}
-			
+
 			for(int i = 0; i < numOf(); i++) {
 				ubyte[][] subarr = arr[i];
-				activate(i);
+				for(int j = 0; j < 3; j++) {
+					buffer[offsets[Offsets.Track1 + j] .. offsets[Offsets.Track1 + j] + 0x400] =
+						subtunes[i][j][0..0x400];
+				}
+								
 				foreach(idx, ref voice; subarr) {
 					voice = tracks[idx].compact().dup;
 				}
 			}
+	
 			return arr;
 		}
 	}
