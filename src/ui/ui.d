@@ -1093,7 +1093,7 @@ final class UI {
 		stop();
 		toplevel.reset();
 		if(std.file.exists(s) == 0 || std.file.isDir(s)) {
-			statusline.display("File not found! " ~ s);
+			statusline.display("File not found: " ~ s);
 			return;
 		}
 		try {
@@ -1106,7 +1106,8 @@ final class UI {
 			}
 		}
 		catch(Exception e) {
-			statusline.display("Error: " ~ e.toString());
+			statusline.display("Could not load file!");
+			writeln("Error: " ~ e.toString());	
 			return;
 		}
 		refresh();
