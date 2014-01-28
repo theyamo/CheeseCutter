@@ -1069,7 +1069,8 @@ final class UI {
 			song.save(s);
 		}
 		catch(FileException e) {
-			statusline.display(e.toString());
+			statusline.display("Could not save file! Check your filename.");
+			//statusline.display(e.toString());
 			return;
 		}
 		// sync load filesel to save filesel
