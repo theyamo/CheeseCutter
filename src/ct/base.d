@@ -214,7 +214,7 @@ struct Note {
 		case 2:
 			return "+++"; 
 		default:
-			if((v + trns) > 0x5e)
+			if((v + trns) > 0x5e || (v + trns) < 0)
 				return "???";
 			else return NOTES[v + trns];
 		}
