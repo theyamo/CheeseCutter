@@ -602,7 +602,7 @@ class ChordTable : HexTable {
 	override void insertRow() {
 		ubyte[] tmp = data[row .. $-1].dup;
 		foreach(i, c; tmp) {
-			if(c >= (0x80 + row) && ++c < 0x100)
+			if(row > 0 && c >= (0x80 + row) && ++c < 0x100)
 				tmp[i] = c;
 		}
 		data[row+1 .. $] = tmp;
