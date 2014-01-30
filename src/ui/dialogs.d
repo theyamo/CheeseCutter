@@ -134,6 +134,8 @@ class DebugDialog : Window {
 
 	override void update() {
 		assert(seq !is null);
+		ubyte[] data = seq.compact();
+		data.length = 256;
 		int y,pos;
 		string str;
 		drawFrame(area);
@@ -145,7 +147,7 @@ class DebugDialog : Window {
 		for(y=0; y<16; y++) {
 			str = format("%02X:",y*16);
 			for(int i = 0; i < 16 ; i++) {
-				str ~= format("%02X ", seq.data.raw[pos++]);
+				str ~= format("%02X ", data[pos++]);
 			}
 			screen.fprint(area.x+2,area.y+y+2,"`0f" ~ str);
 		}
