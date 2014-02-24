@@ -937,10 +937,12 @@ final class UI {
 				song.sidModel ^= 1;
 				audio.player.setSidModel(song.sidModel);
 				break;
+				/+
 			case SDLK_F4, SDLK_b:
 				audio.player.badline ^= 1;
 				audio.player.init();
 				break;
+				+/
 			case SDLK_F8:
 				key.mods & KMOD_SHIFT ? audio.player.prevFP() : audio.player.nextFP();
 				break;
