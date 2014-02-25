@@ -344,6 +344,10 @@ class VideoYUV : Video {
 		rect.w = cast(ushort)scrRes[0];
 		rect.h = cast(ushort)scrRes[1];
 		rect.x = rect.y = 0;
+		if(useFullscreen) {
+			rect.x = cast(short)(scrRes[0]/2 - ovlRes[0]/2);
+			rect.y = cast(short)(scrRes[1]/2 - ovlRes[1]/2);
+		}
 	}
 }
 
