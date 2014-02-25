@@ -175,28 +175,21 @@ class VideoYUV : Video {
 	bool keepAspect = false; 
 	const private int arheight, arwidth;
 	
-	this(Screen scr, int fs, bool p_keepAspect) {
+	this(Screen scr, int fs, bool keepAspect) {
 		super(scr, fs);
-//		SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 		arheight = maxheight;
 		arwidth = maxwidth;
-		keepAspect = p_keepAspect;
-		// writefln("cur. screen resolution x=%d, y=%d", maxwidth, maxheight);
+		this.keepAspect = keepAspect;
 		if(keepAspect) {
 			if(cast(float)maxheight / maxwidth < 0.75) { // wide screen
 				arwidth = cast(int)(arheight / 0.75);
 				arheight = maxheight;
-				//writefln("asp.corr: wide screen mode");
 			}
 			else {
 				arwidth = maxwidth;
 				arheight = cast(int)(arwidth * 0.75);
 			}
 		}
-		/+
-		if(keepAspect)
-			writefln("aspect corr. overlay res x=%d, y=%d", arwidth, arheight);
-			+/
 		enableFullscreen(fs > 0);
 	}
 
@@ -235,9 +228,6 @@ class VideoYUV : Video {
 		}
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
-//		writefln("scaling overlay of x=%d, y=%d, over %d,%d pixels", arwidth, arheight, maxwidth, maxheight);
-//		writefln("ratio = ", cast(float)arheight / arwidth);
-//		makeOverlay([800, 600],[width, height]);
 		makeOverlay([800, 600],[width, height]);
 		screen.refresh();
 	}
