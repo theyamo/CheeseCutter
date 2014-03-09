@@ -80,6 +80,9 @@ protected class Posinfo {
 		}
 		return counter + seqOffset;
 	}
+	int rowOnCursor() {
+		return seqOffset + pointerOffset;
+	}
 }
 
 protected class PosinfoTable {
@@ -524,11 +527,27 @@ protected abstract class VoiceTable : Window {
 	}
 	
 	void setPositionMark() {
-		foreach(v; voices) { v.setPositionMark(); }
+		int rows = -1;
+		foreach(v; voices) {
+			if(rows < 0)
+				rows = v.pos.rowOnCursor;
+			if(rows != v.pos.rowOnCursor)
+				UI.statusline.display("Warning: The start point is not aligned! The song will play incorrectly.");
+
+			v.setPositionMark();
+		}
 	}
 
 	void setWrapMark() {
-		foreach(v; voices) { v.setWrapMark(); }
+		int rows = -1;
+		foreach(v; voices) {
+			if(rows < 0)
+				rows = v.pos.rowOnCursor;
+			if(rows != v.pos.rowOnCursor)
+				UI.statusline.display("Warning: The loop point is not aligned! The song will loop incorrectly.");
+
+			v.setWrapMark();
+		}
 	}
 
 	void jump(int to, bool doCtr) {
