@@ -412,7 +412,7 @@ class InputString : Input {
 				nibble = 0;
 				break;
 			}
-			// fallthrough
+			goto case SDLK_DELETE;
 		case SDLK_DELETE:
 			instring[nibble .. $-1] = instring[nibble+1 .. $].dup;
 			instring[$-1] = ' ';
@@ -509,7 +509,7 @@ abstract class Newinput : Input {
 				setRowValue(memvalue);
 				return WRAP;
 			}
-			// fallthrough
+			goto case '.';
 		case '.':
 			clearRow();
 			return WRAP;
@@ -519,7 +519,7 @@ abstract class Newinput : Input {
 			if(value < 0) return OK;
 			return valuekeyHandler(value);
 		}
-		return OK;
+		//not reached
 	}
 
 protected:	
@@ -611,6 +611,7 @@ class InputInstrument : Newinput {
 		case SDLK_RETURN:
 			if(element.instr.value < 0x30)
 				mainui.activateInstrumentTable(element.instr.value);
+			break;
 		default:
 			break;
 		}

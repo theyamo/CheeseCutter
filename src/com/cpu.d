@@ -628,12 +628,12 @@ protected:
             return 0;
         case Am.IMMEDIATE:
             return arg;
-        case Am.ABSOLUTE_X:
-        case Am.ZY, Am.ABSOLUTE_Y:
-        case Am.ZEROPAGE_X:
-        case Am.Z:
-        case Am.ABSOLUTE:
-        case Am.INDIRECT_Y:
+        case Am.ABSOLUTE_X,
+			Am.ZY, Am.ABSOLUTE_Y,
+			Am.ZEROPAGE_X,
+			Am.Z,
+			Am.ABSOLUTE,
+			Am.INDIRECT_Y:
             return memory[fetchAddress(st)];
         case Am.ACC:
             return regs.a;

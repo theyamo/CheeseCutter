@@ -511,6 +511,7 @@ final private class Toplevel : WindowSwitcher {
 			case SDLK_h:
 				.ui.tables.displayHelp ^= 1;
 				UI.statusline.display("Help texts " ~ (.ui.tables.displayHelp ? "enabled." : "disabled."));
+				break;
 			default:
 				break;
 			}
@@ -994,13 +995,11 @@ final class UI {
 					 seqPos.dup(fplayPos);
 					 toplevel.stopFp();
 					 statusline.display("Tracking off.");
-					 break;
 				 }
 				 else {
 					 stop(false);
 					 toplevel.startFp();
 					 statusline.display("Tracking on.");
-					 break;
 				 }
 				 break;
 			 case SDLK_F4:

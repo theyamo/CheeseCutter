@@ -157,6 +157,7 @@ class DebugDialog : Window {
 		switch(key.unicode) {
 		case SDLK_SPACE:
 			com.util.hexdump(seq.compact(),16);
+			break;
 		case 0:
 			break;
 		default:
