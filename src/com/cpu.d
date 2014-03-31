@@ -691,7 +691,13 @@ protected:
 }
 
 class CPUException : Exception {
+	CPU cpu;
 	this(CPU cpu, string msg) {
 		super("CPU error: " ~ msg ~ " (" ~ cpu.dumpRegs() ~ ")");
+		this.cpu = cpu;
+	}
+
+	override string toString() {
+		return msg;
 	}
 }
