@@ -88,22 +88,6 @@ CXX_SRCS = src/audio/resid/residctrl.cpp \
 CXX_OBJS = $(CXX_SRCS:.cpp=.o)
 
 C_SRCS	= \
-	src/asm/acme.c \
-	src/com/asm.c \
-	src/asm/alu.c \
-	src/asm/basics.c \
-	src/asm/cpu.c \
-	src/asm/dynabuf.c \
-	src/asm/encoding.c \
-	src/asm/flow.c \
-	src/asm/global.c \
-	src/asm/input.c src/asm/label.c \
-	src/asm/macro.c \
-	src/asm/mnemo.c \
-	src/asm/output.c \
-	src/asm/platform.c \
-	src/asm/section.c \
-	src/asm/tree.c
 
 C_OBJS	= $(C_SRCS:.c=.o)
 
