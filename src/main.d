@@ -33,7 +33,7 @@ version(Win32) {
 	const DIR_SEPARATOR = '\\';
 }
 
-void initVideo(bool useFullscreen, int m, bool yuv, bool aspect) {
+void initVideo(bool useFullscreen, int m, bool useyuv) {
 	int mx, my;
 
 	if( SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -45,7 +45,7 @@ void initVideo(bool useFullscreen, int m, bool yuv, bool aspect) {
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
-	video = yuv ? new VideoYUV(screen, useFullscreen, aspect) :
+	video = useyuv ? new VideoYUV(screen, useFullscreen) :
 		new VideoStandard(screen, useFullscreen);
 
 	SDL_EnableKeyRepeat(200, 10);
@@ -155,14 +155,14 @@ void printheader() {
 	derr.writefln("  -m [0|1]         Specify SID model for reSID (6581/8580) (def=0)");
 	derr.writefln("  -n               Enable NTSC mode");
 	derr.writefln("  -r [value]       Set playback frequency (def=48000)");
-	derr.writefln("  -y               Use a YUV video overlay");
+	derr.writefln("  -y               Use YUV video overlay");
 	derr.writef("\n");
 }
 
 int main(char[][] args) {
 	int i;
 	bool fs = false;
-	bool yuvOverlay, keepAspect, display;
+	bool yuvOverlay, display;
 	string filename;
 	bool fnDefined = false;
 
@@ -227,7 +227,6 @@ int main(char[][] args) {
 				break;
 			case "-y", "-ya", "-yuv":
 				yuvOverlay = true;
-				keepAspect = true;
 				break;
 			default:
 				version (darwin) {
@@ -255,7 +254,7 @@ int main(char[][] args) {
 		return -1;
 	}
 	
-	initVideo(fs, display, yuvOverlay, keepAspect);
+	initVideo(fs, display, yuvOverlay);
 	audio.player.init();
 	initSession();
 	mainui = new UI();

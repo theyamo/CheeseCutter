@@ -171,24 +171,21 @@ class VideoStandard : Video {
 
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
-	bool keepAspect = false; 
 	const private int correctedHeight, correctedWidth;
 	
-	this(Screen scr, int fs, bool keepAspect) {
+	this(Screen scr, int fs) {
 		super(scr, fs);
 		correctedHeight = displayHeight;
 		correctedWidth = displayWidth;
-		this.keepAspect = keepAspect;
-		if(keepAspect) {
-			if(cast(float)displayHeight / displayWidth < 0.75) { // wide screen
-				correctedWidth = cast(int)(correctedHeight / 0.75);
-				correctedHeight = displayHeight;
-			}
-			else {
-				correctedWidth = displayWidth;
-				correctedHeight = cast(int)(correctedWidth * 0.75);
-			}
+		if(cast(float)displayHeight / displayWidth < 0.75) { // wide screen
+			correctedWidth = cast(int)(correctedHeight / 0.75);
+			correctedHeight = displayHeight;
 		}
+		else {
+			correctedWidth = displayWidth;
+			correctedHeight = cast(int)(correctedWidth * 0.75);
+		}
+		
 		enableFullscreen(fs > 0);
 	}
 
@@ -199,14 +196,8 @@ class VideoYUV : Video {
 
 	override protected void resize(bool maxres) {
 		if(maxres) {
-			if(keepAspect) {
-				width = correctedWidth;
-				height = correctedHeight;
-			}
-			else {
-				width = displayWidth;
-				height = displayHeight;
-			}
+			width = correctedWidth;
+			height = correctedHeight;
 		}
 		else {
 			width = 800;
@@ -327,7 +318,7 @@ class VideoYUV : Video {
 		if(overlay !is null)
 			SDL_FreeYUVOverlay(overlay);
 		overlay = SDL_CreateYUVOverlay(ovlRes[0], ovlRes[1], SDL_YV12_OVERLAY, surface);
-		if (overlay is null) {
+		if(overlay is null) {
 			throw new DisplayError("Couldn't initialize YUV overlay.");
 		}
 		rect.w = cast(ushort)scrRes[0];
