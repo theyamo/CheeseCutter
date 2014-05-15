@@ -55,15 +55,14 @@ abstract class Video {
 		int useFullscreen;
 		Screen screen;
 	}
-	int height, width;
+	int height = 800, width = 600;
 	float scalex, scaley;
-	const int maxheight, maxwidth;
+	const int displayHeight, displayWidth;
 	this(Screen scr, int fs) {
 		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 		screen = scr;
-		maxheight = vidinfo.current_h;
-		maxwidth = vidinfo.current_w;
-		width = 800; height = 600;
+		displayHeight = vidinfo.current_h;
+		displayWidth = vidinfo.current_w;
 		useFullscreen = fs;
 	}
 
@@ -173,21 +172,21 @@ class VideoStandard : Video {
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
 	bool keepAspect = false; 
-	const private int arheight, arwidth;
+	const private int correctedHeight, correctedWidth;
 	
 	this(Screen scr, int fs, bool keepAspect) {
 		super(scr, fs);
-		arheight = maxheight;
-		arwidth = maxwidth;
+		correctedHeight = displayHeight;
+		correctedWidth = displayWidth;
 		this.keepAspect = keepAspect;
 		if(keepAspect) {
-			if(cast(float)maxheight / maxwidth < 0.75) { // wide screen
-				arwidth = cast(int)(arheight / 0.75);
-				arheight = maxheight;
+			if(cast(float)displayHeight / displayWidth < 0.75) { // wide screen
+				correctedWidth = cast(int)(correctedHeight / 0.75);
+				correctedHeight = displayHeight;
 			}
 			else {
-				arwidth = maxwidth;
-				arheight = cast(int)(arwidth * 0.75);
+				correctedWidth = displayWidth;
+				correctedHeight = cast(int)(correctedWidth * 0.75);
 			}
 		}
 		enableFullscreen(fs > 0);
@@ -201,12 +200,12 @@ class VideoYUV : Video {
 	override protected void resize(bool maxres) {
 		if(maxres) {
 			if(keepAspect) {
-				width = arwidth;
-				height = arheight;
+				width = correctedWidth;
+				height = correctedHeight;
 			}
 			else {
-				width = maxwidth;
-				height = maxheight;
+				width = displayWidth;
+				height = displayHeight;
 			}
 		}
 		else {
@@ -222,7 +221,7 @@ class VideoYUV : Video {
 		int sdlflags = SDL_SWSURFACE | useFullscreen;
 		if(!useFullscreen)
 			surface = SDL_SetVideoMode(800, 600, 0, sdlflags); 
-		else surface = SDL_SetVideoMode(maxwidth, maxheight, 0, sdlflags); 
+		else surface = SDL_SetVideoMode(displayWidth, displayHeight, 0, sdlflags); 
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
 		}
