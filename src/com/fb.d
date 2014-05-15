@@ -185,6 +185,8 @@ class VideoYUV : Video {
 			correctedWidth = displayWidth;
 			correctedHeight = cast(int)(correctedWidth * 0.75);
 		}
+
+//		derr.writefln("corr.width = " ~ correctedWidth ~ ", height = " ~ correctedHeight);
 		
 		enableFullscreen(fs > 0);
 	}
@@ -203,6 +205,9 @@ class VideoYUV : Video {
 			width = 800;
 			height = 600;
 		}
+
+//		derr.writefln("corr.width = " ~ correctedWidth ~ ", height = " ~ correctedHeight);
+
 		super.resize(maxres);
 	}
 
@@ -238,7 +243,8 @@ class VideoYUV : Video {
 		SDL_LockYUVOverlay(overlay);
 	
 		// clear bottom stripe if necessary (mode = 800x600)
-		/+if(video.resolution == Resolution.Res800x600)+/ {
+		/+if(video.resolution == Resolution.Res800x600)+/
+		{
 			pixbuf[] = 0;
 			for(x = 0; x < screen.width; x++) {
 				for(y = 0; y < 12; y++) {
@@ -329,6 +335,11 @@ class VideoYUV : Video {
 			rect.x = cast(short)(scrRes[0]/2 - ovlRes[0]/2);
 			rect.y = cast(short)(scrRes[1]/2 - ovlRes[1]/2);
 		}
+
+		derr.writefln("monitor res x = " ~ scrRes[0] ~ ",  y = " ~ scrRes[1]);
+		derr.writefln("screen res x = " ~ width ~ ",  y = " ~ height);
+		derr.writefln("offset x = " ~ rect.x ~ ",  offset y = " ~ rect.y);
+		
 	}
 }
 
