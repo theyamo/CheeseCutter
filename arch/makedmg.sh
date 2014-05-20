@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=$(shell cat ../Version)
+VERSION="2.6"
 applicationName="CheeseCutter.app"
 backgroundPictureName="background.png"
 source="dist"
