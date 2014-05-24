@@ -33,7 +33,7 @@ version(Win32) {
 	const DIR_SEPARATOR = '\\';
 }
 
-void initVideo(bool useFullscreen, int m, bool useyuv) {
+void initVideo(bool useFullscreen, int m, bool useyuv, bool yuvcenter) {
 	int mx, my;
 
 	if( SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -45,7 +45,7 @@ void initVideo(bool useFullscreen, int m, bool useyuv) {
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
-	video = useyuv ? new VideoYUV(screen, useFullscreen) :
+	video = useyuv ? new VideoYUV(screen, useFullscreen, yuvcenter) :
 		new VideoStandard(screen, useFullscreen);
 
 	SDL_EnableKeyRepeat(200, 10);
@@ -162,7 +162,7 @@ void printheader() {
 int main(char[][] args) {
 	int i;
 	bool fs = false;
-	bool yuvOverlay, display;
+	bool yuvOverlay, yuvCenter = true, display;
 	string filename;
 	bool fnDefined = false;
 
@@ -225,8 +225,12 @@ int main(char[][] args) {
 			case "-nofp":
 				audio.player.usefp = 0;
 				break;
-			case "-y", "-ya", "-yuv":
+			case "-y", "-ya", "-yuv":	
 				yuvOverlay = true;
+				break;
+			case "-yn":
+				yuvOverlay = true;
+				yuvCenter = false;
 				break;
 			default:
 				version (darwin) {
@@ -254,7 +258,7 @@ int main(char[][] args) {
 		return -1;
 	}
 	
-	initVideo(fs, display, yuvOverlay);
+	initVideo(fs, display, yuvOverlay, yuvCenter);
 	audio.player.init();
 	initSession();
 	mainui = new UI();

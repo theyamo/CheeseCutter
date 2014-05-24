@@ -172,8 +172,8 @@ class VideoStandard : Video {
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
 	const private int correctedHeight, correctedWidth;
-	
-	this(Screen scr, int fs) {
+	const bool yuvCenter;
+	this(Screen scr, int fs, bool yuvCenter) {
 		super(scr, fs);
 		correctedHeight = displayHeight;
 		correctedWidth = displayWidth;
@@ -186,8 +186,8 @@ class VideoYUV : Video {
 			correctedHeight = cast(int)(correctedWidth * 0.75);
 		}
 
-		derr.writefln("corr.width = ", correctedWidth, ", height = ", correctedHeight);
-		
+//		derr.writefln("corr.width = ", correctedWidth, ", height = ", correctedHeight);
+		this.yuvCenter = yuvCenter;
 		enableFullscreen(fs > 0);
 	}
 
@@ -223,7 +223,7 @@ class VideoYUV : Video {
 		}
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
-		makeOverlay([800, 600],[width, height]);
+		makeOverlay([width, height]);
 		screen.refresh();
 	}
 
@@ -320,27 +320,32 @@ class VideoYUV : Video {
 		}
 	}
 
-	private void makeOverlay(int[] ovlRes, int[] scrRes) {
+	private void makeOverlay(int[] scrRes) {
 		if(overlay !is null)
 			SDL_FreeYUVOverlay(overlay);
-		overlay = SDL_CreateYUVOverlay(ovlRes[0], ovlRes[1], SDL_YV12_OVERLAY, surface);
+		overlay = SDL_CreateYUVOverlay(800, 600, SDL_YV12_OVERLAY, surface);
 		if(overlay is null) {
 			throw new DisplayError("Couldn't initialize YUV overlay.");
 		}
 		rect.w = cast(ushort)scrRes[0];
 		rect.h = cast(ushort)scrRes[1];
 		rect.x = rect.y = 0;
+		/+
 		if(useFullscreen &&
-		   scrRes[0] >= ovlRes[0] && scrRes[1] >= ovlRes[1]) {
-			rect.x = cast(short)(scrRes[0]/2 - ovlRes[0]/2);
-			rect.y = cast(short)(scrRes[1]/2 - ovlRes[1]/2);
-		}
+		   scrRes[0] >= ovlRes[0] && scrRes[1] >= ovlRes[1] &&
+			yuvCenter) {
+			+/
 
-		derr.writefln("monitor res x = ", scrRes[0], ",  y = ", scrRes[1]);
+		if(yuvCenter && useFullscreen) {
+			rect.x = cast(short)(displayWidth/2 - scrRes[0]/2);
+			rect.y = cast(short)(displayHeight/2 - scrRes[1]/2);
+		}
+/+
+		derr.writefln("monitor res x = ", displayWidth, ",  y = ", displayHeight);
 		derr.writefln("screen res x = ", width, ",  y = ", height);
-		derr.writefln("overlay res x = ", ovlRes[0], ",  y = ", ovlRes[1]);
+//		derr.writefln("overlay res x = ", ovlRes[0], ",  y = ", ovlRes[1]);
 		derr.writefln("offset x = ", rect.x, ",  offset y = ", rect.y);
-		
++/		
 	}
 }
 
