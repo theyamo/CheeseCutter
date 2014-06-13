@@ -141,7 +141,7 @@ void mainloop() {
 }
 
 void printheader() {
-	derr.writefln("CheeseCutter (C) 2009-13 Abaddon");
+	derr.writefln("CheeseCutter (C) 2009-14 Abaddon");
 	derr.writefln("Released under GNU GPL.");
 	derr.writef("\n");
 	derr.writefln("Usage: ccutter [OPTION]... [FILE]");

@@ -9,4 +9,4 @@ Exec=ccutter %f
 Type=Application
 Icon=ccutter-96
 Categories=GNOME;Application;AudioVideo;Audio;Video;
-X-Desktop-File-Install-Version=0.10
+X-Desktop-File-Install-Version=0.21
