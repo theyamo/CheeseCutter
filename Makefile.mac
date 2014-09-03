@@ -38,7 +38,8 @@ release: all
 
 	rm -rf CheeseCutter.app
 	mkdir -p CheeseCutter.app/Contents/Frameworks
-	cp -r arch/MacOs/Contents CheeseCutter.app
+	mkdir -p CheeseCutter.app/Contents/MacOS
+	cp -r arch/MacOS/Contents CheeseCutter.app
 	cp -r /Library/Frameworks/SDL.framework CheeseCutter.app/Contents/Frameworks
 	cp $(TARGET) CheeseCutter.app/Contents/MacOS
 	cp ct2util CheeseCutter.app/Contents/MacOS
