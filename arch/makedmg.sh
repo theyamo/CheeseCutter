@@ -41,10 +41,10 @@ echo '
            set position of item "Applications" of container window to {375, 100}
            update without registering applications
            close
-	   open
-	   delay 5
+           open
+           delay 5
            eject
-     end tell
+           end tell
    end tell
 ' | osascript
 
@@ -53,4 +53,4 @@ sync
 sync
 hdiutil detach ${device}
 hdiutil convert pack.temp.dmg -format UDZO -imagekey zlib-level=9 -o ${finalDMGName}
-rm pack.temp.dmg 
+rm pack.temp.dmg
