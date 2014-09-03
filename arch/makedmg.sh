@@ -19,7 +19,10 @@ sleep 5
 mkdir /Volumes/"${title}"/.background
 cp arch/background.png /Volumes/"${title}"/.background
 cp -r tunes README COPYING Changelog /Volumes/"${title}"/
- 
+
+pushd /Volumes/"${title}"
+ln -s /Applications
+popd
 
 echo '
    tell application "Finder"
@@ -33,7 +36,6 @@ echo '
            set arrangement of theViewOptions to not arranged
            set icon size of theViewOptions to 72
            set background picture of theViewOptions to file ".background:'${backgroundPictureName}'"
-           make new alias file at container window to POSIX file "/Applications" with properties {name:"Applications"}
            delay 1
 	   set position of item ${applicationName} of container window to {100, 100}
            set position of item "Applications" of container window to {375, 100}
