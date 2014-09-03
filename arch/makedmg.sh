@@ -5,7 +5,7 @@ applicationName="CheeseCutter.app"
 backgroundPictureName="background.png"
 source="dist"
 title="CheeseCutter ${VERSION}"
-size=10000
+size=20000
 finalDMGName="CheeseCutter_${VERSION}.dmg"
 
 mkdir "${source}"
