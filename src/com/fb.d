@@ -171,7 +171,7 @@ class VideoStandard : Video {
 
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
-	const private int correctedHeight, correctedWidth;
+	private int correctedHeight, correctedWidth;
 	const bool yuvCenter;
 	this(Screen scr, int fs, bool yuvCenter) {
 		super(scr, fs);

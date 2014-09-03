@@ -445,7 +445,7 @@ class InputString : Input {
 				try {
 					validate(instring);
 				}
-				catch(UtfException e) {
+				catch(UTFException e) {
 					instring = old.dup;
 					break;
 				}
