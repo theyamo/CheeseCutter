@@ -1,5 +1,6 @@
 #LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL
-LIBS=/opt/ldc2/lib/libphobos-ldc.a /opt/ldc2/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL 
+#LIBS=/opt/ldc2/lib/libphobos-ldc.a /opt/ldc2/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL 
+LIBS=/usr/local/lib/libphobos2-ldc.a /usr/local/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL
 COMFLAGS= -mmacosx-version-min=10.7
 VERSION=$(shell cat Version)
 DLINK=$(COMFLAGS)
