@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>ct</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>ct.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>ChesseCutter song file</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>SONG</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSTypeIsPackage</key>
+			<false/>
+			<key>NSPersistentStoreTypeKey</key>
+			<string>Binary</string>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>ccutter</string>
+	<key>CFBundleGetInfoString</key>
+	<string>Version 2.5.0</string>
+	<key>CFBundleIconFile</key>
+	<string>ct.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>fi.kapsi.theyamo.ct</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>CheeseCutter</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>CT</string>
+	<key>CFBundleVersion</key>
+	<string>2.5.0</string>
+</dict>
+</plist>

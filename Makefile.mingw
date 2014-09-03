@@ -1,0 +1,73 @@
+COMFLAGS=-m32
+LIBS=-lstdc++
+DLINK=$(COMFLAGS)
+VERSION=$(shell cat Version)
+DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font
+CFLAGS=$(COMFLAGS)
+CXXFLAGS=$(CFLAGS) -I./src -O2
+COMPILE.d = $(DC) $(DFLAGS) -c -o $@
+COMPILE.c = $(CC) $(CFLAGS) -c -o $@
+OUTPUT_OPTION = 
+DC=gdc-win
+CXX=g++-win
+CC=gcc-win
+EXE=
+TARGET=ccutter
+OBJCOPY=objcopy
+
+include Makefile.objects.mk
+
+$(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
+	$(DC) $(DLINK) -mwindows -o $(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
+
+ct2util: $(C64OBJS) $(UTILOBJS)
+	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS) 
+
+.cpp.o : $(CXX_SRCS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.c.o : $(C_SRCS)
+	gcc-win -c $< -o $@
+
+ct: $(C64OBJS) $(CTOBJS)
+
+c64: $(C64OBJS)
+
+all: c64 $(OBJS) $(CXX_OBJS) ct2util ct $(TARGET)
+
+release: all
+	strip ccutter$(EXE)
+	strip ct2util$(EXE)
+
+dist:	release
+	zip cheesecutter-$(VERSION)-win32.zip $(DIST_FILES)
+
+clean: 
+	rm -f *.o *~ resid/*.o resid-fp/*.o ccutter ct2util \
+		$(C64OBJS) $(OBJS) $(CTOBJS) $(CXX_OBJS) $(UTILOBJS) $(C_OBJS)
+
+dclean: clean
+	rm -rf dist
+	rm -rf CheeseCutter.app
+	rm -rf CheeseCutter_$(VERSION).dmg
+
+
+tar:
+	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-src.tar.bz2
+# --------------------------------------------------------------------------------
+
+src/c64/player.bin: src/c64/player_v4.acme
+	acme -f cbm --outfile $@ $<
+
+src/c64/custplay.bin: src/c64/custplay.acme
+	acme -f cbm --outfile $@ $<
+
+
+src/ct/base.o: src/c64/player.bin
+src/ui/ui.o: src/ui/help.o
+
+%.o: %.d
+	$(COMPILE.d) $(OUTPUT_OPTION) $<
+
+
+
