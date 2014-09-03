@@ -37,7 +37,7 @@ echo '
            set icon size of theViewOptions to 72
            set background picture of theViewOptions to file ".background:'${backgroundPictureName}'"
            delay 1
-	   set position of item ${applicationName} of container window to {100, 100}
+	         set position of item "'${applicationName}'" of container window to {100, 100}
            set position of item "Applications" of container window to {375, 100}
            update without registering applications
            close
