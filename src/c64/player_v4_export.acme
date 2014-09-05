@@ -3,8 +3,7 @@ FALSE		= 0
 TRUE		= 1
 EXPORT		= TRUE				; if TRUE, editor specific code will be left out
 MULTISPEED	= FALSE				; support for multispeed playback
-INSNO		= 48				; number of instruments used
-		
+INSNO		= 48		
 ;;; ----------------------------------------
 ;;; instr table enums
 ;;; ----------------------------------------

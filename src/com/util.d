@@ -61,7 +61,7 @@ string petscii2D(PetString petstring) {
 	return format(s);
 }
 
-string getArgumentValue(string argname, string[] text) {
+deprecated string getArgumentValue(string argname, string[] text) {
 	foreach(line; text) {
 		string[] tokens = line.split();
 		if(tokens.length == 0) continue;
@@ -69,6 +69,22 @@ string getArgumentValue(string argname, string[] text) {
 			return tokens[2];
 	}
 	return null;
+}
+
+string setArgumentValue(string argname, string value, string text) {
+	string s;
+	bool found;
+	foreach(line; text.splitLines()) {
+		string[] tokens = line.split();
+		if(tokens.length == 0) continue;
+		if(tokens[0] == argname && tokens.length > 2 && tokens[1] == "=") {
+			line = tokens[0] ~ tokens[1] ~ " " ~ value;
+			found = true;
+		}
+		s ~= line ~ "\n";
+	}
+	if(!found) throw new Exception("argname not found");
+	return s;
 }
 
 ubyte[] table2Array(string table) {
