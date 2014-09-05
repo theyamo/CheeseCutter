@@ -114,6 +114,7 @@ UTILOBJS = src/ct2util.o \
 	src/ct/pack.o \
 	src/ct/purge.o \
 	src/ct/dump.o \
+	src/ct/build.o \
 	$(C_OBJS)
 
 C64OBJS = src/c64/player.bin \

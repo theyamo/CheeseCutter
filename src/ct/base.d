@@ -709,6 +709,19 @@ class Sequence {
 	
 }
 
+struct Table {
+	ubyte[] data;
+	int offset;
+	int size() {
+		foreach_reverse(idx, val; data) {
+			if(val != 0) return cast(int)(idx + 1);
+		}
+		return 0;
+	}
+	int length() { return cast(int)data.length; }
+}
+
+
 class Song {
 	enum DatafileOffset {
 		Binary, Header = 65536, 
@@ -723,18 +736,6 @@ class Song {
 			ubyte[8] instrumentFlags;
 			ubyte[16] cmdFlags;
 		}
-	}
-
-	struct Table {
-		ubyte[] data;
-		int offset;
-		int size() {
-			foreach_reverse(idx, val; data) {
-				if(val != 0) return cast(int)(idx + 1);
-			}
-			return 0;
-		}
-		int length() { return cast(int)data.length; }
 	}
 
 	class Subtunes {
