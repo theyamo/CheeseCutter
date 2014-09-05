@@ -8,12 +8,13 @@ import ct.base;
 import ct.purge;
 import ct.pack;
 import ct.dump;
+import ct.build;
 import std.stdio;
 import std.string;
 import std.conv;
 import std.stdio;
 
-enum Command { None, ExportPRG, ExportSID, Dump, Import, Init }
+enum Command { None, ExportPRG, ExportSID, Dump, Import, Init, ExportASM }
 const string[] exts = [ "", "prg", "sid", "s", "ct", "ct" ];
 
 /+ options +/
@@ -134,6 +135,9 @@ int main(string[] args) {
 		case "init":
 			command = Command.Init;
 			break;
+		case "asm":
+			command = Command.ExportASM;
+			break;
 		default:
 			throw new UserException(format("command '%s' not recognized.",args[1]));
 		}
@@ -233,6 +237,13 @@ int main(string[] args) {
 			doPurge(insong);
 			ubyte[] data = (command == Command.ExportSID) ? packToSid(insong, relocAddress, defaultTune, verbose)
 				: pack(insong, relocAddress, verbose);
+			std.file.write(outfn, data);
+			break;
+		case Command.ExportASM:
+			insong = new Song;
+			insong.open(infn);
+			doPurge(insong);
+			ubyte[] data = doBuild(insong);
 			std.file.write(outfn, data);
 			break;
 		case Command.Import:
