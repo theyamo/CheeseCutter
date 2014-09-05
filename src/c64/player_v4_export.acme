@@ -1129,7 +1129,7 @@ skippostsync
 next		dex
 		bmi maindone
 
-		bit state			; 7th bit, keyjam call
+		bit state
 		bvs *+5				; 6th bit, multiplay call
 		jmp main0
 		jmp syncskip
