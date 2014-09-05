@@ -1,5 +1,5 @@
 LIBS=-ldl -lstdc++
-COMFLAGS=-g
+COMFLAGS=
 DLINK=$(COMFLAGS)
 VERSION=$(shell cat Version)
 DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font
@@ -30,7 +30,7 @@ ct2util: $(C64OBJS) $(UTILOBJS)
 
 c64: $(C64OBJS)
 
-all: c64 $(OBJS) $(CXX_OBJS) ct2util ct $(TARGET)
+all: c64 $(OBJS) $(CXX_OBJS) $(UTILOBJS) ct2util ct $(TARGET)
 
 release: all
 	strip ccutter$(EXE)

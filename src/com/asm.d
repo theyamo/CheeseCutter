@@ -20,12 +20,10 @@ char[] assemble(string source) {
 	char* input = acme_assemble(toStringz(source), &length, &error_message[0]);
 	
 	if(input is null) {
-		free(input);
 		string msg = to!string(&error_message[0]);
 		throw new Error(format("Could not assemble player. Message:\n%s", msg));
 	}
-	char[] output;
-	output.length = length;
+	char[] output = new char[length];
 	memcpy(output.ptr, input, length);
 	free(input);
 	return output;
