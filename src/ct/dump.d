@@ -10,7 +10,7 @@ module ct.dump;
 import ct.base;
 import std.file;
 import std.string;
-
+import std.stdio;
 
 // confirming acme standard
 private const string byteOp = "!byte", wordOp = "!word";
@@ -51,11 +51,12 @@ string dumpData(Song sng, string title) {
 		}
 		append("\n");
 	}
-
 	int tablen;
-	append(format("; data dump for %s \n", title));
-	append( "songsets\t" ~ wordOp ~ " track1,track2,track3\n");
-	append( format("\t\t" ~ byteOp ~ " %d, 7\n", sng.speed()));
+	ushort[][] trackpointers = new ushort[][sng.subtunes.numOf];
+	sng.subtunes.activate(0);
+	auto packedTracks = sng.subtunes.compact();	
+	writeln(packedTracks.length, " ", sng.subtunes.numOf);
+	
 	append( "arp1 = *\n");
 	tablen = getHighestUsed(sng.wave1Table) + 1;
 	hexdump(sng.wave1Table[0 .. tablen], 16);
@@ -120,14 +121,34 @@ string dumpData(Song sng, string title) {
 	hexdump(tracks[0..tablen], 16);
 
 	+/
+	// dump songsets
 
+	append( "songsets = *\n");// ~ wordOp); // ~ " track1,track2,track3\n");
+	//append( format("\t\t" ~ byteOp ~ " %d, 7\n", sng.speed()));
+	for(int i = 0; i < sng.subtunes.numOf; i++) {
+		append(wordOp ~ "\t");
+		for(int voice = 0; voice < 3; voice++) {
+			if(voice > 0)
+				append(",");
+			append(" " ~ format("track%d_%d", i, voice));
+		}
+		append( format("\n\t\t" ~ byteOp ~ " %d, 7\n", sng.songspeeds[i]));
+	}
+	// dump tracks
+	foreach(i, ref subtune; packedTracks) {
+		foreach(j, voice; subtune) {
+			append(format("track%d_%d = *\n", i, j));
+			hexdump(voice, 16);
+		}
+	}
+	/+
 	append( "track1 = *\n");
 	hexdump(sng.tracks[0].compact(), 16);
 	append( "track2 = *\n");
 	hexdump(sng.tracks[1].compact(), 16);
 	append( "track3 = *\n");
 	hexdump(sng.tracks[2].compact(), 16);
-
+	+/
 
 	for(int i = 0; i < sng.numOfSeqs(); i++) {
 		append( format("s%02x = *\n", i));
