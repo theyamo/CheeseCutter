@@ -51,13 +51,13 @@ static this() {
 abstract class Video {
 	protected {
 		SDL_Surface* surface;
-		SDL_Rect rect;
 		int useFullscreen;
 		Screen screen;
 	}
 	int height = 800, width = 600;
 	float scalex, scaley;
 	const int displayHeight, displayWidth;
+	SDL_Rect rect;
 	this(Screen scr, int fs) {
 		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 		screen = scr;
@@ -171,7 +171,7 @@ class VideoStandard : Video {
 
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
-	const private int correctedHeight, correctedWidth;
+	const int correctedHeight, correctedWidth;
 	const bool yuvCenter;
 	this(Screen scr, int fs, bool yuvCenter) {
 		super(scr, fs);
@@ -330,22 +330,11 @@ class VideoYUV : Video {
 		rect.w = cast(ushort)scrRes[0];
 		rect.h = cast(ushort)scrRes[1];
 		rect.x = rect.y = 0;
-		/+
-		if(useFullscreen &&
-		   scrRes[0] >= ovlRes[0] && scrRes[1] >= ovlRes[1] &&
-			yuvCenter) {
-			+/
 
 		if(yuvCenter && useFullscreen) {
 			rect.x = cast(short)(displayWidth/2 - scrRes[0]/2);
 			rect.y = cast(short)(displayHeight/2 - scrRes[1]/2);
 		}
-/+
-		derr.writefln("monitor res x = ", displayWidth, ",  y = ", displayHeight);
-		derr.writefln("screen res x = ", width, ",  y = ", height);
-//		derr.writefln("overlay res x = ", ovlRes[0], ",  y = ", ovlRes[1]);
-		derr.writefln("offset x = ", rect.x, ",  offset y = ", rect.y);
-+/		
 	}
 }
 

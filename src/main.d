@@ -101,6 +101,8 @@ void mainloop() {
 				case 1, 3:
 					int x, y;
 					SDL_GetMouseState(&x, &y);
+					x -= video.rect.x;
+					y -= video.rect.y;
 					x *= video.scalex;
 					y *= video.scaley;
 					int cx = (x + 4) / 8, cy = y / 14;
