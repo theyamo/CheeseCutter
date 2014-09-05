@@ -8,18 +8,12 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 module ct.dump;
 
 import ct.base;
+import com.util;
 import std.file;
 import std.string;
 import std.stdio;
 
-// confirming acme standard
 private const string byteOp = "!byte", wordOp = "!word";
-
-/** TODO:
-	- subtunes!
-	- pack insturment table
-	- inform user about player version used
-*/
 
 string dumpData(Song sng, string title) {
 	string output;
@@ -63,17 +57,23 @@ string dumpData(Song sng, string title) {
 	append( "arp2 = *\n");
 	hexdump(sng.wave2Table[0 .. tablen], 16);
 	append( "filttab = *\n");
-	hexdump(sng.filterTable[0 .. getHighestUsed(sng.filterTable) + 3], 3);
+	hexdump(sng.filterTable[0 .. getHighestUsed(sng.filterTable) + 4], 4);
 	append( "pulstab = *\n");
-	hexdump(sng.pulseTable[0 .. getHighestUsed(sng.pulseTable) + 3], 3);
+	hexdump(sng.pulseTable[0 .. getHighestUsed(sng.pulseTable) + 4], 4);
 	append( "inst = *\n");
 	ubyte[512] instab = 0;
 	// FIX: find out which instrs are in use
 //	hexdump(sng.instrumentTable[0 .. (getHighestUsed(sng.instrumentTable[0..256]) | 8) + 1], 8);
 //	hexdump(sng.instrumentTable[0 .. 48*8], 16);
+
+	int maxInsno;
+	sng.seqIterator((Sequence s, Element e) { 
+			int insval = e.instr.value;
+			if(insval > 0x2f) return;
+			if(insval > maxInsno) maxInsno = insval; });
 	for(int i = 0; i < 8; i++) {
 		append( format("\ninst%d = *\n",i));
-		hexdump(sng.instrumentTable[i * 48 .. i * 48 + 48], 16);
+		hexdump(sng.instrumentTable[i * 48 .. i * 48 + (maxInsno+1)], 16);
 	}
 
 
@@ -161,6 +161,5 @@ string dumpData(Song sng, string title) {
 	hexdump(sng.chordTable[0..tablen], 16);
 	append("\nchordindex");
 	hexdump(sng.chordIndexTable[0..16], 16);
-
 	return output;
 }

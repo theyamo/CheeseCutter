@@ -123,6 +123,12 @@ ubyte[] doBuild(Song song) {
 	string input = playerCode;
 	input ~= dumpData(song, "");
 	writeln("Assembling...");
+	int maxInsno;
+	song.seqIterator((Sequence s, Element e) { 
+			int insval = e.instr.value;
+			if(insval > 0x2f) return;
+			if(insval > maxInsno) maxInsno = insval; });
+	input = setArgumentValue("INSNO", format("%d", maxInsno+1), input);
 	writeln(input);
 	ubyte[] output = cast(ubyte[])assemble(input);
 	writeln(format("Size %d bytes.", output.length));
