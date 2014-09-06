@@ -129,6 +129,64 @@ ubyte[] doBuild(Song song) {
 			if(insval > 0x2f) return;
 			if(insval > maxInsno) maxInsno = insval; });
 	input = setArgumentValue("INSNO", format("%d", maxInsno+1), input);
+	bool chordUsed, swingUsed, filterUsed, vibratoUsed, setAttUsed, setDecUsed, setSusUsed, setRelUsed, setVolUsed, setSpeedUsed, offsetUsed;
+	bool slideUpUsed, slideDnUsed, lovibUsed, portaUsed, setADSRUsed;
+	
+	song.seqIterator((Sequence s, Element e) { 
+			int val = e.cmd.value;
+			int cmdval = -1;
+			if(val == 0) return;
+			if(val < 0x40) {
+				cmdval = song.superTable[val];
+				if(cmdval < 1)
+					slideUpUsed = true;
+				else if(cmdval == 1)
+					slideDnUsed = true;
+				else if(cmdval == 2)
+					vibratoUsed = true;
+				else if(cmdval == 3)
+					offsetUsed = true;
+				else if(cmdval == 4)
+					lovibUsed = true;
+				else if(cmdval == 5)
+					setADSRUsed = true;
+				else if(cmdval == 7)
+					portaUsed = true;
+				return;
+			}
+			else if(val < 0x60)
+				return;
+			else if(val < 0x80)
+				return;
+			else if(val < 0xa0)
+				chordUsed = true;
+			else if(val < 0xb0)
+				setAttUsed = true;
+			else if(val < 0xc0)
+				setDecUsed = true;
+			else if(val < 0xd0)
+				setSusUsed = true;
+			else if(val < 0xe0)
+				setRelUsed = true;
+			else if(val < 0xf0)
+				setVolUsed = true;
+			else setSpeedUsed = true;
+		});
+	input = setArgumentValue("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_CMD_VIBR", vibratoUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_CMD_PORTA", portaUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_CMD_SET_ADSR", setADSRUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_SEQ_SET_CHORD", chordUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_CHORD", chordUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_CMD_SET_OFFSET", offsetUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_CMD_SET_LOVIB", lovibUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_SEQ_SET_ATT", setAttUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_SEQ_SET_DEC", setDecUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_SEQ_SET_SUS", setSusUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_SEQ_SET_REL", setRelUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_SEQ_SET_VOL", setVolUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_SEQ_SET_SPEED", setSpeedUsed ? "TRUE" : "FALSE", input);
 	writeln(input);
 	ubyte[] output = cast(ubyte[])assemble(input);
 	writeln(format("Size %d bytes.", output.length));
