@@ -51,9 +51,9 @@ INCLUDE_CMD_PORTA	= TRUE
 INCLUDE_CMD_SET_ADSR	= TRUE
 INCLUDE_CMD_SET_OFFSET	= TRUE
 INCLUDE_CMD_SET_LOVIB	= TRUE
-INCLUDE_CMD_SET_WAVE	= TRUE
-INCLUDE_CMD_SET_SPEED	= TRUE
-INCLUDE_CMD_SET_VOL	= TRUE
+INCLUDE_CMD_SET_WAVE	= FALSE
+; INCLUDE_CMD_SET_SPEED	= TRUE
+; INCLUDE_CMD_SET_VOL	= TRUE
 INCLUDE_SEQ_SET_PULSE	= TRUE
 INCLUDE_SEQ_SET_FILTER	= TRUE
 INCLUDE_SEQ_SET_CHORD	= TRUE
@@ -825,7 +825,6 @@ viblessamp	dey
 		jmp viblessamp
 
 vibadd		
-!if INCLUDE_VIBRAFEEL = TRUE {		
 		lda ZREG
 		clc
 		adc vibrafl,x
@@ -841,7 +840,6 @@ vibadd
 		lda vibrafh,x
 		adc #0
 		sta vibrafh,x
-}		
 vibrealadd	lda vibradir,x
 		and #1
 		bne vibradown
@@ -1207,12 +1205,9 @@ snotslide2
 		lda #3
 		sta effstate,x
 
-!if INCLUDE_VIBRAFEEL = TRUE {
 		lda ZREG
 		and #$0f
 		sta vibraflv,x
-}
-		
 		lda cmd3,y
 		and #$0f
 		sta vibraamp,x
@@ -1231,10 +1226,8 @@ snotslide2
 novibcor	sta vibracnt,x
 		lda #0
 		sta vibradir,x
-!if INCLUDE_VIBRAFEEL = TRUE {
 		sta vibrafl,x
 		sta vibrafh,x
-}
 }		
 snotvibrato	jmp superdone
 
@@ -1453,10 +1446,10 @@ filterskip	lda filtlo
 		sta $d418
 		
 		rts
-
+!if EXPORT = FALSE {
 dummy		!8 0
 		!8 $fc,$3d	; end-of-code mark for packer
-
+}
 ;---------------------------------------
 freqtable_lo
 		!8 $16,$27,$38,$4b,$5f,$73
@@ -1495,8 +1488,9 @@ freqtable_hi
 ;---------------------------------------
  ;Registers
 voicon		!8 1,1,1			;flags channels on and off
+!if EXPORT = FALSE {
 editorflag	!8 0				; set to >0 from packer
-		
+}		
 state		!8 0
 inittemp	= state		; real state value overrides temp at the end of init
 
@@ -1572,7 +1566,7 @@ curseq		!8 0,0,0
 seqcnt		!8 0,0,0
 
 		 ;Filter
-
+!if INCLUDE_FILTER = TRUE {
 bandpass	!8 0
 filter		!8 0
 filtcnt		!8 0
@@ -1580,15 +1574,14 @@ filtcur		!8 0
 filtnxt		!8 0
 filtadd		!8 0,0
 filtlo		!8 0
-
+}
 		 ;Vibration variables
-
+!if INCLUDE_CMD_VIBR = TRUE | INCLUDE_CMD_SET_LOVIB = TRUE {
 vibracnt	!8 0,0,0 ;Count
 vibradir	!8 0,0,0 ;Direction
 vibraamp	!8 0,0,0 ;Amplitude
 vibrafrq	!8 0,0,0 ;Frequency
 vibracor	!8 0,0,0 ;Tune correction
-!if INCLUDE_VIBRAFEEL = TRUE {
 vibrafl		!8 0,0,0 ;Vibrato feel low
 vibrafh		!8 0,0,0 ;Vibrato feel high
 vibraflv	!8 0,0,0 ;Vibrato feel add
@@ -1621,8 +1614,10 @@ wavetrans	!8 0,0,0
 wavecnt		!8 0,0,0
 wavepos		!8 0,0,0
 wavetime	!8 0,0,0
+!if INCLUDE_CHORD = TRUE {
 chordtpos	!8 0,0,0
 chordvalue	!8 0,0,0
+}
 		 ;Portamento
 !if INCLUDE_CMD_PORTA = TRUE {
 portahi		!8 0,0,0
