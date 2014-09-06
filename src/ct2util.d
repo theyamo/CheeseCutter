@@ -98,6 +98,7 @@ int main(string[] args) {
 		writefln("\nCommands:");
 		writefln("  prg           Export song (.ct) to prg file");
 		writefln("  sid           Export song (.ct) to SID file");
+		writefln("  build         Export song (.ct) to SID file while optimizing the player to leave out unused effect code (BETA)");
 		writefln("  dump          Dump song data to assembler source (BETA)");
 		writefln("  import        Copy data from another song without overwriting the player");
 		writefln("  init          Create a fresh .ct from player binary");
@@ -135,7 +136,7 @@ int main(string[] args) {
 		case "init":
 			command = Command.Init;
 			break;
-		case "asm":
+		case "build":
 			command = Command.ExportASM;
 			break;
 		default:
