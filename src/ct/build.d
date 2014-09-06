@@ -14,7 +14,7 @@ extern(C) {
 	extern char* acme_assemble(const char*,int*,char*);
 }
 
-static const string playerCode = import("player_v4_export.acme");
+static const string playerCode = import("player_v4.acme");
 static const auto SIDDriver = cast(ubyte[])import("custplay.bin");
 
 const ubyte[] SIDHEADER = [
@@ -181,6 +181,7 @@ ubyte[] doBuild(Song song) {
 		if(song.getFiltertablePointer(i) > 0)
 			filterUsed = true;
 	}
+	input = setArgumentValue("EXPORT", "TRUE", input);
 	input = setArgumentValue("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE", input);
 	input = setArgumentValue("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE", input);
 	input = setArgumentValue("INCLUDE_CMD_VIBR", vibratoUsed ? "TRUE" : "FALSE", input);
