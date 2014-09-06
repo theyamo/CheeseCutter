@@ -83,7 +83,7 @@ string setArgumentValue(string argname, string value, string text) {
 		}
 		s ~= line ~ "\n";
 	}
-	if(!found) throw new Exception("argname not found");
+	if(!found) throw new Exception("argname " ~ argname ~ " not found");
 	return s;
 }
 

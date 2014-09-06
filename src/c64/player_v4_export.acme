@@ -576,9 +576,10 @@ effslidedown	lda shfreqlo,x
 		sta shfreqhi,x
 		jmp effdone
 
-effdo3		cmp #$04
+effdo3		
+!if INCLUDE_CMD_SET_LOVIB = TRUE {		
+		cmp #$04
 		bne effdo3a
-		
 		lda vibraamp,x
 		sta ZREG
 		lda #0
@@ -588,12 +589,16 @@ effdo3		cmp #$04
 		rol
 		sta ZREG+1
 		jmp vibrealadd
-				
-effdo3a		cmp #$03
+
+}
+		
+effdo3a		
+!if INCLUDE_CMD_VIBR = TRUE | INCLUDE_CMD_SET_LOVIB = TRUE {
+		cmp #$03
 		beq effvibrato
 		jmp effdo4
-
-effvibrato	ldy notereal,x			
+effvibrato
+ 		ldy notereal,x			
 		sec
 		lda freqtable_lo+1,y
 		sbc freqtable_lo,y
@@ -662,6 +667,7 @@ vibrapost	clc
 		inc vibradir,x
 		lda #0
 vibradirok	sta vibracnt,x
+}
 vibradone	
 !if INCLUDE_CMD_PORTA = TRUE {
 effdo4		cmp #$81			; Portamento
@@ -859,9 +865,10 @@ notfilt		cmp #$a0
 		sta chordtpos,x
 		jmp superdone
 }
-notchord	cmp #$b0
+notchord	
+!if INCLUDE_SEQ_SET_ATT = TRUE {
+		cmp #$b0
 		bcs notatt
-
 		asl
 		asl
 		asl
@@ -872,8 +879,10 @@ notchord	cmp #$b0
 		ora ZREG
 		sta ad,x
 		jmp superdone
-		
-notatt		cmp #$c0
+}		
+notatt
+!if INCLUDE_SEQ_SET_DEC = TRUE {
+		cmp #$c0
 		bcs notdec
 
 		and #$0f
@@ -884,8 +893,11 @@ notatt		cmp #$c0
 		sta ad,x
 		
 		jmp superdone
-
-notdec		cmp #$d0
+}
+notdec
+!if INCLUDE_SEQ_SET_SUS = TRUE {
+		
+		cmp #$d0
 		bcs notsus
 
 		asl
@@ -898,9 +910,12 @@ notdec		cmp #$d0
 		ora ZREG
 		sta sr,x
 		jmp superdone
+}
 
-
-notsus		cmp #$e0
+notsus
+!if INCLUDE_SEQ_SET_REL = TRUE {
+		
+		cmp #$e0
 		bcs notrel
 
 		and #$0f
@@ -910,14 +925,22 @@ notsus		cmp #$e0
 		ora ZREG
 		sta sr,x
 		jmp superdone
-		
-notrel		cmp #$f0
+}		
+notrel		
+!if INCLUDE_SEQ_SET_VOL = TRUE {
+		cmp #$f0
 		bcs notvol
 
 		and #$0f
 		sta volume
 		jmp superdone
-notvol		and #$0f
+}
+
+
+
+notvol	
+!if INCLUDE_SEQ_SET_SPEED = TRUE {			
+		and #$0f
 		sta speed
 		cmp #2
 		bcs notvol2
@@ -926,7 +949,9 @@ notvol		and #$0f
 notvol2		sta playspeed
 		sta speedcnt
 		dec speedcnt
+}
 		jmp superdone
+
 ;;; ----------------------------------------
 ;;; process a command table entry
 ;;; ----------------------------------------
@@ -940,7 +965,9 @@ iscmd		lda cmd2,y
 		jmp superhigh
 
 		 ;SLIDE UP
-superlow	cmp #0
+superlow
+!if INCLUDE_CMD_SLUP = TRUE {		
+		cmp #0
 		bne snotslide1
 		lda ZREG
 		sta slidehi,x
@@ -949,10 +976,12 @@ superlow	cmp #0
 		lda #1
 		sta effstate,x
 		jmp superdone
-
+}
 		 ;SLIDE DOWN
 
-snotslide1	cmp #CMD_SLIDE_DOWN
+snotslide1
+!if INCLUDE_CMD_SLDOWN = TRUE {		
+		cmp #CMD_SLIDE_DOWN
 		bne snotslide2
 		lda ZREG
 		sta slidehi,x
@@ -963,10 +992,13 @@ snotslide1	cmp #CMD_SLIDE_DOWN
 		sta effstate,x
 		
 		jmp superdone
-		
+}		
 		 ;VIBRATO
 
-snotslide2	cmp #CMD_VIBRATO
+snotslide2	
+!if INCLUDE_CMD_VIBR = TRUE {		
+		
+		cmp #CMD_VIBRATO
 		bne snotvibrato
 		
 		lda #3
@@ -1000,7 +1032,7 @@ novibcor	sta vibracnt,x
 		sta vibrafl,x
 		sta vibrafh,x
 }
-		
+}
 snotvibrato	jmp superdone
 
 superhigh
