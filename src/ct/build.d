@@ -168,10 +168,15 @@ ubyte[] doBuild(Song song) {
 				setSusUsed = true;
 			else if(val < 0xe0)
 				setRelUsed = true;
-			else if(val < 0xf0)
+			else if(val < 0xf0) {
+				if(val == 0xf0 || val == 0xf1) swingUsed = true;
 				setVolUsed = true;
+			}
 			else setSpeedUsed = true;
 		});
+	for(int i = 0; i < song.subtunes.numOf; i++) {
+		if(song.songspeeds[i] < 2) swingUsed = true;
+	}
 	input = setArgumentValue("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE", input);
 	input = setArgumentValue("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE", input);
 	input = setArgumentValue("INCLUDE_CMD_VIBR", vibratoUsed ? "TRUE" : "FALSE", input);
@@ -187,6 +192,7 @@ ubyte[] doBuild(Song song) {
 	input = setArgumentValue("INCLUDE_SEQ_SET_REL", setRelUsed ? "TRUE" : "FALSE", input);
 	input = setArgumentValue("INCLUDE_SEQ_SET_VOL", setVolUsed ? "TRUE" : "FALSE", input);
 	input = setArgumentValue("INCLUDE_SEQ_SET_SPEED", setSpeedUsed ? "TRUE" : "FALSE", input);
+	input = setArgumentValue("INCLUDE_BREAKSPEED", swingUsed ? "TRUE" : "FALSE", input);
 	writeln(input);
 	ubyte[] output = cast(ubyte[])assemble(input);
 	writeln(format("Size %d bytes.", output.length));
