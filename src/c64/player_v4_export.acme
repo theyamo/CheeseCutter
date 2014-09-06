@@ -673,9 +673,11 @@ vibrapost	clc
 		lda #0
 vibradirok	sta vibracnt,x
 }
-vibradone	
+vibradone
+
+effdo4				
 !if INCLUDE_CMD_PORTA = TRUE {
-effdo4		cmp #$81			; Portamento
+		cmp #$81			; Portamento
 		beq effporta
 		jmp effdone
 
@@ -1383,7 +1385,7 @@ filtlo		!8 0
 bandpass	!8 0
 }
 		 ;Vibration variables
-!if INCLUDE_CMD_VIBR = TRUE {
+!if INCLUDE_CMD_VIBR = TRUE | INCLUDE_CMD_SET_LOVIB = TRUE {
 vibracnt	!8 0,0,0 ;Count
 vibradir	!8 0,0,0 ;Direction
 vibraamp	!8 0,0,0 ;Amplitude
