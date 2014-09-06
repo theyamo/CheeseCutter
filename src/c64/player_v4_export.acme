@@ -40,6 +40,7 @@ INCLUDE_SEQ_SET_VOL	= TRUE
 INCLUDE_VIBRAFEEL	= TRUE
 INCLUDE_BREAKSPEED	= TRUE
 INCLUDE_CHORD		= TRUE
+INCLUDE_FILTER		= TRUE
 ;;; ----------------------------------------
 ;;; new effect commands
 ;;; ----------------------------------------
@@ -149,9 +150,11 @@ subinit5	lda #2
 		bpl subinit5
 		lda #$0f
 		sta volume
+!if INCLUDE_FILTER = TRUE {
 		lda #0
 		sta filter
 		sta bandpass
+}
 		lda #$f0
 		sta $d417
 		lda #0
@@ -443,7 +446,9 @@ pulsdirset	sta pulsenxt,x			;pointer
 		lda #0
 		sta pulsecnt,x
 
-setflt		lda inst+INS_FLTP,y
+setflt		
+!if INCLUDE_FILTER = TRUE {		
+		lda inst+INS_FLTP,y
 		beq filterdone			;no filter reset
 		asl				
 		asl
@@ -451,7 +456,7 @@ setflt		lda inst+INS_FLTP,y
 		lda #0
 		sta filtcnt
 filterdone	
-		
+}
 scmddone	lda #0
 		sta newinsflag,x
 !if INCLUDE_CHORD = TRUE {
@@ -844,7 +849,9 @@ superparse2	ldy shsuper,x
 		sta pulsecnt,x
 		jmp superdone
 
-notpulse	cmp #$80
+notpulse	
+!if INCLUDE_FILTER = TRUE {
+		cmp #$80
 		bcs notfilt
 
 		and #$1f
@@ -856,7 +863,9 @@ notpulse	cmp #$80
 		jmp superdone
 
 
-notfilt		cmp #$a0
+notfilt
+}
+		cmp #$a0
 		bcs notchord
 !if INCLUDE_CHORD = TRUE {
 		and #$1f
@@ -1172,7 +1181,7 @@ maindone	lda #0
 ;;; ----------------------------------------
 ;;; feb '12: sweeps now in 10 bits res to allow faster sweeps
 ;;; ($80 in 10 bits corresponds to $20 in 8 bits)
-		
+!if INCLUDE_FILTER = TRUE {		
 		dec filtcnt
 		bpl filtnotnew
 		lda filtnxt
@@ -1238,8 +1247,11 @@ filterskip	lda filtlo
 		sta $d415
 		lda filter
 		sta $d416
+}
 		lda volume
+!if INCLUDE_FILTER = TRUE {
 		ora bandpass
+}
 		sta $d418
 		
 		rts
@@ -1361,16 +1373,17 @@ seqcnt		!8 0,0,0
 
 		 ;Filter
 
-bandpass	!8 0
+!if INCLUDE_FILTER = TRUE {
 filter		!8 0
 filtcnt		!8 0
 filtcur		!8 0
 filtnxt		!8 0
 filtadd		!8 0,0
 filtlo		!8 0
-
+bandpass	!8 0
+}
 		 ;Vibration variables
-
+!if INCLUDE_CMD_VIBR = TRUE {
 vibracnt	!8 0,0,0 ;Count
 vibradir	!8 0,0,0 ;Direction
 vibraamp	!8 0,0,0 ;Amplitude
@@ -1381,11 +1394,10 @@ vibrafl		!8 0,0,0 ;Vibrato feel low
 vibrafh		!8 0,0,0 ;Vibrato feel high
 vibraflv	!8 0,0,0 ;Vibrato feel add
 }
+}
 		 ;Slide variables
-
 slidelo		 !8 0,0,0 ;Low fraction
 slidehi		 !8 0,0,0 ;High fraction
-
 		 ;Pulse
 
 pulsecur	!8 0,0,0
@@ -1409,8 +1421,10 @@ wavetrans	!8 0,0,0
 wavecnt		!8 0,0,0
 wavepos		!8 0,0,0
 wavetime	!8 0,0,0
+!if INCLUDE_CHORD = TRUE {
 chordtpos	!8 0,0,0
 chordvalue	!8 0,0,0
+}
 		 ;Portamento
 !if INCLUDE_CMD_PORTA = TRUE {
 portahi		!8 0,0,0
