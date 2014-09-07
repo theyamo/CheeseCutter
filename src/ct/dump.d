@@ -49,7 +49,6 @@ string dumpData(Song sng, string title) {
 	ushort[][] trackpointers = new ushort[][sng.subtunes.numOf];
 	sng.subtunes.activate(0);
 	auto packedTracks = sng.subtunes.compact();	
-	writeln(packedTracks.length, " ", sng.subtunes.numOf);
 	
 	append( "arp1 = *\n");
 	tablen = getHighestUsed(sng.wave1Table) + 1;
