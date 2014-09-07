@@ -62,9 +62,6 @@ string dumpData(Song sng, string title) {
 	hexdump(sng.pulseTable[0 .. getHighestUsed(sng.pulseTable) + 4], 4);
 	append( "inst = *\n");
 	ubyte[512] instab = 0;
-	// FIX: find out which instrs are in use
-//	hexdump(sng.instrumentTable[0 .. (getHighestUsed(sng.instrumentTable[0..256]) | 8) + 1], 8);
-//	hexdump(sng.instrumentTable[0 .. 48*8], 16);
 
 	int maxInsno;
 	sng.seqIterator((Sequence s, Element e) { 
@@ -98,33 +95,9 @@ string dumpData(Song sng, string title) {
 	append( "cmd3 = *\n");
 	hexdump(sng.superTable[128..128+tablen], 16);
 
-	/+
-	int toffset;
-	ubyte[] tracks;
-
-	toffset = sng.offsets[Offsets.Track1];
-	tracks = sng.memspace[toffset .. toffset + 512];
-	tablen = sng.getTracklistLength(0);
-	append( "track1 = *\n");
-	hexdump(tracks[0..tablen], 16);
-
-	toffset = sng.offsets[Offsets.Track2];
-	tracks = sng.memspace[toffset .. toffset + 512];
-	tablen = sng.getTracklistLength(1);
-	append( "track2 = *\n");
-	hexdump(tracks[0..tablen], 16);
-
-	toffset = sng.offsets[Offsets.Track3];
-	tracks = sng.memspace[toffset .. toffset + 512];
-	tablen = sng.getTracklistLength(2);
-	append( "track3 = *\n");
-	hexdump(tracks[0..tablen], 16);
-
-	+/
 	// dump songsets
 
-	append( "songsets = *\n");// ~ wordOp); // ~ " track1,track2,track3\n");
-	//append( format("\t\t" ~ byteOp ~ " %d, 7\n", sng.speed()));
+	append( "songsets = *\n");
 	for(int i = 0; i < sng.subtunes.numOf; i++) {
 		append(wordOp ~ "\t");
 		for(int voice = 0; voice < 3; voice++) {
@@ -141,14 +114,6 @@ string dumpData(Song sng, string title) {
 			hexdump(voice, 16);
 		}
 	}
-	/+
-	append( "track1 = *\n");
-	hexdump(sng.tracks[0].compact(), 16);
-	append( "track2 = *\n");
-	hexdump(sng.tracks[1].compact(), 16);
-	append( "track3 = *\n");
-	hexdump(sng.tracks[2].compact(), 16);
-	+/
 
 	for(int i = 0; i < sng.numOfSeqs(); i++) {
 		append( format("s%02x = *\n", i));
