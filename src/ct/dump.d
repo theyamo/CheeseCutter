@@ -160,6 +160,12 @@ string dumpData(Song sng, string title) {
 	append("\nchord");
 	hexdump(sng.chordTable[0..tablen], 16);
 	append("\nchordindex");
-	hexdump(sng.chordIndexTable[0..16], 16);
+	int highestChord = 0;
+	sng.seqIterator((Sequence s, Element e) { 				
+			if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f &&
+			   (e.cmd.value & 0x1f) > highestChord)
+				highestChord = e.cmd.value & 0x1f;
+		});
+	hexdump(sng.chordIndexTable[0..highestChord+1], 16);
 	return output;
 }
