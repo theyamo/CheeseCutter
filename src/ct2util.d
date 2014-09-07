@@ -158,7 +158,8 @@ int main(string[] args) {
 					break;
 				case "-r":
 					if(command != Command.ExportSID &&
-					   command != Command.ExportPRG)
+					   command != Command.ExportPRG &&
+					   command != Command.ExportASM)
 						throw new ArgumentException("Option available only with exporting commands.");
 					int r = str2Value(nextArg());
 					if(r > 0xffff)
@@ -244,7 +245,7 @@ int main(string[] args) {
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
-			ubyte[] data = doBuild(insong);
+			ubyte[] data = doBuild(insong, relocAddress, verbose);
 			std.file.write(outfn, data);
 			break;
 		case Command.Import:

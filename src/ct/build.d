@@ -113,7 +113,7 @@ private char[] assemble(string source) {
 }
 
 
-ubyte[] doBuild(Song song) {
+ubyte[] doBuild(Song song, int address, bool verbose) {
 	string input = playerCode;
 	input ~= dumpData(song, "");
 	writeln("Assembling...");
@@ -201,11 +201,13 @@ ubyte[] doBuild(Song song) {
 								 input);
 		input = setArgumentValue("MULTIPLIER", format("%d", song.multiplier - 1), input);
 	}
+
+	input = setArgumentValue("BASEADDRESS", format("$%04x", address), input);
 	
 	writeln(input);
 	ubyte[] output = cast(ubyte[])assemble(input);
 	writeln(format("Size %d bytes.", output.length));
-	return generatePSIDFile(song, output, 0x1000, 0x1003, 1, true);
+	return generatePSIDFile(song, output, address, address + 3, 1, true);
 }
 
 // quick and ugly hack to circumvent D2 phobos weirdness

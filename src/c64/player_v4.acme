@@ -31,6 +31,7 @@ MULTISPEED	= TRUE				; support for multispeed playback
 INSNO		= 48				; number of instruments used
 CIA_VALUE	= $4cc7				; for multispeed
 MULTIPLIER	= 1				; for multispeed
+BASEADDRESS	= $1000
 ;;; ----------------------------------------
 ;;; instr table enums
 ;;; ----------------------------------------
@@ -259,7 +260,7 @@ subnoteplay
 }
 		
 
-		 *= $1000
+		 *= BASEADDRESS
 
 init		
 !if USE_MDRIVER = TRUE {
