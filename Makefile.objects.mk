@@ -110,7 +110,6 @@ UTILOBJS = src/ct2util.o \
 	src/ct/base.o \
 	src/com/cpu.o \
 	src/com/util.o \
-	src/com/asm.o \
 	src/ct/pack.o \
 	src/ct/purge.o \
 	src/ct/dump.o \
