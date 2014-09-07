@@ -88,6 +88,7 @@ string dumpData(Song sng, string title) {
 	}
 
 	tablen = getHighestUsed(sng.superTable[0..64]) + 1;
+	if(tablen < 1) tablen = 1;
 	append( "\ncmd1 = *\n");
 	hexdump(sng.superTable[0..tablen], 16);
 	append( "cmd2 = *\n");

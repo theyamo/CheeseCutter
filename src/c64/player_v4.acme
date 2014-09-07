@@ -758,7 +758,9 @@ pulsedone
 		lda effstate,x
 		bne effdo1
 		jmp effdone
-effdo1		cmp #$01
+effdo1		
+!if INCLUDE_CMD_SLUP {		
+		cmp #$01
 		bne effdo2
 
 effslideup	lda shfreqlo,x
@@ -770,7 +772,10 @@ effslideup	lda shfreqlo,x
 		sta shfreqhi,x
 
 		jmp effdone
-effdo2		cmp #$02
+}
+effdo2
+!if INCLUDE_CMD_SLDOWN {
+		cmp #$02
 		bne effdo3
 
 effslidedown	lda shfreqlo,x
@@ -781,7 +786,7 @@ effslidedown	lda shfreqlo,x
 		sbc slidehi,x
 		sta shfreqhi,x
 		jmp effdone
-
+}
 effdo3			
 !if INCLUDE_CMD_SET_LOVIB = TRUE {		
 		cmp #$04
@@ -870,10 +875,11 @@ vibrapost	clc
 		inc vibradir,x
 		lda #0
 vibradirok	sta vibracnt,x
+vibradone
 }
-vibradone	
+effdo4
 !if INCLUDE_CMD_PORTA = TRUE {
-effdo4		cmp #$81			; Portamento
+		cmp #$81			; Portamento
 		beq effporta
 		jmp effdone
 
