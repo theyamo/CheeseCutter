@@ -124,6 +124,7 @@ string dumpData(Song sng, string title) {
 
 	tablen = getHighestUsed(sng.chordTable) + 1;
 	append("\nchord");
+	if(tablen < 1) tablen = 1;
 	hexdump(sng.chordTable[0..tablen], 16);
 	append("\nchordindex");
 	int highestChord = 0;
