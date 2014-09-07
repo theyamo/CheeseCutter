@@ -15,7 +15,6 @@ extern(C) {
 }
 
 static const string playerCode = import("player_v4.acme");
-static const auto SIDDriver = cast(ubyte[])import("custplay.bin");
 
 const ubyte[] SIDHEADER = [
   0x50, 0x53, 0x49, 0x44, 0x00, 0x02, 0x00, 0x7c, 0x00, 0x00, 0x10, 0x00,
@@ -46,25 +45,36 @@ enum {
 	PSID_DATA_START = 0x7c 
 }
 
+// quick and ugly hack to circumvent D2 phobos weirdness
+private int paddedStringLength(char[] s, char padchar) {
+	int i;
+	for(i = cast(int)(s.length - 1); i >= 0; i--) {
+		if(s[i] != padchar) return cast(int)(i+1);
+	}
+	return 0;
+}
 
-ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int playAddress, int defaultSubtune, bool verbose) {
+private char[] assemble(string source) {
+	int length;
+	char error_message[1024];
+	memset(&error_message, '\0', 1024);
+	char* input = acme_assemble(toStringz(source), &length, &error_message[0]);
+	
+	if(input is null) {
+		string msg = to!string(&error_message[0]);
+		throw new Error(format("Could not assemble player. Message:\n%s", msg));
+	}
+	char[] output = new char[length];
+	memcpy(output.ptr, input, length);
+	free(input);
+	return output;
+}
+
+private ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int playAddress, int defaultSubtune, bool verbose) {
 	int custBase, custInit, custPlay, custTimerlo, custTimerhi;
 	/+ SID default tune indicatior starts from value 1... +/
 	if(defaultSubtune > insong.subtunes.numOf)
 		throw new UserException(format("This song only has %d subtunes", insong.subtunes.numOf));
-	/+
-	if(insong.multiplier > 1) {
-		ubyte[] custplay = SIDDriver.dup; 
-		int clock = PAL_CLOCK / insong.multiplier;
-		custBase = toAddress([custplay[0], custplay[1]]) + 6;
-		custInit = custBase + custplay[2 + 3] - 4;
-		custPlay = custBase + custplay[2 + 2] - 4;
-		custTimerlo = custBase + custplay[2 + 0] - 4;
-		custTimerhi = custBase + custplay[2 + 1] - 4;
-		custplay = [lowbyte(cast(ushort)custBase), highbyte(cast(ushort)custBase)] ~ custplay[6 .. $];
-		data = custplay ~ data[0 .. $];
-	}
-	+/
 	data = SIDHEADER ~ data;
 	void outstr(char[] s, int offset) {
 		data[offset .. offset + s.length] = cast(ubyte[])s;
@@ -95,23 +105,6 @@ ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int playAdd
 
 	return data;
 }
-
-private char[] assemble(string source) {
-	int length;
-	char error_message[1024];
-	memset(&error_message, '\0', 1024);
-	char* input = acme_assemble(toStringz(source), &length, &error_message[0]);
-	
-	if(input is null) {
-		string msg = to!string(&error_message[0]);
-		throw new Error(format("Could not assemble player. Message:\n%s", msg));
-	}
-	char[] output = new char[length];
-	memcpy(output.ptr, input, length);
-	free(input);
-	return output;
-}
-
 
 ubyte[] doBuild(Song song, int address, bool verbose) {
 	string input = playerCode;
@@ -210,11 +203,3 @@ ubyte[] doBuild(Song song, int address, bool verbose) {
 	return generatePSIDFile(song, output, address, address + 3, 1, true);
 }
 
-// quick and ugly hack to circumvent D2 phobos weirdness
-int paddedStringLength(char[] s, char padchar) {
-	int i;
-	for(i = cast(int)(s.length - 1); i >= 0; i--) {
-		if(s[i] != padchar) return cast(int)(i+1);
-	}
-	return 0;
-}
