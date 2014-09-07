@@ -29,7 +29,8 @@ TRUE		= 1
 EXPORT		= FALSE				; if TRUE, editor specific code will be left out
 MULTISPEED	= TRUE				; support for multispeed playback
 INSNO		= 48				; number of instruments used
-		
+CIA_VALUE	= $4cc7				; for multispeed
+MULTIPLIER	= 1				; for multispeed
 ;;; ----------------------------------------
 ;;; instr table enums
 ;;; ----------------------------------------
@@ -67,6 +68,7 @@ INCLUDE_VIBRAFEEL	= TRUE
 INCLUDE_BREAKSPEED	= TRUE
 INCLUDE_CHORD		= TRUE
 INCLUDE_FILTER		= TRUE
+USE_MDRIVER		= FALSE
 ;;; ----------------------------------------
 ;;; new effect commands
 ;;; ----------------------------------------
@@ -259,8 +261,18 @@ subnoteplay
 
 		 *= $1000
 
-init		jmp subinit
-play		jmp subplay
+init		
+!if USE_MDRIVER = TRUE {
+		jmp cinit		
+} else {
+		jmp subinit
+}
+play		
+!if USE_MDRIVER = TRUE {
+		jmp cplay
+} else {
+		jmp subplay
+}
 !if MULTISPEED = TRUE {
 mplay		jmp submplay
 }
@@ -1452,6 +1464,26 @@ filterskip	lda filtlo
 		sta $d418
 		
 		rts
+
+!if USE_MDRIVER = TRUE {
+cplay	dec cntr
+	bmi *+5
+	jmp submplay
+	lda #MULTIPLIER
+	sta cntr
+	jmp subplay
+cinit	ldx #0
+	stx cntr
+timerlo	= *+1
+	ldx #<CIA_VALUE
+timerhi	= *+1
+	ldy #>CIA_VALUE
+	sty $dc05
+	stx $dc04
+	jmp subinit
+cntr		!8 0
+}
+		
 !if EXPORT = FALSE {
 dummy		!8 0
 		!8 $fc,$3d	; end-of-code mark for packer

@@ -47,11 +47,12 @@ enum {
 }
 
 
-ubyte[] generatePSIDFile(Song insong, ubyte[] data, int relocTo, int defaultSubtune, bool verbose) {
+ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int playAddress, int defaultSubtune, bool verbose) {
 	int custBase, custInit, custPlay, custTimerlo, custTimerhi;
 	/+ SID default tune indicatior starts from value 1... +/
 	if(defaultSubtune > insong.subtunes.numOf)
 		throw new UserException(format("This song only has %d subtunes", insong.subtunes.numOf));
+	/+
 	if(insong.multiplier > 1) {
 		ubyte[] custplay = SIDDriver.dup; 
 		int clock = PAL_CLOCK / insong.multiplier;
@@ -63,6 +64,7 @@ ubyte[] generatePSIDFile(Song insong, ubyte[] data, int relocTo, int defaultSubt
 		custplay = [lowbyte(cast(ushort)custBase), highbyte(cast(ushort)custBase)] ~ custplay[6 .. $];
 		data = custplay ~ data[0 .. $];
 	}
+	+/
 	data = SIDHEADER ~ data;
 	void outstr(char[] s, int offset) {
 		data[offset .. offset + s.length] = cast(ubyte[])s;
@@ -81,21 +83,13 @@ ubyte[] generatePSIDFile(Song insong, ubyte[] data, int relocTo, int defaultSubt
 	data[PSID_NUM_SONGS + 1] = cast(ubyte)insong.subtunes.numOf();
 	data[PSID_START_SONG + 1] = cast(ubyte)defaultSubtune;
 	if(insong.multiplier > 1) {
-		if(relocTo != 0x1000) throw new UserException("Relocating multispeed tunes not supported.");
-		// mask speed bits to use custom cia
 		data[PSID_SPEED_OFFSET .. PSID_SPEED_OFFSET + 4] = 255;
-		data[PSID_INIT_OFFSET .. PSID_INIT_OFFSET + 2] = cast(ubyte[])[ custInit >> 8, custInit & 255 ];
-		data[PSID_PLAY_OFFSET .. PSID_PLAY_OFFSET + 2] = cast(ubyte[])[ custPlay >> 8, custPlay & 255 ];
-		data[PSID_DATA_START + 2 + custTimerlo - custBase] = cast(ubyte)((PAL_CLOCK / insong.multiplier) & 255);
-		data[PSID_DATA_START + 2 + custTimerhi - custBase] = cast(ubyte)((PAL_CLOCK / insong.multiplier) >> 8);
-		data[PSID_DATA_START + 2 + custPlay - custBase + 5] = cast(ubyte)(insong.multiplier - 1);
 	}
-	else {
-		data[PSID_INIT_OFFSET .. PSID_INIT_OFFSET + 2] = cast(ubyte[])[ relocTo >> 8, relocTo & 255 ];
-		data[PSID_PLAY_OFFSET .. PSID_PLAY_OFFSET + 2] = cast(ubyte[])[ (relocTo + 3) >> 8, (relocTo + 3) & 255 ];
-		int endAddr = cast(int)(relocTo + data.length);
-		if(endAddr > 0xfff9) throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9));
-	}
+	data[PSID_INIT_OFFSET .. PSID_INIT_OFFSET + 2] = cast(ubyte[])[ initAddress >> 8, initAddress & 255 ];
+	data[PSID_PLAY_OFFSET .. PSID_PLAY_OFFSET + 2] = cast(ubyte[])[ playAddress >> 8, playAddress & 255 ];
+	int endAddr = cast(int)(initAddress + data.length);
+	if(endAddr > 0xfff9) throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9))
+							 ;
 	data[PSID_FLAGS_OFFSET + 1] 
 		= cast(ubyte)(0x04 /+ PAL +/ | (insong.sidModel ? 0x20 : 0x10));
 
@@ -199,10 +193,19 @@ ubyte[] doBuild(Song song) {
 	input = setArgumentValue("INCLUDE_SEQ_SET_SPEED", setSpeedUsed ? "TRUE" : "FALSE", input);
 	input = setArgumentValue("INCLUDE_BREAKSPEED", swingUsed ? "TRUE" : "FALSE", input);
 	input = setArgumentValue("INCLUDE_FILTER", filterUsed ? "TRUE" : "FALSE", input);
+
+	if(song.multiplier > 1) {
+		input = setArgumentValue("USE_MDRIVER", "TRUE", input);
+		input = setArgumentValue("CIA_VALUE",
+								 format("$%04x", 0x4cc7 / song.multiplier),
+								 input);
+		input = setArgumentValue("MULTIPLIER", format("%d", song.multiplier - 1), input);
+	}
+	
 	writeln(input);
 	ubyte[] output = cast(ubyte[])assemble(input);
 	writeln(format("Size %d bytes.", output.length));
-	return generatePSIDFile(song, output, 0x1000, 1, true);
+	return generatePSIDFile(song, output, 0x1000, 0x1003, 1, true);
 }
 
 // quick and ugly hack to circumvent D2 phobos weirdness
