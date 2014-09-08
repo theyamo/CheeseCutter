@@ -1322,8 +1322,9 @@ class Song {
 			}
 			for(i=0;i < 256;i++) {
 				if((wave1Table[i] == 0x7f || wave1Table[i] == 0x7e) &&
-				   wave2Table[i] >= pos)
-					wave2Table[i]--;
+				   wave2Table[i] >= pos) {
+					if(wave2Table[i] > 0) --wave2Table[i];
+				}
 			}
 			arpPointerUpdate(pos, -1);
 		}	
