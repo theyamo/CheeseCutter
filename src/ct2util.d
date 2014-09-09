@@ -14,7 +14,7 @@ import std.string;
 import std.conv;
 import std.stdio;
 
-enum Command { None, ExportPRG, ExportSID, Dump, Import, Init, ExportASM }
+enum Command { None, ExportPRG, ExportSID, Dump, Import, Init, ExportAsmSid, ExportAsmPrg }
 const string[] exts = [ "", "prg", "sid", "s", "ct", "ct" ];
 
 /+ options +/
@@ -99,6 +99,7 @@ int main(string[] args) {
 		writefln("  prg           Export song (.ct) to prg file");
 		writefln("  sid           Export song (.ct) to SID file");
 		writefln("  build         Export song (.ct) to SID file while optimizing the player to leave out unused effect code (BETA)");
+		writefln("  buildprg      Export song (.ct) to PRG file while optimizing the player (BETA)");
 		writefln("  dump          Dump song data to assembler source (BETA)");
 		writefln("  import        Copy data from another song without overwriting the player");
 		writefln("  init          Create a fresh .ct from player binary");
@@ -137,7 +138,10 @@ int main(string[] args) {
 			command = Command.Init;
 			break;
 		case "build":
-			command = Command.ExportASM;
+			command = Command.ExportAsmSid;
+			break;
+		case "buildprg":
+			command = Command.ExportAsmPrg;
 			break;
 		default:
 			throw new UserException(format("command '%s' not recognized.",args[1]));
@@ -159,7 +163,8 @@ int main(string[] args) {
 				case "-r":
 					if(command != Command.ExportSID &&
 					   command != Command.ExportPRG &&
-					   command != Command.ExportASM)
+					   command != Command.ExportAsmSid &&
+					   command != Command.ExportAsmPrg)
 						throw new ArgumentException("Option available only with exporting commands.");
 					int r = str2Value(nextArg());
 					if(r > 0xffff)
@@ -241,11 +246,12 @@ int main(string[] args) {
 				: pack(insong, relocAddress, verbose);
 			std.file.write(outfn, data);
 			break;
-		case Command.ExportASM:
+		case Command.ExportAsmSid, Command.ExportAsmPrg:
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
-			ubyte[] data = doBuild(insong, relocAddress, verbose);
+			ubyte[] data = doBuild(insong, relocAddress, verbose,
+								   command == Command.ExportAsmSid);
 			std.file.write(outfn, data);
 			break;
 		case Command.Import:
