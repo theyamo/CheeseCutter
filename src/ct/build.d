@@ -106,7 +106,7 @@ private ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int
 	return data;
 }
 
-ubyte[] doBuild(Song song, int address, bool verbose) {
+ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 	string input = playerCode;
 	input ~= dumpData(song, "");
 	writeln("Assembling...");
@@ -155,11 +155,12 @@ ubyte[] doBuild(Song song, int address, bool verbose) {
 				setSusUsed = true;
 			else if(val < 0xe0)
 				setRelUsed = true;
-			else if(val < 0xf0) {
-				if(val == 0xf0 || val == 0xf1) swingUsed = true;
+			else if(val < 0xf0) 
 				setVolUsed = true;
+			else {
+				if(val == 0xf0 || val == 0xf1) swingUsed = true;
+				setSpeedUsed = true;
 			}
-			else setSpeedUsed = true;
 		});
 	for(int i = 0; i < song.subtunes.numOf; i++) {
 		if(song.songspeeds[i] < 2) swingUsed = true;
@@ -200,6 +201,6 @@ ubyte[] doBuild(Song song, int address, bool verbose) {
 	writeln(input);
 	ubyte[] output = cast(ubyte[])assemble(input);
 	writeln(format("Size %d bytes.", output.length));
-	return generatePSIDFile(song, output, address, address + 3, 1, true);
+	return genPSID ? generatePSIDFile(song, output, address, address + 3, 1, true) : output;
 }
 
