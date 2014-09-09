@@ -43,6 +43,27 @@ int str2Value(string s) {
 	return to!int(s);
 }
 
+int str2Value2(string s) {
+	int idx;
+	bool hexUsed;
+	if(s[0] == 'x' || s[0] == '$') {
+		hexUsed = true; idx = 1;
+	}
+	else if(s[0..2] == "0x") {
+		hexUsed = true; idx = 2;
+	}
+	if(hexUsed) {
+		int val, i;
+		foreach_reverse(c; toUpper(s[idx..$])) {
+			if("0123456789ABCDEF".indexOf(c) < 0)
+				throw new Error("Illegal hexadecimal value in string.");
+			val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
+		}
+		return val;
+	}
+	return to!int(s);
+}
+
 void parseList(ref int[] array, string arg) {
 	int index;
 	string[] list = std.string.split(arg, ",");
