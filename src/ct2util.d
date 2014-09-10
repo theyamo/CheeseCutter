@@ -15,7 +15,7 @@ import std.conv;
 import std.stdio;
 
 enum Command { None, ExportPRG, ExportSID, Dump, Import, Init, ExportAsmSid, ExportAsmPrg }
-const string[] exts = [ "", "prg", "sid", "s", "ct", "ct", "sid", "sid" ];
+const string[] exts = [ "", "prg", "sid", "s", "ct", "ct", "sid", "prg" ];
 
 bool verbose = true;
 bool noPurge;
@@ -187,7 +187,7 @@ int main(string[] args) {
 					   command != Command.ExportAsmSid &&
 					   command != Command.ExportAsmPrg)
 						throw new ArgumentException("Option available only with exporting commands.");
-					int r = str2Value(nextArg());
+					int r = str2Value2(nextArg());
 					if(r > 0xffff)
 						throw new ArgumentException("-r: Address value too big.");
 					relocAddress = cast(ushort)r;
@@ -271,8 +271,9 @@ int main(string[] args) {
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
-			ubyte[] data = doBuild(insong, relocAddress, verbose,
-								   command == Command.ExportAsmSid);
+			ubyte[] data = doBuild(insong, relocAddress,
+								   command == Command.ExportAsmSid,
+								   verbose);
 			std.file.write(outfn, data);
 			break;
 		case Command.Import:

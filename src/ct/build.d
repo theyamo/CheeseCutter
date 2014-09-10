@@ -62,12 +62,12 @@ private char[] assemble(string source) {
 	
 	if(input is null) {
 		string msg = to!string(&error_message[0]);
-		throw new Error(format("Could not assemble player. Message:\n%s", msg));
+		throw new UserException(format("Could not assemble player. Message:\n%s", msg));
 	}
-	char[] output = new char[length];
-	memcpy(output.ptr, input, length);
+	char[] assembled = new char[length];
+	memcpy(assembled.ptr, input, length);
 	free(input);
-	return output;
+	return assembled;
 }
 
 private ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int playAddress, int defaultSubtune, bool verbose) {
@@ -175,7 +175,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 		if(verbose)
 			writeln(arg, " = ", val);
 	}
-	
+
 	setArgVal("EXPORT", "TRUE");
 	setArgVal("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE");
 	setArgVal("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE");
@@ -196,19 +196,21 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 	setArgVal("INCLUDE_FILTER", filterUsed ? "TRUE" : "FALSE");
 	
 	if(song.multiplier > 1) {
-		 setArgVal("USE_MDRIVER", "TRUE", );
+		 setArgVal("USE_MDRIVER", "TRUE");
 		 setArgVal("CIA_VALUE",
-								 format("$%04x", 0x4cc7 / song.multiplier),
-								 );
-		 setArgVal("MULTIPLIER", format("%d", song.multiplier - 1), );
+				   format("$%04x", PAL_CLOCK / song.multiplier));
+		 setArgVal("MULTIPLIER", format("%d", song.multiplier - 1));
 	}
 	setArgVal("BASEADDRESS", format("$%04x", address), );
-	
-//	writeln(input);
-	writeln("Assembling...");
 
-	ubyte[] output = cast(ubyte[])assemble(input);
-	writeln(format("Size %d bytes.", output.length));
-	return genPSID ? generatePSIDFile(song, output, address, address + 3, 1, true) : output;
+	if(verbose)
+		writeln("Assembling...");
+
+	ubyte[] assembled = cast(ubyte[])assemble(input);
+	
+	if(verbose)
+		writeln(format("Size %d bytes.", assembled.length));
+	
+	return genPSID ? generatePSIDFile(song, assembled, address, address + 3, 1, true) : assembled;
 }
 
