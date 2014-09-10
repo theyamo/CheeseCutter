@@ -125,8 +125,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 			if(val == 0) return;
 			if(val < 0x40) {
 				cmdval = song.superTable[val];
-				if(cmdval < 1)
-					slideUpUsed = true;
+				if(cmdval < 1) slideUpUsed = true;
 				else if(cmdval == 1)
 					slideDnUsed = true;
 				else if(cmdval == 2)
