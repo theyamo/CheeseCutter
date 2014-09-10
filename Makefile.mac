@@ -5,7 +5,7 @@ VERSION=$(shell cat Version)
 DLINK=$(COMFLAGS)
 DFLAGS=-I./src -J./src/c64 -J./src/font -O1
 CFLAGS=$(COMFLAGS) -O1
-CXXFLAGS=$(CFLAGS) -I./src -O2
+CXXFLAGS=$(CFLAGS) -I./src -O3
 COMPILE.d = $(DC) $(DFLAGS) -d -O2 -c -of=$@
 DC=ldc2
 EXE=
