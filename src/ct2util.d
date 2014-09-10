@@ -15,7 +15,7 @@ import std.conv;
 import std.stdio;
 
 enum Command { None, ExportPRG, ExportSID, Dump, Import, Init, ExportAsmSid, ExportAsmPrg }
-const string[] exts = [ "", "prg", "sid", "s", "ct", "ct" ];
+const string[] exts = [ "", "prg", "sid", "s", "ct", "ct", "sid", "sid" ];
 
 /+ options +/
 bool noPurge;
