@@ -115,6 +115,10 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 			if(insval > 0x2f) return;
 			if(insval > maxInsno) maxInsno = insval; });
 	input = setArgumentValue("INSNO", format("%d", maxInsno+1), input);
+	char[] linkedPlayerID = (new Song()).playerID;
+	if(song.playerID[0..6] != linkedPlayerID[0..6] && verbose) {
+		writeln("Warning: your song uses an old version of the player!\nThe assembled song may sound different.\nSong player: ", to!string(song.playerID[0..6]), ", linked player: ", to!string(linkedPlayerID[0..6]));
+	}
 	
 	bool chordUsed, swingUsed, filterUsed, vibratoUsed;
 	bool setAttUsed, setDecUsed, setSusUsed, setRelUsed, setVolUsed, setSpeedUsed;
