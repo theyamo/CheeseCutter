@@ -219,7 +219,7 @@ class Infobar : Window {
 	  
 		screen.clrtoeol(0,c);
 		
-		screen.cprint(4, 0, 1, c, "CheeseCutter 2.6.2");
+		screen.cprint(4, 0, 1, c, "CheeseCutter 2.7");
 		screen.cprint(screen.width - 14, 0, 1, c, "F12 = Help");
 		int c1 = audio.player.isPlaying ? 13 : 12;
 		screen.fprint(x1,area.y,format("`05Time: `0%x%02d:%02d / $%02x",
