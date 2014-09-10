@@ -173,10 +173,14 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 	void setArgVal(string arg, string val) {
 		input = setArgumentValue(arg, val, input);
 		if(verbose)
-			writeln(arg, " = ", val);
+			writeln("  ", arg, " = ", val);
 	}
 
-	setArgVal("EXPORT", "TRUE");
+//	setArgVal("EXPORT", "TRUE");
+	if(verbose)
+		writefln("Setting player flags...");
+	
+	input = setArgumentValue("EXPORT", "TRUE", input);
 	setArgVal("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE");
 	setArgVal("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE");
 	setArgVal("INCLUDE_CMD_VIBR", vibratoUsed ? "TRUE" : "FALSE");
