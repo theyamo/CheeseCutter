@@ -109,15 +109,16 @@ private ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int
 ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 	string input = playerCode;
 	input ~= dumpData(song, "");
-	writeln("Assembling...");
 	int maxInsno;
 	song.seqIterator((Sequence s, Element e) { 
 			int insval = e.instr.value;
 			if(insval > 0x2f) return;
 			if(insval > maxInsno) maxInsno = insval; });
 	input = setArgumentValue("INSNO", format("%d", maxInsno+1), input);
-	bool chordUsed, swingUsed, filterUsed, vibratoUsed, setAttUsed, setDecUsed, setSusUsed, setRelUsed, setVolUsed, setSpeedUsed, offsetUsed;
-	bool slideUpUsed, slideDnUsed, lovibUsed, portaUsed, setADSRUsed;
+	
+	bool chordUsed, swingUsed, filterUsed, vibratoUsed;
+	bool setAttUsed, setDecUsed, setSusUsed, setRelUsed, setVolUsed, setSpeedUsed;
+	bool offsetUsed, slideUpUsed, slideDnUsed, lovibUsed, portaUsed, setADSRUsed;
 	
 	song.seqIterator((Sequence s, Element e) { 
 			int val = e.cmd.value;
@@ -168,36 +169,44 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 		if(song.getFiltertablePointer(i) > 0)
 			filterUsed = true;
 	}
-	input = setArgumentValue("EXPORT", "TRUE", input);
-	input = setArgumentValue("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_CMD_VIBR", vibratoUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_CMD_PORTA", portaUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_CMD_SET_ADSR", setADSRUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_SEQ_SET_CHORD", chordUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_CHORD", chordUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_CMD_SET_OFFSET", offsetUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_CMD_SET_LOVIB", lovibUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_SEQ_SET_ATT", setAttUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_SEQ_SET_DEC", setDecUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_SEQ_SET_SUS", setSusUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_SEQ_SET_REL", setRelUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_SEQ_SET_VOL", setVolUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_SEQ_SET_SPEED", setSpeedUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_BREAKSPEED", swingUsed ? "TRUE" : "FALSE", input);
-	input = setArgumentValue("INCLUDE_FILTER", filterUsed ? "TRUE" : "FALSE", input);
 
-	if(song.multiplier > 1) {
-		input = setArgumentValue("USE_MDRIVER", "TRUE", input);
-		input = setArgumentValue("CIA_VALUE",
-								 format("$%04x", 0x4cc7 / song.multiplier),
-								 input);
-		input = setArgumentValue("MULTIPLIER", format("%d", song.multiplier - 1), input);
+	void setArgVal(string arg, string val) {
+		input = setArgumentValue(arg, val, input);
+		if(verbose)
+			writeln(arg, " = ", val);
 	}
-
-	input = setArgumentValue("BASEADDRESS", format("$%04x", address), input);
 	
-	writeln(input);
+	setArgVal("EXPORT", "TRUE");
+	setArgVal("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_CMD_VIBR", vibratoUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_CMD_PORTA", portaUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_CMD_SET_ADSR", setADSRUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_SEQ_SET_CHORD", chordUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_CHORD", chordUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_CMD_SET_OFFSET", offsetUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_CMD_SET_LOVIB", lovibUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_SEQ_SET_ATT", setAttUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_SEQ_SET_DEC", setDecUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_SEQ_SET_SUS", setSusUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_SEQ_SET_REL", setRelUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_SEQ_SET_VOL", setVolUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_SEQ_SET_SPEED", setSpeedUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_BREAKSPEED", swingUsed ? "TRUE" : "FALSE");
+	setArgVal("INCLUDE_FILTER", filterUsed ? "TRUE" : "FALSE");
+	
+	if(song.multiplier > 1) {
+		 setArgVal("USE_MDRIVER", "TRUE", );
+		 setArgVal("CIA_VALUE",
+								 format("$%04x", 0x4cc7 / song.multiplier),
+								 );
+		 setArgVal("MULTIPLIER", format("%d", song.multiplier - 1), );
+	}
+	setArgVal("BASEADDRESS", format("$%04x", address), );
+	
+//	writeln(input);
+	writeln("Assembling...");
+
 	ubyte[] output = cast(ubyte[])assemble(input);
 	writeln(format("Size %d bytes.", output.length));
 	return genPSID ? generatePSIDFile(song, output, address, address + 3, 1, true) : output;
