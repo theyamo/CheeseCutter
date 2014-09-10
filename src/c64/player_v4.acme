@@ -1555,7 +1555,6 @@ speedsub	!8 0
 newseq		!8 0,0,0
 		
 volume		!8 $0f
-temp		!8 $00
 
 shtrans2	!8 0,0,0
 				
@@ -1626,10 +1625,10 @@ vibrafh		!8 0,0,0 ;Vibrato feel high
 vibraflv	!8 0,0,0 ;Vibrato feel add
 }
 		 ;Slide variables
-
+!if INCLUDE_CMD_SLUP = TRUE | INCLUDE_CMD_SLDOWN = TRUE {
 slidelo		 !8 0,0,0 ;Low fraction
 slidehi		 !8 0,0,0 ;High fraction
-
+}
 		 ;Pulse
 
 pulsecur	!8 0,0,0

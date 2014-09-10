@@ -209,7 +209,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 	ubyte[] assembled = cast(ubyte[])assemble(input);
 	
 	if(verbose)
-		writeln(format("Size %d bytes.", assembled.length));
+		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length, address, address + assembled.length));
 	
 	return genPSID ? generatePSIDFile(song, assembled, address, address + 3, 1, true) : assembled;
 }
