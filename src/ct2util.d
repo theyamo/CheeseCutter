@@ -17,17 +17,8 @@ import std.stdio;
 enum Command { None, ExportPRG, ExportSID, Dump, Import, Init, ExportAsmSid, ExportAsmPrg }
 const string[] exts = [ "", "prg", "sid", "s", "ct", "ct", "sid", "sid" ];
 
-/+ options +/
-bool noPurge;
-address relocAddress = 0x1000;
-int[] speeds, masks;
-int defaultTune;
-string infn, outfn;
-string[3] infns;
-bool outfnDefined = false, infnDefined = false;
 bool verbose = true;
-int command;
-Song insong;
+bool noPurge;
 
 int str2Value(string s) {
 	if(s[0] == 'x' || s[0] == '$') {
@@ -109,6 +100,15 @@ void doPurge(ref Song sng) {
 
 
 int main(string[] args) {
+	address relocAddress = 0x1000;
+	int[] speeds, masks;
+	int defaultTune;
+	bool outfnDefined = false, infnDefined = false;
+	int command;
+	Song insong;
+	string infn, outfn;
+	string[3] infns;
+
 	speeds.length = 32;
 	masks.length = 32;
 	void printheader() {
