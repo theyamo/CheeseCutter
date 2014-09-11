@@ -117,7 +117,7 @@ int main(string[] args) {
 		writefln("\t%s import <infile> <infile2> <-o outfile>",args[0]);
 		writefln("\t%s init <binaryfile> <-o outfile>",args[0]);
 		writefln("\nCommands:");
-		writefln("  prg           Export song (.ct) to prg file");
+		writefln("  prg           Export song (.ct) to PRG file");
 		writefln("  sid           Export song (.ct) to SID file");
 		writefln("  build         Export song (.ct) to SID file while optimizing the player to leave out unused effect code (BETA)");
 		writefln("  buildprg      Export song (.ct) to PRG file while optimizing the player (BETA)");
@@ -133,7 +133,7 @@ int main(string[] args) {
 		writefln("  -s [subtune]:[speed],...    Set speeds for subtunes");
 		writefln("  -c [subtune]:[voicemask],...Set voice bitmasks for subtunes");
 		writefln("  -q            Don't output information");
-		writefln("\nPrefix value options with 'x' or '$' to indicate a hexadecimal value.");
+		writefln("\nPrefix value options with '0x' or '$' to indicate a hexadecimal value.");
 	}
 
 	if(args.length < 2) {
