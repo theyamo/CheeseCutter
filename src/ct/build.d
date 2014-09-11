@@ -204,10 +204,10 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 	setArgVal("INCLUDE_FILTER", filterUsed ? "TRUE" : "FALSE");
 	
 	if(song.multiplier > 1) {
-		 setArgVal("USE_MDRIVER", "TRUE");
-		 setArgVal("CIA_VALUE",
-				   format("$%04x", PAL_CLOCK / song.multiplier));
-		 setArgVal("MULTIPLIER", format("%d", song.multiplier - 1));
+		setArgVal("USE_MDRIVER", genPSID ? "TRUE" : "FALSE");
+		setArgVal("CIA_VALUE",
+				  format("$%04x", PAL_CLOCK / song.multiplier));
+		setArgVal("MULTIPLIER", format("%d", song.multiplier - 1));
 	}
 	setArgVal("BASEADDRESS", format("$%04x", address), );
 
