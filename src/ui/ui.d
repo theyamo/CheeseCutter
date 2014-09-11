@@ -215,12 +215,13 @@ class Infobar : Window {
 	}
 
 	override void update() {
-		int c = (escapecounter ? 7 : 12);
+		int headerColor = keyjamStatus ? 14 : 12;
+		if(escapecounter) headerColor = 7;
 	  
-		screen.clrtoeol(0,c);
+		screen.clrtoeol(0, headerColor);
 		
-		screen.cprint(4, 0, 1, c, "CheeseCutter 2.7");
-		screen.cprint(screen.width - 14, 0, 1, c, "F12 = Help");
+		screen.cprint(4, 0, 1, headerColor, "CheeseCutter 2.7");
+		screen.cprint(screen.width - 14, 0, 1, headerColor, "F12 = Help");
 		int c1 = audio.player.isPlaying ? 13 : 12;
 		screen.fprint(x1,area.y,format("`05Time: `0%x%02d:%02d / $%02x",
 									c1,audio.timer.min, audio.timer.sec, audio.callback.linesPerFrame));
