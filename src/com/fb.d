@@ -9,7 +9,7 @@ import std.stdio;
 import std.file;
 import std.cstream;
 
-const SDL_Color[] PALETTE = [
+immutable SDL_Color[] PALETTE = [
 	{ 0,0,0 },       
 	{ 63 << 2,63 << 2,63 << 2 },
 	{ 26 << 2,13 << 2,10 << 2 },
@@ -27,21 +27,21 @@ const SDL_Color[] PALETTE = [
 	{ 27 << 2,23 << 2,45 << 2 },
 	{ 37 << 2,37 << 2,37 << 2 } ];
 
-const FONT_X = 8, FONT_Y = 14;
+immutable FONT_X = 8, FONT_Y = 14;
 __gshared ubyte[] font;
 int mode;
 bool isDirty = false;
 int border = 1;
 
-const CHECKX = "assert(x >= 0 && x < width);";
-const CHECKY = "assert(y >= 0 && y < height);";
-const CHECKS = "assert(x + y >= 0 && x + y < width*height);";
+immutable CHECKX = "assert(x >= 0 && x < width);";
+immutable CHECKY = "assert(y >= 0 && y < height);";
+immutable CHECKS = "assert(x + y >= 0 && x + y < width*height);";
 
 static this() {
 	void[] arr;
 	font.length = 256*16;
 	// realign font data
-	const rawfont = import("font.psf");
+	immutable rawfont = import("font.psf");
 	for(int i=0;i<256;i++) {
 		font[i*16..i*16+14] = cast(ubyte[])rawfont[i*FONT_Y+4..i*FONT_Y+4+FONT_Y];
 	}
@@ -56,7 +56,7 @@ abstract class Video {
 	}
 	int height = 800, width = 600;
 	float scalex, scaley;
-	const int displayHeight, displayWidth;
+	immutable int displayHeight, displayWidth;
 	SDL_Rect rect;
 	this(Screen scr, int fs) {
 		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
@@ -171,8 +171,8 @@ class VideoStandard : Video {
 
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
-	const int correctedHeight, correctedWidth;
-	const bool yuvCenter;
+	immutable int correctedHeight, correctedWidth;
+	immutable bool yuvCenter;
 	this(Screen scr, int fs, bool yuvCenter) {
 		super(scr, fs);
 		correctedHeight = displayHeight;
@@ -341,7 +341,7 @@ class VideoYUV : Video {
 class Screen {
 	Uint16[] data;
 	private Uint16[] olddata;
-	const int width, height;
+	immutable int width, height;
 	alias width w;
 	alias height h;
 	this(int xchars, int ychars) {
