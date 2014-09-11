@@ -28,7 +28,7 @@ const SDL_Color[] PALETTE = [
 	{ 37 << 2,37 << 2,37 << 2 } ];
 
 const FONT_X = 8, FONT_Y = 14;
-ubyte[] font;
+__gshared ubyte[] font;
 int mode;
 bool isDirty = false;
 int border = 1;
