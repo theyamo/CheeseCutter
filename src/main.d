@@ -194,7 +194,7 @@ int main(char[][] args) {
 			case "-m":
 				sidtype = to!int(args[i+1]);
 				if(sidtype != 0 && sidtype != 1 && sidtype != 6581 && sidtype != 8580)
-					throw new ArgumentException("Incorrect SID type; specify 0 for 6581 or 1 for 8580");
+					throw new UserException("Incorrect SID type; specify 0 for 6581 or 1 for 8580");
 				i++;
 				break;
         	case "-fpr":
@@ -241,12 +241,12 @@ int main(char[][] args) {
 					}
 				}
 				if(args[i][0] == '-')
-					throw new ArgumentException(format("Unrecognized option %s", args[i]));
+					throw new UserException(format("Unrecognized option %s", args[i]));
 				if(fnDefined)
-					throw new ArgumentException("Filename already defined.");
+					throw new UserException("Filename already defined.");
 				filename = cast(string)args[i].dup;
 				if(std.file.exists(filename) == 0 || std.file.isDir(filename)) {
-					throw new ArgumentException("File not found!");
+					throw new UserException("File not found!");
 				}		
 				fnDefined = true;
 		
@@ -255,7 +255,7 @@ int main(char[][] args) {
 			i++;
 		}
 	}
-	catch(ArgumentException e) {
+	catch(UserException e) {
 		writeln(e);
 		return -1;
 	}

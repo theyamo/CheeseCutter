@@ -20,20 +20,6 @@ const string[] exts = [ "", "prg", "sid", "s", "ct", "ct", "sid", "prg" ];
 bool verbose = true;
 bool noPurge;
 
-int str2Value(string s) {
-	if(s[0] == 'x' || s[0] == '$') {
-		int val, i;
-		foreach_reverse(c; toUpper(s[1..$])) {
-			if(c == 'x' || c == '$') break;
-			if("0123456789ABCDEF".indexOf(c) < 0)
-				throw new Error("Illegal hexadecimal value in string.");
-			val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
-		}
-		return val;
-	}
-	return to!int(s);
-}
-
 int str2Value2(string s) {
 	int idx;
 	bool hexUsed;
@@ -47,7 +33,7 @@ int str2Value2(string s) {
 		int val, i;
 		foreach_reverse(c; toUpper(s[idx..$])) {
 			if("0123456789ABCDEF".indexOf(c) < 0)
-				throw new Error("Illegal hexadecimal value in string.");
+				throw new UserException("Illegal hexadecimal value in string.");
 			val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
 		}
 		return val;
@@ -69,12 +55,12 @@ void parseList(ref int[] array, string arg) {
 		else {
 			index = to!int(values[0]);
 			if(index > 31)
-				throw new Error("Value list index out of bounds.");
+				throw new UserException("Value list index out of bounds.");
 			array[index] = to!int(values[1]);
 		}
 		index++;
 		if(index > 31)
-			throw new Error("Value list too long.");
+			throw new UserException("Value list too long.");
 	}
 }
 
@@ -173,7 +159,7 @@ int main(string[] args) {
 			for(int argp = 2; argp < args.length; argp++) {
 				string nextArg() {
 					if(argp+1 >= args.length || args[argp+1][0] == '-')
-						throw new ArgumentException("Missing value for option '" ~ args[argp] ~"'");
+						throw new UserException("Missing value for option '" ~ args[argp] ~"'");
 					argp++;
 					return args[argp];
 				}
@@ -186,34 +172,34 @@ int main(string[] args) {
 					   command != Command.ExportPRG &&
 					   command != Command.ExportAsmSid &&
 					   command != Command.ExportAsmPrg)
-						throw new ArgumentException("Option available only with exporting commands.");
+						throw new UserException("Option available only with exporting commands.");
 					int r = str2Value2(nextArg());
 					if(r > 0xffff)
-						throw new ArgumentException("-r: Address value too big.");
+						throw new UserException("-r: Address value too big.");
 					relocAddress = cast(ushort)r;
 					break;
 				case "-s":
 					if(command != Command.ExportSID &&
 					   command != Command.ExportPRG)
-						throw new ArgumentException("Option available only with exporting commands.");
+						throw new UserException("Option available only with exporting commands.");
 					parseList(speeds, nextArg());
 					break;
 				case "-c":
 					if(command != Command.ExportSID &&
 					   command != Command.ExportPRG)
-						throw new ArgumentException("Option available only with exporting commands.");
+						throw new UserException("Option available only with exporting commands.");
 					parseList(masks, nextArg());
 					break;
 				case "-d":
 					if(command != Command.ExportSID)
-						throw new ArgumentException("Option available only when exporting to SID.");
+						throw new UserException("Option available only when exporting to SID.");
 					defaultTune = to!int(nextArg());
 					if(defaultTune <= 0)
-						throw new ArgumentException("Valid range for subtunes is 1 - 32.");
+						throw new UserException("Valid range for subtunes is 1 - 32.");
 					break;
 				case "-o":
 					if(outfnDefined)
-						throw new ArgumentException("Output file already defined.");
+						throw new UserException("Output file already defined.");
 					outfn = args[argp+1];
 					outfnDefined = true;
 					argp++;
@@ -223,12 +209,12 @@ int main(string[] args) {
 					break;
 				default:
 					if(args[argp][0] == '-')
-						throw new ArgumentException("Unrecognized option '" ~ args[argp] ~ "'");
+						throw new UserException("Unrecognized option '" ~ args[argp] ~ "'");
 					if(infnDefined && command != Command.Import)
-						throw new ArgumentException("Input filename already defined.");
+						throw new UserException("Input filename already defined. Use -o to define output file.");
 					if(command == Command.Import) {
 						if(infncounter > 1)
-							throw new ArgumentException("Infile & import filename already defined.");
+							throw new UserException("Infile & import filename already defined.");
 						infns[infncounter++] = args[argp];
 						infn = infns[0];
 					}
@@ -240,17 +226,20 @@ int main(string[] args) {
 		}
 		assert(command != Command.None);
 		if(!infnDefined)
-			throw new ArgumentException("Input filename not defined.");
+			throw new UserException("Input filename not defined.");
 		if(command == Command.Init && !outfnDefined) {
-			throw new ArgumentException("Command 'init' requires output filename to be defined (option -o).");
+			throw new UserException("Command 'init' requires output filename to be defined (option -o).");
 		}
 		else if(command == Command.Import && !outfnDefined) {
-			throw new ArgumentException("Command 'import' requires output filename to be defined (option -o).");
+			throw new UserException("Command 'import' requires output filename to be defined (option -o).");
 		}
 
 		if(!outfnDefined) {
 			outfn = defineOutfn(command, infn);
 		}
+
+		if(!std.file.exists(infn))
+			throw new UserException(format("File %s does not exist", infn));
 
 		explain("Input file: " ~ infn);
 		explain("Output file: " ~ outfn);
@@ -263,7 +252,8 @@ int main(string[] args) {
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
-			ubyte[] data = (command == Command.ExportSID) ? packToSid(insong, relocAddress, defaultTune, verbose)
+			ubyte[] data = (command == Command.ExportSID) ?
+				packToSid(insong, relocAddress, defaultTune, verbose)
 				: pack(insong, relocAddress, verbose);
 			std.file.write(outfn, data);
 			break;
@@ -278,7 +268,7 @@ int main(string[] args) {
 			break;
 		case Command.Import:
 			if(infncounter < 2)
-				throw new ArgumentException("Import song not defined.");
+				throw new UserException("Import song not defined.");
 			explain("Importing data from " ~ infns[1]);
 			insong = new Song;
 			insong.open(infns[0]);
@@ -301,11 +291,19 @@ int main(string[] args) {
 			assert(0);
 		}
 	}
+	catch(UserException e) {
+		writeln("error: ", e);
+		return -1;
+	}
 	catch(Exception e) {
 		writeln(e);
 		return -1;
 	}
-	
-	explain("Done.");
+	scope(failure) {
+		writeln("Aborted.");
+	}
+	scope(success) {
+		explain("Done.");
+	}
 	return 0;
 }

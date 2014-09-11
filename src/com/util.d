@@ -17,12 +17,6 @@ class UserException : Exception {
 	override string toString() { return msg; }
 }
 
-class ArgumentException : UserException {
-	this(string msg) {
-		super("Argument error: " ~ msg);
-	}
-}
-
 int paddedStringLength(string s, char padchar) {
 	int i;
 	for(i = cast(int)(s.length - 1); i >= 0; i--) {
