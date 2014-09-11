@@ -138,9 +138,9 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 				else if(cmdval == 3)
 					offsetUsed = true;
 				else if(cmdval == 4)
-					lovibUsed = true;
-				else if(cmdval == 5)
 					setADSRUsed = true;
+				else if(cmdval == 5)
+					lovibUsed = true;
 				else if(cmdval == 7)
 					portaUsed = true;
 				return;
