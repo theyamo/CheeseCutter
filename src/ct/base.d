@@ -706,6 +706,10 @@ struct Table {
 		return 0;
 	}
 	int length() { return cast(int)data.length; }
+	ubyte[] opSlice() { return data; }
+	ubyte[] opSlice(size_t x, size_t y) {
+		return data[x..y];
+	}
 }
 
 
@@ -1220,7 +1224,7 @@ class Song {
 		return upto + 1;
 	}
 	
-	int speed() {
+	@property int speed() {
 		return memspace[offsets[Offsets.SPEED]];
 	}
 
