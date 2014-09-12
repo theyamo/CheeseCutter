@@ -20,26 +20,24 @@ private {
 import derelict.sdl.sdl;
 import std.string;
 
-const PAGESTEP = 2;
+enum PAGESTEP = 2;
 enum Jump { ToBeginning = 0, ToMark = -1, ToEnd = -2, ToWrapMark = -3 };
 
-const int playbackBarColor = 6;
-const int wrapBarColor = 4;
+enum playbackBarColor = 6;
+enum wrapBarColor = 4;
 
 bool displaySequenceRowcounter = true;
 int stepValue = 1;
 int activeVoiceNum;
-int stepCounter;
-
-int tableTop = 15, tableBot = -16, tableScrMid = 0;
-int anchor = 16;
+private int stepCounter;
+int tableTop = 15, tableBot = -16;
+immutable int anchor = 16;
 
 private {
 	bool useRelativeNotes = true;
 }
 
 struct SequenceRowData {
-	// track number
 	Track trk; 
 	alias trk track;
 	// offset in tracklist, checked against endmark
@@ -53,13 +51,13 @@ struct SequenceRowData {
 	Element element; // data entry under cursor
 }
 
-struct VoiceInit {
+private struct VoiceInit {
 	Tracklist t;
 	Rectangle a;
 	Posinfo p;
 }
 
-private struct 	Clip {
+private struct Clip {
 	int trans, no;
 }
 
@@ -760,7 +758,6 @@ final class Sequencer : Window {
 		// top & bottom
 		tableBot = -area.height / 2;
 		tableTop = area.height / 2;
-		tableScrMid = area.y + area.height / 2 + 1;
 		sequenceTable.centerTo(0);
 	}
 

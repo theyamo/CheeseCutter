@@ -77,9 +77,7 @@ protected class FPlayVoiceTable : SequenceTable {
 }
 
 class Fplay : Window {
-	private {
-		FPlayVoiceTable ftable;
-	}
+	private FPlayVoiceTable ftable;
 	this(Rectangle a) { 
 		assert(fplayPos !is null);
 		ftable = new FPlayVoiceTable(a);

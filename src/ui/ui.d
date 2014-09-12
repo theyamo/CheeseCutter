@@ -25,9 +25,9 @@ import com.util;
 import seq.sequencer;
 import audio.audio;
 
-const PAGESTEP = 16;
-const CONFIRM_TIMEOUT = 90;
-const UPDATE_RATE = 2; // 50 / n times per second
+enum PAGESTEP = 16;
+enum CONFIRM_TIMEOUT = 90;
+enum UPDATE_RATE = 2; // 50 / n times per second
 
 bool keyjamStatus = false;
 string filename;

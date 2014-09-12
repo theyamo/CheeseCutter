@@ -12,7 +12,7 @@ import std.c.stdlib;
 import std.c.string;
 import std.conv;
 
-const MIXBUF_MUL = 2;
+enum MIXBUF_MUL = 2;
 __gshared SDL_AudioSpec audiospec;
 __gshared bool audioInited = false;
 __gshared int framerate = 50;

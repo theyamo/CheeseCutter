@@ -69,7 +69,7 @@ protected class QueryDialog : Window {
 }
 
 class HelpDialog : Window {
-	const MAX_LINE_LENGTH = 80;
+	enum MAX_LINE_LENGTH = 80;
 	string[][] pages;
 	const string title;
 	int numpages;

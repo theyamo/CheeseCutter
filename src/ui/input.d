@@ -26,7 +26,7 @@ struct Keyinfo {
 }
 
 class Cursor {
-	const BLINK_VAL = 8;
+	enum BLINK_VAL = 8;
 	int x = -1, y = -1;
 	private {
 		int counter;
@@ -789,8 +789,8 @@ final class InputSeq : Newinput {
 	Newinput activeInput;
 	int activeInputNo;
 	alias activeInputNo activeColumn;
-	const int columns = 3;
-
+	immutable columns = 3;
+	
 	this() {
 		super();
 		inputNote = new InputNote();
@@ -926,8 +926,8 @@ class InputSpecial : InputValue {
 	}
 	
 	override void update() {
-		const int[] xoffs = [0, 2, 3, 5, 6];
+		immutable offsets = [0, 2, 3, 5, 6];
         screen.cprint(x, y, 1, -1, format("%01X-%02X %02X",inarray[0],toInt(inarray[1..3]),toInt(inarray[3..5])));
-		cursor.set(pointerX + xoffs[nibble], pointerY);
+		cursor.set(pointerX + offsets[nibble], pointerY);
 	}
 }
