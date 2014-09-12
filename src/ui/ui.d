@@ -33,7 +33,6 @@ bool keyjamStatus = false;
 string filename;
 int tickcounter1, tickcounter3 = -1;
 int clearcounter, optimizecounter, escapecounter, restartcounter;
-int activeInstrument;
 
 struct Rectangle {
 	int x, y;
@@ -510,8 +509,8 @@ final private class Toplevel : WindowSwitcher {
 				}
 				break;
 			case SDLK_h:
-				.ui.tables.displayHelp ^= 1;
-				UI.statusline.display("Help texts " ~ (.ui.tables.displayHelp ? "enabled." : "disabled."));
+				displayHelp ^= 1;
+				UI.statusline.display("Help texts " ~ (displayHelp ? "enabled." : "disabled."));
 				break;
 			default:
 				break;
@@ -758,7 +757,7 @@ final class UI {
 		audio.player.setMultiplier(song.multiplier);
 
 		if(com.fb.mode > 0)
-			ui.tables.shortTitles = false;
+			com.session.shortTitles = false;
 		toplevel.activate();
 		activateDialog(aboutdialog);
 		update();

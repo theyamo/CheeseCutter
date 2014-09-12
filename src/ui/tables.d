@@ -12,9 +12,6 @@ import com.util;
 import derelict.sdl.sdl;
 import std.string;
 
-bool shortTitles = true;
-bool displayHelp = true;
-
 abstract class Table : Window {
 	const int columns, rows, visibleRows;
 	protected {
@@ -293,7 +290,7 @@ class InsValueTable : HexTable {
 			if(p > 47) p -= 48;
 			assert(p >= 0 && p < 48);
 			
-			int c = (ui.ui.activeInstrument >= 0 && row == p) ? 15 : 12;
+			int c = (com.session.activeInstrument >= 0 && row == p) ? 15 : 12;
 			screen.cprint(area.x,area.y + i + 1, c, 0, format("%02X:", p));
 			for(j=0; j<8; j++) {
 				ofs = p + j * 48;
@@ -653,7 +650,7 @@ class WaveTable : HexTable {
 	}
 
 	void seekCurWave() {
-		seekRow(song.instrumentTable[ui.ui.activeInstrument + 7 * 48]);
+		seekRow(song.instrumentTable[com.session.activeInstrument + 7 * 48]);
 	}
 
 	override int keypress(Keyinfo key) {

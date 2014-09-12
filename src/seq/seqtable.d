@@ -16,7 +16,6 @@ import std.string;
 
 protected class SeqVoice : Voice {
 	InputSeq seqinput;
-	int mod;
 
 	this(VoiceInit v) {		
 		super(v);

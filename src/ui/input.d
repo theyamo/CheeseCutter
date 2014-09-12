@@ -17,9 +17,6 @@ import std.utf;
 
 enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT }
 
-int octave = 3;
-bool autoinsertInstrument = true;
-
 struct Keyinfo {
 	int key, mods, unicode;
 	alias key raw;
@@ -719,8 +716,8 @@ class InputNote : Newinput {
 			if(note > 0x5e) break;
 			element.note = cast(ubyte)note;
 			if(autoinsertInstrument && value < 0x80) {
-				if(ui.ui.activeInstrument >= 0)
-					element.instr = cast(ubyte)(ui.ui.activeInstrument);
+				if(com.session.activeInstrument >= 0)
+					element.instr = cast(ubyte)(com.session.activeInstrument);
 				else element.instr = 0x80;
 			}
 			if(value >= 0x80) {
@@ -765,8 +762,8 @@ class InputKeyjam : Newinput {
 
 			break;
 		}
-		if(ui.ui.activeInstrument >= 0)
-			element.instr = cast(ubyte)(ui.ui.activeInstrument);
+		if(com.session.activeInstrument >= 0)
+			element.instr = cast(ubyte)(com.session.activeInstrument);
 		audio.player.playNote(element);
 	}
 	

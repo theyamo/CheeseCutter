@@ -9,11 +9,15 @@ import ui.ui;
 import seq.sequencer;
 
 __gshared Song song;
-
 UI mainui;
 Video video;
 Screen screen;
 PosinfoTable fplayPos, seqPos;
+int octave = 3;
+int activeInstrument;
+bool autoinsertInstrument = true;
+bool shortTitles = true;
+bool displayHelp = true;
 
 void initSession() {
 	song = new Song();
