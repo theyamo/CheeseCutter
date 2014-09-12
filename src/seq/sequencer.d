@@ -696,55 +696,6 @@ protected abstract class VoiceTable : Window {
 		doStep(true,extra);
 	}
 
-	deprecated void superSstep(int st, int extra, int height) {
-		bool wrapOk = true;
-		bool atBeg = activeVoice.atBeg();
-		
-		if(st < 0 && atBeg && stepCounter > 0) {
-			st = 0;
-			wrapOk = false;
-		}
-		
-		posTable.pointerOffset = 
-			posTable.pointerOffset + st;
-
-		bool atEnd = activeVoice.atEnd();
-		if(atEnd && stepCounter > 1) {
-			posTable.pointerOffset = 
-				posTable.pointerOffset - st;
-			st = 0;
-			wrapOk = false;
-		}
-
-		int r;
-		if(posTable.pointerOffset >= tableTop) {
-			r = -(height/2-posTable.pointerOffset-1);
-			posTable.pointerOffset = tableTop - 1;
-
-		}
-		else if(posTable.pointerOffset < tableBot) {
-			r = (posTable.pointerOffset+height/2);
-			posTable.pointerOffset = tableBot;
-
-		}
-
- 		stepCounter++;
-
-		int d = r > 0 ? 1 : - 1;
-		if(r == 0) d = 0;
-		int i;
-
-		doStep(wrapOk,r);
-
-		// "extra" 
-		if(d <= 0) return;
-		assert(extra >= 0);
-		posTable.pointerOffset = 
-			posTable.pointerOffset - extra;
-
-		foreach(v; voices) { v.scroll(extra); }
-	}
-
 	protected void doStep(bool wrapOk, int r) {
 		foreach(v; voices) {
 			bool wrap = wrapOk;

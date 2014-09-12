@@ -961,7 +961,7 @@ class Song {
 			offsets[i] = data[0xfa0+i*2] | (data[0xfa1+i*2] << 8);
 		}
 
-		for(int no=0;no<MAX_SEQ_NUM;no++) {
+		for(int no = 0; no < MAX_SEQ_NUM; no++) {
 			int p, lo, hi;
 			int lobyt = offsets[Offsets.SeqLO] + no, hibyt = offsets[Offsets.SeqHI] + no;
 			p = data[lobyt] + (data[hibyt] << 8);
@@ -1224,7 +1224,7 @@ class Song {
 		return memspace[offsets[Offsets.SPEED]];
 	}
 
-	void speed(int spd) {
+	@property void speed(int spd) {
 		memspace[offsets[Offsets.Songsets] + 6] = cast(ubyte)spd;
 		memspace[offsets[Offsets.SPEED]] = cast(ubyte)spd;
 		songspeeds[subtune] = cast(ubyte)spd;

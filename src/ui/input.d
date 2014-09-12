@@ -370,7 +370,7 @@ class InputString : Input {
 		if(tl >= inputLength) tl = inputLength;
 		str2[tl .. $] = ' ';
 		instring = str2;
-		nibble = getLength();
+		nibble = stringLength;
 		if(nibble >= inputLength)
 			nibble = inputLength - 1;
 	}
@@ -381,7 +381,7 @@ class InputString : Input {
 
 	string toString(bool pad) {
 		if(!pad)
-			return cast(string)(instring[0..getLength()].dup);
+			return cast(string)(instring[0..stringLength].dup);
 		return cast(string)(instring);
 	}
 
@@ -422,7 +422,7 @@ class InputString : Input {
 			nibble = 0;
 			break;
 		case SDLK_END:
-			nibble = getLength();
+			nibble = stringLength;
 			if(nibble >= inputLength)
 				nibble = inputLength - 1;
 			break;
@@ -456,8 +456,7 @@ class InputString : Input {
 		return OK;
 	}
 
-	int getLength() {
-                
+	@property int stringLength() {
 		for(int i = inputLength - 1; i >= 0; i--) {
 			if(instring[i] != ' ') 
 				return i+1;
