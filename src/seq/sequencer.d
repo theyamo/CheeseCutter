@@ -51,7 +51,7 @@ struct SequenceRowData {
 	Element element; // data entry under cursor
 }
 
-private struct VoiceInit {
+struct VoiceInit {
 	Tracklist t;
 	Rectangle a;
 	Posinfo p;
