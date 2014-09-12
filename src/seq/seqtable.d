@@ -122,7 +122,7 @@ protected class SeqVoice : Voice {
 		
 		void printTrack() {
 			screen.cprint(area.x - 1, scry, 1, 0,
-						  " " ~ formatTrackValue(wseq.track.getValue2));
+						  " " ~ formatTrackValue(wseq.track.smashedValue));
 			if(trkofs == pos.mark) {
 				for(int i = 0; i < 13; i++) {
 					int xpos = area.x + i;

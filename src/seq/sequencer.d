@@ -294,7 +294,7 @@ protected:
 
 	void jump(int jumpto) {
 		if(jumpto == Jump.ToMark) jumpto = pos.mark;
-		else if(jumpto == Jump.ToWrapMark) jumpto = tracks.wrapOffset();
+		else if(jumpto == Jump.ToWrapMark) jumpto = tracks.wrapOffset;
 		assert(jumpto >= 0);
 		pos.trkOffset = jumpto;
 		pos.seqOffset = 0;
@@ -571,7 +571,7 @@ protected abstract class VoiceTable : Window {
 			posTable.pointerOffset = 0;
 			foreach(v; voices) {
 				v.jump(Jump.ToBeginning);
-				v.jump(v.tracks.wrapOffset());
+				v.jump(v.tracks.wrapOffset);
 			}
 			if(doCtr) centerTo(0);
 			break;

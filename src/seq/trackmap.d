@@ -38,7 +38,7 @@ protected class TrackmapVoice : TrackVoice {
 			int fpCounter = fplayPos.rowCounter;
 			int delta = fpCounter - counter; 
 			int fgcol = (delta >= 0 && delta < wseq.seq.rows) ? 13 : 5;
-			int trk = wseq.trk.getValue2();
+			int trk = wseq.trk.smashedValue;
 			int rows = wseq.seq.rows;
 			int c = counter;
 			if(scry == area.y + 1 + anchor) fgcol = 1;
