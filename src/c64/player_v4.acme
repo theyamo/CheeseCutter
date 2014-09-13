@@ -70,7 +70,6 @@ INCLUDE_BREAKSPEED	= TRUE
 INCLUDE_CHORD		= TRUE
 INCLUDE_FILTER		= TRUE
 USE_MDRIVER		= FALSE
-OPTIMIZE_PULSE          = TRUE
 ;;; ----------------------------------------
 ;;; new effect commands
 ;;; ----------------------------------------
@@ -710,9 +709,6 @@ syncskip
 ;;; pulsework
 ;;; ----------------------------------------
 updatepulse	ldy pulsecur,x
-!if OPTIMIZE_PULSE {
-                beq pulsedone
-}                           
 		dec pulsecnt,x
 		bpl pulsenotnew
 
