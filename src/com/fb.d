@@ -27,10 +27,10 @@ immutable SDL_Color[] PALETTE = [
 	{ 27 << 2,23 << 2,45 << 2 },
 	{ 37 << 2,37 << 2,37 << 2 } ];
 
-immutable FONT_X = 8, FONT_Y = 14;
-__gshared ubyte[] font;
+enum FONT_X = 8, FONT_Y = 14;
+private immutable ubyte[256*16] font;
+private bool isDirty = false;
 int mode;
-bool isDirty = false;
 int border = 1;
 
 immutable CHECKX = "assert(x >= 0 && x < width);";
@@ -38,13 +38,13 @@ immutable CHECKY = "assert(y >= 0 && y < height);";
 immutable CHECKS = "assert(x + y >= 0 && x + y < width*height);";
 
 static this() {
-	void[] arr;
-	font.length = 256*16;
+	auto arr = new ubyte[256*16];
 	// realign font data
 	immutable rawfont = import("font.psf");
 	for(int i=0;i<256;i++) {
-		font[i*16..i*16+14] = cast(ubyte[])rawfont[i*FONT_Y+4..i*FONT_Y+4+FONT_Y];
+		arr[i*16..i*16+14] = cast(ubyte[])rawfont[i*FONT_Y+4..i*FONT_Y+4+FONT_Y];
 	}
+	font = arr.idup;
 }
 
 
@@ -114,7 +114,6 @@ class VideoStandard : Video {
 		Uint16* cptr = &screen.olddata[0];
 		Uint32* sptr = cast(Uint32 *)surface.pixels;
 		Uint32* sp;
-		Uint8* bp;
 		Uint8 ubg, ufg;
 		
 		if (!isDirty) return;
@@ -128,7 +127,7 @@ class VideoStandard : Video {
 					*cptr = *bptr;
 					sp = sptr;
 					a = *bptr & 255;
-					bp = &font[a * 16];
+					auto d = font[a * 16 .. a * 16 + 16];
 					ufg = (*bptr >> 8) & 15;
 					ubg = (*bptr >> 12);
 					int fgcolor = PALETTE[ufg].b << surface.format.Bshift | 
@@ -137,8 +136,8 @@ class VideoStandard : Video {
 					int bgcolor = PALETTE[ubg].b << surface.format.Bshift | 
 						(PALETTE[ubg].g << surface.format.Gshift) |
 						(PALETTE[ubg].r << surface.format.Rshift);
-					for(c = 4; c < 18; c++, bp++) {
-						b = *bp;
+					for(c = 0; c < 14; c++) {
+						b = d[c];
 						if(b & 0x80) *(sp++) = fgcolor;
 						else *(sp++) = bgcolor;
 						if(b & 0x40) *(sp++) = fgcolor;
@@ -258,7 +257,7 @@ class VideoYUV : Video {
 				if(*bptr != *cptr) {
 					*cptr = *bptr;
 					a = *bptr & 255;
-					bp = &font[a * 16];
+					auto d = font[a * 16 .. a * 16 + 16];
 					ufg = (*bptr >> 8) & 15;
 					ubg = (*bptr >> 12);
 					int fgcolor = PALETTE[ufg].b << surface.format.Bshift | 
@@ -267,9 +266,9 @@ class VideoYUV : Video {
 					int bgcolor = PALETTE[ubg].b << surface.format.Bshift | 
 						(PALETTE[ubg].g << surface.format.Gshift) |
 						(PALETTE[ubg].r << surface.format.Rshift);
-					for(c = 4; c < 18; c++, bp++) {
+					for(c = 0; c < 14; c++) {
 						sp = &pixbuf[0];
-						b = *bp;
+						b = d[c];
 						if(b & 0x80) *(sp++) = fgcolor;
 						else *(sp++) = bgcolor;
 						if(b & 0x40) *(sp++) = fgcolor;
@@ -286,7 +285,7 @@ class VideoYUV : Video {
 						else *(sp++) = bgcolor;
 						if(b & 0x01) *(sp++) = fgcolor;
 						else *(sp++) = bgcolor;
-						RGBBlock2YUV(pixbuf, x * 8, y * 14 + c - 4);
+						RGBBlock2YUV(pixbuf, x * 8, y * 14 + c);
 						sp += width - 8;
 					}
 				}
