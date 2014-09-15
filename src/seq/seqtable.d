@@ -17,7 +17,7 @@ import std.string;
 protected class SeqVoice : Voice {
 	InputSeq seqinput;
 
-	this(VoiceInit v) {		
+	this(VoiceInitParams v) {		
 		super(v);
 		activeRow = getSequenceData(0, 0);
 		seqinput = new InputSeq();
@@ -189,8 +189,8 @@ protected class SequenceTable : VoiceTable {
 		for(int v=0;v<3;v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
-			voices[v] = new SeqVoice(VoiceInit(song.tracks[v],
-											   na, pi[v]));
+			voices[v] = new SeqVoice(VoiceInitParams(song.tracks[v],
+													 na, pi[v]));
 		}
 		super(a, pi); 
 	}

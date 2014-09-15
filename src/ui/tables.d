@@ -328,13 +328,13 @@ class InsValueTable : HexTable {
 
 class InsTable : Window {
 	private {
-		FileSelectorDialogString insdesc;
+		DialogString insdesc;
 		InsValueTable insinput;
 	}
 	Window active;
 	this(Rectangle a) {
 		super(a);
-		insdesc = new FileSelectorDialogString(a, com.fb.mode ? 32 : 16);
+		insdesc = new DialogString(a, com.fb.mode ? 32 : 16);
 		insinput = new InsValueTable(a);
 		refresh();
 		activateInsValueTable();

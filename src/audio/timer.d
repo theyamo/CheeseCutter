@@ -47,7 +47,7 @@ void tick() {
 /+ should be called once per frame cycle, updated fplay counters +/
 void tickFullFrame() {
 	tickCounter++;
-	if(++fplayTickCounter > song.playSpeed()) {
+	if(++fplayTickCounter > song.playSpeed) {
 		fplayRowCounter++;
 		fplayTickCounter = 0;
 	}

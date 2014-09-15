@@ -51,7 +51,7 @@ struct SequenceRowData {
 	Element element; // data entry under cursor
 }
 
-struct VoiceInit {
+struct VoiceInitParams {
 	Tracklist t;
 	Rectangle a;
 	Posinfo p;
@@ -132,7 +132,7 @@ abstract protected class Voice : Window {
 	Input input;
 	alias input activeInput;
 	
-	this(ref VoiceInit v) {
+	this(ref VoiceInitParams v) {
 		super(v.a);
 		tracks = v.t; pos = v.p;
 		assert(pos !is null);

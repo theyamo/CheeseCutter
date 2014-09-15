@@ -14,7 +14,7 @@ import derelict.sdl.sdl;
 private int mode;
 
 protected class FPlayVoice : SeqVoice {
-	this(VoiceInit v) { 
+	this(VoiceInitParams v) { 
 		super(v); 
 		assert(pos !is null);
 	}
@@ -64,8 +64,9 @@ protected class FPlayVoiceTable : SequenceTable {
 		for(int v=0;v<3;v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
-			voices[v] = new FPlayVoice(VoiceInit(song.tracks[v],
-												 na, fplayPos[v]));
+			voices[v] =
+				new	FPlayVoice(VoiceInitParams(song.tracks[v],
+											   na, fplayPos[v]));
 		}
 	}
 

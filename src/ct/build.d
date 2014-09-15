@@ -98,8 +98,8 @@ private ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int
 	data[PSID_INIT_OFFSET .. PSID_INIT_OFFSET + 2] = cast(ubyte[])[ initAddress >> 8, initAddress & 255 ];
 	data[PSID_PLAY_OFFSET .. PSID_PLAY_OFFSET + 2] = cast(ubyte[])[ playAddress >> 8, playAddress & 255 ];
 	int endAddr = cast(int)(initAddress + data.length);
-	if(endAddr > 0xfff9) throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9))
-							 ;
+	if(endAddr > 0xfff9) throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9));
+	
 	data[PSID_FLAGS_OFFSET + 1] 
 		= cast(ubyte)(0x04 /+ PAL +/ | (insong.sidModel ? 0x20 : 0x10));
 

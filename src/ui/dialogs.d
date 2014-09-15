@@ -410,7 +410,7 @@ private:
 }
 
 // wraps inputstring
-class FileSelectorDialogString : Window {
+class DialogString : Window {
 	this(Rectangle a) {
 		this(a, 50);
 	}
@@ -439,7 +439,7 @@ class FileSelectorDialog : WindowSwitcher {
 	alias void delegate(string) CB;
 	const CB callback;
 	alias activeWindow active;
-	private FileSelectorDialogString sfile, sdir;
+	private DialogString sfile, sdir;
 	FileSelector fsel;
 	private const string header;
 	private int active_window_num;
@@ -450,8 +450,8 @@ class FileSelectorDialog : WindowSwitcher {
 		filearea = Rectangle(a.x + 5, a.y + 2, a.height - 6, a.width - 10);
 		fsel = new FileSelector(Rectangle(a.x + 5, a.y + 2, a.height - 6, 
 								a.width - 18));
-		sfile = new FileSelectorDialogString(Rectangle(a.x+3+11, a.y+a.height-2), 50);
-		sdir = new FileSelectorDialogString(Rectangle(a.x+3+11, a.y+a.height-3), 50);
+		sfile = new DialogString(Rectangle(a.x+3+11, a.y+a.height-2), 50);
+		sdir = new DialogString(Rectangle(a.x+3+11, a.y+a.height-3), 50);
 		sdir.setString(getcwd());
 		super(a, [cast(Window)fsel, sdir, sfile]);
 		activateWindow(0);

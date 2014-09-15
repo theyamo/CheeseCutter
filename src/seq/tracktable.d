@@ -18,7 +18,7 @@ import ct.base;
 class TrackVoice : SeqVoice {
 	InputTrack trackinput;
 	bool displayTracklist = false;
-	this(VoiceInit v) {		
+	this(VoiceInitParams v) {		
 		super(v);
 		refreshPointer(0);
 		trackinput = new InputTrack(activeRow);
@@ -353,8 +353,8 @@ protected class TrackTable : BaseTrackTable {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 
-			voices[v] = new TrackVoice(VoiceInit(song.tracks[v],
-				na, pi.pos[v]));
+			voices[v] = new TrackVoice(VoiceInitParams(song.tracks[v],
+													   na, pi.pos[v]));
 		}
 		super(a, pi);
 	}

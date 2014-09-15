@@ -185,7 +185,6 @@ class VideoYUV : Video {
 			correctedHeight = cast(int)(correctedWidth * 0.75);
 		}
 
-//		derr.writefln("corr.width = ", correctedWidth, ", height = ", correctedHeight);
 		this.yuvCenter = yuvCenter;
 		enableFullscreen(fs > 0);
 	}
@@ -204,8 +203,6 @@ class VideoYUV : Video {
 			width = 800;
 			height = 600;
 		}
-
-//		derr.writefln("corr.width = " ~ correctedWidth ~ ", height = " ~ correctedHeight);
 
 		super.resize(maxres);
 	}
@@ -297,7 +294,7 @@ class VideoYUV : Video {
 		SDL_DisplayYUVOverlay(overlay, &rect);
 	}
 
-	private	void RGBBlock2YUV(Uint32[] source, int x, int y) {
+	private	void RGBBlock2YUV(const Uint32[] source, int x, int y) {
 		void RGB_to_YUV(Uint8 *rgb, Uint8* yuv) {
 			yuv[0] = cast(ubyte)(0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2]);
 			yuv[2] = cast(ubyte)((rgb[2]-yuv[0])*0.565 + 128);
@@ -381,7 +378,7 @@ class Screen {
 		isDirty = true;
 	}
 
-	void setfg(int x, int y, int fg) {
+	deprecated void setfg(int x, int y, int fg) {
 		Uint16* s = &data[x + y * width];
 		*s &= 0xf0ff;
 		*s |= (fg << 8);
@@ -400,7 +397,7 @@ class Screen {
 		isDirty = true;
 	}
 
-	void clrbgtoeol(int y, int bg) {
+	deprecated void clrbgtoeol(int y, int bg) {
 		mixin(CHECKY);
 		Uint16* s = &data[y * width];
 		Uint16 v = cast(Uint16)(0x20 | (bg << 12));
@@ -423,7 +420,7 @@ class Screen {
 		isDirty = true;
 	}
 
-	void setcoltoeol(int y, int fg, int bg) {
+	deprecated void setcoltoeol(int y, int fg, int bg) {
 		mixin(CHECKY);
 	
 		Uint16* s = &data[y * width];
@@ -435,11 +432,6 @@ class Screen {
 			*s |= v;
 			s++;		
 		}
-	}
-	
-	void cprint(int x, int y, int fg, int bg, char[] txt) {
-		derr.writefln("FORMATC");
-		cprint(x,y,fg,bg,format(txt));
 	}
 	
 	void cprint(int x, int y, int fg, int bg, string txt) {
@@ -459,12 +451,7 @@ class Screen {
 		}
 		isDirty = true;
 	}
-/*
-	void fprint(int x, int y, char[] str) {
-		derr.writefln("FORMATF");
-		fprint(x,y,format(str));
-	}
-*/
+
 	void fprint(int x, int y, string str) {
 		mixin(CHECKS);
 		assert(str.length < 256);

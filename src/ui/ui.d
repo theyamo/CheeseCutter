@@ -29,10 +29,8 @@ enum PAGESTEP = 16;
 enum CONFIRM_TIMEOUT = 90;
 enum UPDATE_RATE = 2; // 50 / n times per second
 
-bool keyjamStatus = false;
-string filename;
-int tickcounter1, tickcounter3 = -1;
-int clearcounter, optimizecounter, escapecounter, restartcounter;
+private int tickcounter1, tickcounter3 = -1;
+private int clearcounter, optimizecounter, escapecounter, restartcounter;
 
 struct Rectangle {
 	int x, y;
@@ -186,7 +184,7 @@ class WindowSwitcher : Window {
 			if(activeWindowNum >= windows.length)
 				activeWindowNum %= windows.length;
 				+/
-			activeWindowNum = umod(activeWindowNum, 0, windows.length);
+			activeWindowNum = umod(activeWindowNum, 0, cast(int)windows.length - 1);
 			activateWindow();
 			return OK;
 		default: 
@@ -236,7 +234,7 @@ class Infobar : Window {
 						  song.multiplier, audio.player.ntsc ? 60 : 50,
 						  audio.player.usefp ? audio.player.curfp.id : audio.player.sidtype ? "8580" : "6581",
 						  audio.player.badline ? "&0fb" : " "));
-		screen.fprint(x1,area.y+1,format("`05Filename: `0d%s", filename.leftJustify(38)));
+		screen.fprint(x1,area.y+1,format("`05Filename: `0d%s", com.session.filename.leftJustify(38)));
 		//screen.fprint(x2,area.y,format("`05  `b1T`01itle: `0d%-32s", std.string.toString(cast(char *)song.title))); 
 		screen.fprint(x2,area.y,format("`05%s `0d%-32s", (["  `b1T`01itle:", " `01Author:", "`01Release:" ])[idx],
 									song.title));
@@ -699,7 +697,7 @@ final private class Toplevel : WindowSwitcher {
 			refresh();
 			clearcounter = 0;
 			//savedialog.setFilename("");
-			filename = "";
+			com.session.filename = "";
 			UI.statusline.display("Editor restarted.");
 		}
 		else {
@@ -1082,7 +1080,7 @@ final class UI {
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
 		fn = fn[ind..$];
-		ui.ui.filename = fn;
+		com.session.filename = fn;
 	}
 
 	void importCallback(string s) {
@@ -1121,7 +1119,7 @@ final class UI {
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
 		fn = fn[ind..$];
-		ui.ui.filename = fn;
+		com.session.filename = fn;
 		infobar.refresh();
 		
 		// sync save filesel to load filesel in case dir was changed
@@ -1156,13 +1154,10 @@ final class UI {
 		refresh();
 	}
 
-	void enableKeyjamMode(bool enable) {
-		if(enable) {
-			com.fb.disableKeyRepeat();
-		}
-		else com.fb.enableKeyRepeat();
-		
-		keyjamStatus = enable;
+	void enableKeyjamMode(bool doEnable) {
+		doEnable ? com.fb.disableKeyRepeat() :
+			com.fb.enableKeyRepeat();
+		keyjamStatus = doEnable;
 	}
 
 	void activateInstrumentTable(int ins) {
@@ -1176,8 +1171,8 @@ final class UI {
 		stop(true);
 	}
 
-	static void stop(bool s) {
-		if(s) {
+	static void stop(bool doStop) {
+		if(doStop) {
 			audio.player.stop();
 		}
 		infobar.update();

@@ -20,7 +20,7 @@ enum Offsets
 	SHTRANS, FOO3, NEXT, CURINST, GEED, NEWSEQ
 }
 
-const string[] NOTES =
+immutable string[] NOTES =
 	[ "C-0", "C#0", "D-0", "D#0", "E-0", "F-0",
 	  "F#0", "G-0", "G#0", "A-0", "A#0", "B-0",
 	  "C-1", "C#1", "D-1", "D#1", "E-1", "F-1",
@@ -49,12 +49,10 @@ enum {
 	NOTE_KEYON = 2,
 }
 
-const ubyte[] CLEAR = [0xf0, 0xf0, 0x60, 0x00];
-const ubyte[] INITIAL_SEQ = [0xf0, 0xf0, 0x60, 0x00, 0xbf];
+immutable ubyte[] CLEAR = [0xf0, 0xf0, 0x60, 0x00];
+immutable ubyte[] INITIAL_SEQ = [0xf0, 0xf0, 0x60, 0x00, 0xbf];
 
 alias char*[] ByteDescription;
-
-ByteDescription bt;
 
 struct Cmd {
 	private ubyte[] data;
@@ -533,10 +531,9 @@ class Sequence {
 	}
 	
  	override bool opEquals(Object o) const {
-        
 		auto rhs = cast(const Sequence)o;
         	return (rhs && (data.raw[] == rhs.data.raw[]));
-    	}
+	}
 
 	void clear() {
 		data.raw[] = 0;
@@ -820,7 +817,7 @@ class Song {
 			return 0;
 		}
 
-		// highly dubious coding here (actually, like most of this class..)
+		// highly dubious coding here (actually, like in most of this class..)
 		ubyte[][][] compact() {
 			ubyte[][][] arr;
 //			sync();
@@ -896,7 +893,7 @@ class Song {
 		if(bin[0xdfe .. 0xe00] != cast(ubyte[])[ 0x00, 0x0e ])
 			throw new UserException("Illegal loading address.");
 		songspeeds[] = 5;
-		open(bin);
+		initialize(bin);
 		sidbuf = memspace[0xd400 .. 0xd419];
 	}
 
@@ -940,7 +937,7 @@ class Song {
 		int len = 1024*3*32;
 		subtunes = new Subtunes(debuf[offset .. offset + len]);
 		offset += len;
-		open(debuf[0..65536]);
+		initialize(debuf[0..65536]);
 	}
 
 	void setMultiplier(int m) {
@@ -949,7 +946,7 @@ class Song {
 		memspace[Offsets.Volume + 1] = cast(ubyte)m;
 	}
 
-	void open(ubyte[] buf) {
+	protected void initialize(ubyte[] buf) {
 		int i, voi;
 		//int lastused;
 		data[] = buf;
@@ -1236,7 +1233,7 @@ class Song {
 			memspace[offsets[Offsets.PlaySpeed]] = cast(ubyte)spd;
 	}
 
-	int playSpeed() {
+	@property int playSpeed() {
 		return memspace[offsets[Offsets.PlaySpeed]];
 	}
 
@@ -1271,14 +1268,11 @@ class Song {
 		arpPointerUpdate(pos, 1);
 	}
 
-	void setVoicon(int m1, int m2, int m3) {
-		buffer[offsets[Offsets.VOICE]+0] = m1 ? 0x19 : 0x00;
-		buffer[offsets[Offsets.VOICE]+1] = m2 ? 0x19 : 0x07;
-		buffer[offsets[Offsets.VOICE]+2] = m3 ? 0x19 : 0x0e;
-	}
-
 	void setVoicon(shared int[] m) {
-		setVoicon(m[0], m[1], m[2]);
+		//setVoicon(m[0], m[1], m[2]);
+		buffer[offsets[Offsets.VOICE]+0] = m[0] ? 0x19 : 0x00;
+		buffer[offsets[Offsets.VOICE]+1] = m[1] ? 0x19 : 0x07;
+		buffer[offsets[Offsets.VOICE]+2] = m[2] ? 0x19 : 0x0e;
 	}
 	
 	int getFreeSequence(int start) {

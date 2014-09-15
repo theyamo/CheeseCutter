@@ -16,7 +16,7 @@ import ct.base;
 
 
 protected class TrackmapVoice : TrackVoice {
-	this(VoiceInit v) {		
+	this(VoiceInitParams v) {		
 		super(v);
 	}
 
@@ -101,8 +101,8 @@ protected class TrackmapTable : BaseTrackTable {
 		for(int v=0;v<3;v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
-			voices[v] = new TrackmapVoice(VoiceInit(song.tracks[v],
-				na, pi.pos[v]));
+			voices[v] = new TrackmapVoice(VoiceInitParams(song.tracks[v],
+														  na, pi.pos[v]));
 		}
 		super(a, pi); 
 	}

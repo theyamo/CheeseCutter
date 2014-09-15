@@ -18,6 +18,8 @@ int activeInstrument;
 bool autoinsertInstrument = true;
 bool shortTitles = true;
 bool displayHelp = true;
+bool keyjamStatus = false;
+string filename;
 
 void initSession() {
 	song = new Song();
