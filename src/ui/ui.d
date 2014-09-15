@@ -181,9 +181,12 @@ class WindowSwitcher : Window {
 		switch(key.raw) {
 		case SDLK_TAB:
 			key.mods & KMOD_SHIFT ? activeWindowNum-- : activeWindowNum++ ;
+			/+
 			if(activeWindowNum < 0) activeWindowNum = cast(int)(windows.length - 1);
 			if(activeWindowNum >= windows.length)
 				activeWindowNum %= windows.length;
+				+/
+			activeWindowNum = umod(activeWindowNum, 0, windows.length);
 			activateWindow();
 			return OK;
 		default: 

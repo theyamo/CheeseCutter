@@ -1,5 +1,5 @@
 LIBS=-ldl -lstdc++
-COMFLAGS=
+COMFLAGS=-pg
 DLINK=$(COMFLAGS)
 VERSION=$(shell cat Version)
 DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O1 -frelease -fno-bounds-check
