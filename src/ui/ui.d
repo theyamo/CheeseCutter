@@ -564,6 +564,14 @@ final private class Toplevel : WindowSwitcher {
 				 break;
 			 }
 		}
+		else if(key.mods & KMOD_SHIFT) {
+			version(OSX) {
+				if(key.raw == SDLK_EQUALS) {
+					instable.stepRow(1);
+					activeInstrument = instable.row;
+				}
+			}
+		}
 		if(keyjamStatus == true || key.mods & KMOD_CAPS) {
 			inputKeyjam.keypress(key);
 		}

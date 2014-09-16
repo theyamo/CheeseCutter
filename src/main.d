@@ -25,7 +25,7 @@ version(linux) {
 	const DIR_SEPARATOR = '/';
 }
 
-version(darwin) {
+version(OSX) {
 	const DIR_SEPARATOR = '/';
 }
 
@@ -77,7 +77,7 @@ void mainloop() {
 				mods &= 0xffffff - KMOD_NUM;
 				auto keyinfo = Keyinfo(key, mods, unicode);
 				com.kbd.translate(keyinfo);
-				version(darwin) {
+				version(OSX) {
 					if (key == SDLK_q && evt.key.keysym.mod & KMOD_META)
 						quit=true;
 				}	
@@ -235,7 +235,7 @@ int main(char[][] args) {
 				yuvCenter = false;
 				break;
 			default:
-				version (darwin) {
+				version (OSX) {
 					if (args[i].length > 3 && args[i][0..4] == "-psn"){
 						break;
 					}
