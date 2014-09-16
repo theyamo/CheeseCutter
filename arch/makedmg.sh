@@ -5,7 +5,7 @@ applicationName="CheeseCutter.app"
 backgroundPictureName="background.png"
 source="dist"
 title="CheeseCutter ${VERSION}"
-size=10000
+size=20000
 finalDMGName="CheeseCutter_${VERSION}.dmg"
 
 mkdir "${source}"
@@ -19,7 +19,10 @@ sleep 5
 mkdir /Volumes/"${title}"/.background
 cp arch/background.png /Volumes/"${title}"/.background
 cp -r tunes README COPYING Changelog /Volumes/"${title}"/
- 
+
+pushd /Volumes/"${title}"
+ln -s /Applications
+popd
 
 echo '
    tell application "Finder"
@@ -33,16 +36,15 @@ echo '
            set arrangement of theViewOptions to not arranged
            set icon size of theViewOptions to 72
            set background picture of theViewOptions to file ".background:'${backgroundPictureName}'"
-           make new alias file at container window to POSIX file "/Applications" with properties {name:"Applications"}
            delay 1
-	   set position of item ${applicationName} of container window to {100, 100}
+	         set position of item "'${applicationName}'" of container window to {100, 100}
            set position of item "Applications" of container window to {375, 100}
            update without registering applications
            close
-	   open
-	   delay 5
+           open
+           delay 5
            eject
-     end tell
+           end tell
    end tell
 ' | osascript
 
@@ -51,4 +53,4 @@ sync
 sync
 hdiutil detach ${device}
 hdiutil convert pack.temp.dmg -format UDZO -imagekey zlib-level=9 -o ${finalDMGName}
-rm pack.temp.dmg 
+rm pack.temp.dmg

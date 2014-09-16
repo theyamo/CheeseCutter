@@ -45,5 +45,7 @@
 	<string>CT</string>
 	<key>CFBundleVersion</key>
 	<string>2.5.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 </dict>
 </plist>
