@@ -1,11 +1,14 @@
-#LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL
-LIBS=/opt/ldc2/lib/libphobos-ldc.a /opt/ldc2/lib/libdruntime-ldc.a -lstdc++ -framework Foundation -framework SDL 
+#LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++
+#LIBS=/opt/ldc2/lib/libphobos-ldc.a /opt/ldc2/lib/libdruntime-ldc.a -lstdc++
+LIBS=/usr/local/lib/libphobos2-ldc.a /usr/local/lib/libdruntime-ldc.a -lstdc++
+FRAMEWORKS=-framework Foundation -framework SDL
 COMFLAGS= -mmacosx-version-min=10.7
 VERSION=$(shell cat Version)
 DLINK=$(COMFLAGS)
 DFLAGS=-I./src -J./src/c64 -J./src/font
 CFLAGS=$(COMFLAGS)
 CXXFLAGS=$(CFLAGS) -I./src -O2
+LDFLAGS=-rpath,@executable_path/../Frameworks
 COMPILE.d = $(DC) $(DFLAGS) -d -O2 -c -of=$@
 DC=ldc2
 EXE=
@@ -14,7 +17,7 @@ TARGET=ccutter
 include Makefile.objects.mk
 
 $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
-	$(CC) $(DLINK) -o $(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
+	$(CC) $(DLINK) -Wl,$(LDFLAGS) -o $(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS) $(FRAMEWORKS)
 
 .cpp.o : $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -37,7 +40,8 @@ release: all
 
 	rm -rf CheeseCutter.app
 	mkdir -p CheeseCutter.app/Contents/Frameworks
-	cp -r arch/MacOs/Contents CheeseCutter.app
+	mkdir -p CheeseCutter.app/Contents/MacOS
+	cp -r arch/MacOS/Contents CheeseCutter.app
 	cp -r /Library/Frameworks/SDL.framework CheeseCutter.app/Contents/Frameworks
 	cp $(TARGET) CheeseCutter.app/Contents/MacOS
 	cp ct2util CheeseCutter.app/Contents/MacOS
