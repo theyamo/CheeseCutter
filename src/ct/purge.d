@@ -4,8 +4,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 
 module ct.purge;
 import ct.base;
-import ct.base : Sequence;
-import std.stdio;
+import std.stdio : writefln;
 import std.string;
 import com.util;
 

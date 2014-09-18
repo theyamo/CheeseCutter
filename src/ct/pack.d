@@ -6,7 +6,6 @@ module ct.pack;
 import ct.base;
 import com.cpu;
 import std.stdio;
-import std.string;
 import com.util;
 
 const ubyte[] SIDHEADER = [

@@ -8,16 +8,16 @@ import main;
 import com.fb;
 import com.util;
 import com.session;
-private import ct.base;
+import ct.base;
 import ui.help;
 import ui.ui;
 import ui.input;
 import std.string;
 import std.file;
-import std.stdio;
-import std.math;
+//import std.stdio;
+//import std.math;
 import std.utf;
-import std.array;
+import std.array : appender;
 
 protected class QueryDialog : Window {
 	string query;

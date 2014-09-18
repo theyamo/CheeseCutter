@@ -3,10 +3,8 @@ import ct.base;
 import ct.dump;
 import com.cpu;
 import com.util;
-import std.stdio;
-import std.string;
-import std.file;
-import std.conv;
+import std.string : writeln;
+import std.conv : toStringz, to;
 import std.c.string;
 import std.c.stdlib;
 

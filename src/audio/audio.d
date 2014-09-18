@@ -10,7 +10,7 @@ import audio.callback;
 import std.stdio;
 import std.c.stdlib;
 import std.c.string;
-import std.conv;
+import std.conv : to;
 
 enum MIXBUF_MUL = 2;
 __gshared SDL_AudioSpec audiospec;

@@ -3,7 +3,6 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 module seq.sequencer;
-import main;
 import com.fb;
 import ui.ui;
 import ct.base;
@@ -18,7 +17,6 @@ private {
 	import seq.trackmap;
 }
 import derelict.sdl.sdl;
-import std.string;
 
 enum PAGESTEP = 2;
 enum Jump { ToBeginning = 0, ToMark = -1, ToEnd = -2, ToWrapMark = -3 };

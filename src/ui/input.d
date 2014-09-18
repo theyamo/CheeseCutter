@@ -13,7 +13,7 @@ import audio.player;
 import ui.ui;
 import main;
 import std.string;
-import std.utf;
+import std.utf : UtfException, validate;
 
 enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT }
 
@@ -442,7 +442,7 @@ class InputString : Input {
 				try {
 					validate(instring);
 				}
-				catch(UTFException e) {
+				catch(UtfException e) {
 					instring = old.dup;
 					break;
 				}

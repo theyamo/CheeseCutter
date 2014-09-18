@@ -4,11 +4,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 
 module com.cpu;
 
-import std.file;
-import std.stdio;
-import std.string;
-import std.c.stdio;
-
+import std.string : writefln, format;
 alias ushort address;
 
 ubyte highbyte(ushort value) { return value >> 8; }

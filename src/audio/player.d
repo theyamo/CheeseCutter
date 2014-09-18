@@ -13,7 +13,6 @@ import audio.resid.filter;
 import seq.sequencer;
 import ui.ui;
 import derelict.sdl.sdl;
-import std.stdio;
 
 enum Status { Stop, Play, Keyjam };
 shared private int playstatus;

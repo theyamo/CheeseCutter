@@ -3,7 +3,6 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 module seq.seqtable;
-import main;
 import ui.ui;
 import com.fb;
 import com.util;
@@ -12,7 +11,7 @@ import com.session;
 import ct.base;
 import ui.input;
 import derelict.sdl.sdl;
-import std.string;
+import std.string : format;
 
 protected class SeqVoice : Voice {
 	InputSeq seqinput;
