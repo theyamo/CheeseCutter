@@ -2,8 +2,10 @@
 CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 module ct.base;
-private import std.file;
-private import std.zlib;
+import std.stdio;
+import std.string;
+import std.file;
+import std.zlib;
 import com.cpu;
 import com.util;
 

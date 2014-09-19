@@ -5,7 +5,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 module com.util;
 import std.stdio;
 import std.string;
-import std.conv : to;
+import std.conv;
 
 alias char* PetString;
 

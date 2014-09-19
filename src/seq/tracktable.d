@@ -3,6 +3,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 module seq.tracktable;
+import main;
 import seq.sequencer;
 import seq.seqtable;
 import com.fb;
@@ -10,7 +11,7 @@ import com.session;
 import ui.ui;
 import ui.input;
 import derelict.sdl.sdl;
-//import std.string;
+import std.string;
 import ct.base;
 
 

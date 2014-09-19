@@ -13,7 +13,7 @@ import audio.player;
 import ui.ui;
 import main;
 import std.string;
-import std.utf : UTFException, validate;
+import std.utf;
 
 enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT }
 
