@@ -63,7 +63,6 @@ INCLUDE_SEQ_SET_REL	= TRUE
 INCLUDE_SEQ_SET_SPEED	= TRUE
 INCLUDE_SEQ_SET_VOL	= TRUE
 INCLUDE_DIRECT_PULSE    = TRUE
-INCLUDE_DIRECT_CUTOFF   = TRUE                                
 INCLUDE_VIBRAFEEL	= TRUE
 INCLUDE_BREAKSPEED	= TRUE
 INCLUDE_CHORD		= TRUE
@@ -668,7 +667,7 @@ setflt
                 bpl skipcutdirect
 
 		asl
-		sta $d416
+		sta filter
                 lda #0
 skipcutdirect	asl				
 		asl
