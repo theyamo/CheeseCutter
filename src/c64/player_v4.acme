@@ -54,10 +54,7 @@ INCLUDE_CMD_SET_ADSR	= TRUE
 INCLUDE_CMD_SET_OFFSET	= TRUE
 INCLUDE_CMD_SET_LOVIB	= TRUE
 INCLUDE_CMD_SET_WAVE	= FALSE
-; INCLUDE_CMD_SET_SPEED	= TRUE
-; INCLUDE_CMD_SET_VOL	= TRUE
 INCLUDE_SEQ_SET_PULSE	= TRUE
-; INCLUDE_SEQ_SET_FILTER	= TRUE
 INCLUDE_SEQ_SET_CHORD	= TRUE
 INCLUDE_SEQ_SET_ATT	= TRUE
 INCLUDE_SEQ_SET_DEC	= TRUE
@@ -65,6 +62,8 @@ INCLUDE_SEQ_SET_SUS	= TRUE
 INCLUDE_SEQ_SET_REL	= TRUE
 INCLUDE_SEQ_SET_SPEED	= TRUE
 INCLUDE_SEQ_SET_VOL	= TRUE
+INCLUDE_DIRECT_PULSE    = TRUE
+INCLUDE_DIRECT_CUTOFF   = TRUE                                
 INCLUDE_VIBRAFEEL	= TRUE
 INCLUDE_BREAKSPEED	= TRUE
 INCLUDE_CHORD		= TRUE
@@ -160,7 +159,7 @@ ofe8		!16 dummy
 ofea		!16 dummy
 ofec		!16 dummy
 ofee		!16 newseq
-version		!pet "cc4.02"
+version		!pet "cc4.04"
 }
 ;;; ----------------------------------------
 ;;; editor specific player routines, will be 
@@ -645,15 +644,18 @@ skipsetfrq	ldy shinst,x
 
 		lda inst+INS_PULSP,y		;set the pulse
 		beq setflt
-		bpl skippulsdir
+!if INCLUDE_DIRECT_PULSE = TRUE {                
+		bpl skippdirect
 
-		and #$0f
+		and #$7f
 		sta pulsehi,x
-		lda #0
+                and #$70
+                asl
 		sta pulselo,x
+                lda #0
 		jmp pulsdirset
-
-skippulsdir	asl				
+}
+skippdirect	asl				
 		asl
 pulsdirset	sta pulsenxt,x			;pointer
 		lda #0
@@ -663,9 +665,14 @@ setflt
 !if INCLUDE_FILTER = TRUE {		
 		lda inst+INS_FLTP,y
 		beq filterdone			;no filter reset
-		asl				
+                bpl skipcutdirect
+
 		asl
-		sta filtnxt
+		sta $d416
+                lda #0
+skipcutdirect	asl				
+		asl
+                sta filtnxt
 		lda #0
 		sta filtcnt
 filterdone	
