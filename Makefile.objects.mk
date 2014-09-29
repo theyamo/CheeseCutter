@@ -40,7 +40,6 @@ OBJS=   src/derelict/util/compat.o \
 	src/audio/callback.o \
 	src/ct/purge.o \
 	src/ct/base.o \
-	src/ct/pack.o \
 	src/ct/dump.o \
 	src/com/fb.o \
 	src/com/cpu.o \
@@ -110,7 +109,6 @@ UTILOBJS = src/ct2util.o \
 	src/ct/base.o \
 	src/com/cpu.o \
 	src/com/util.o \
-	src/ct/pack.o \
 	src/ct/purge.o \
 	src/ct/dump.o \
 	src/ct/build.o \

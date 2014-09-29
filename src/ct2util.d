@@ -6,7 +6,6 @@ import com.cpu;
 import com.util;
 import ct.base;
 import ct.purge;
-import ct.pack;
 import ct.dump;
 import ct.build;
 import std.stdio;
@@ -105,8 +104,6 @@ int main(string[] args) {
 		writefln("\nCommands:");
 		writefln("  prg           Export song (.ct) to PRG file");
 		writefln("  sid           Export song (.ct) to SID file");
-		writefln("  build         Export song (.ct) to SID file while optimizing the player to leave out unused effect code (BETA)");
-		writefln("  buildprg      Export song (.ct) to PRG file while optimizing the player (BETA)");
 		writefln("  dump          Dump song data to assembler source (BETA)");
 		writefln("  import        Copy data from another song without overwriting the player");
 		writefln("  init          Create a fresh .ct from player binary");
@@ -248,16 +245,8 @@ int main(string[] args) {
 		}
 
 		switch(command) {
-		case Command.ExportPRG, Command.ExportSID:
-			insong = new Song;
-			insong.open(infn);
-			doPurge(insong);
-			ubyte[] data = (command == Command.ExportSID) ?
-				packToSid(insong, relocAddress, defaultTune, verbose)
-				: pack(insong, relocAddress, verbose);
-			std.file.write(outfn, data);
-			break;
-		case Command.ExportAsmSid, Command.ExportAsmPrg:
+		case Command.ExportPRG, Command.ExportSID,
+			Command.ExportAsmSid, Command.ExportAsmPrg:
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
