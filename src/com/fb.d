@@ -171,7 +171,7 @@ class VideoStandard : Video {
 
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
-	immutable int correctedHeight, correctedWidth;
+  int correctedHeight, correctedWidth;
 	immutable bool yuvCenter;
 	this(Screen scr, int fs, bool yuvCenter) {
 		super(scr, fs);
