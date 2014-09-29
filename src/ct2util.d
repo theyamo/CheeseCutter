@@ -251,7 +251,7 @@ int main(string[] args) {
 			insong.open(infn);
 			doPurge(insong);
 			ubyte[] data = doBuild(insong, relocAddress,
-								   command == Command.ExportAsmSid,
+								   command == Command.ExportAsmSid || Command.ExportSID,
 								   verbose);
 			std.file.write(outfn, data);
 			break;
