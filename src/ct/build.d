@@ -202,7 +202,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 	setArgVal("INCLUDE_SEQ_SET_SPEED", setSpeedUsed ? "TRUE" : "FALSE");
 	setArgVal("INCLUDE_BREAKSPEED", swingUsed ? "TRUE" : "FALSE");
 	setArgVal("INCLUDE_FILTER", filterUsed ? "TRUE" : "FALSE");
-	
+	setArgVal("MULTISPEED", song.multiplier > 1 ? "TRUE" : "FALSE");
 	if(song.multiplier > 1) {
 		setArgVal("USE_MDRIVER", genPSID ? "TRUE" : "FALSE");
 		setArgVal("CIA_VALUE",
