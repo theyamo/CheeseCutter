@@ -1333,9 +1333,11 @@ setsid		ldy voice,x
 		and gate,x
 		sta $d404,y
 ;;; ----------------------------------------
+!if MULTISPEED = TRUE {                
 		bit state
 		bvc *+5
 		jmp next
+}                
 
 		;; check tie & super
 		lda tsync,x			
@@ -1380,15 +1382,23 @@ skippostsync
 ;---------------------------------------
 next		dex
 		bmi maindone
-
-		bit state			; 7th bit, keyjam call
 !if EXPORT = FALSE {
-		bpl *+5
+		bit state			; 7th bit, keyjam call
+                bpl *+5
 		jmp updsound
-}
+               
 		bvs *+5				; 6th bit, multiplay call
 		jmp main0
 		jmp syncskip
+} else {
+!if MULTISPEED = TRUE {
+                bit state
+                bvs *+5
+                jmp main0
+                jmp syncskip
+}                
+
+}
 		
 maindone	lda #0
 		sta state
