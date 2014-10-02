@@ -170,7 +170,7 @@ idescr0 !raw "Attack / Decay.",0
 idescr1 !raw "Sustain / Release.",0
 idescr2 !raw "Restart type / arpeggio speed.&$00 = 3 Frame Restart.&$40 = Soft restart.&$80 = Hard Restart. &$00-$0F = Arpeggio delay value.",0
 idescr3 !raw "Hard Restart waveform.",0
-idescr4 !raw "Filter Table pointer.&$80-$ff = Set filter cutoff directly. This value gets multiplied by two to cover most of cutoff range.",0
+idescr4 !raw "Filter Table pointer.&$80-$ff = Set filter cutoff directly.",0
 idescr5 !raw "Pulse Table pointer $00-$3f.&$80-$ff = Set pulse width directly.",0
 idescr6 !raw "Hard restart SR envelope value.",0
 idescr7 !raw "Wave Table pointer.",0
