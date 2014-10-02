@@ -1403,8 +1403,11 @@ next		dex
 
 }
 		
-maindone	lda #0
+maindone	
+!if MULTISPEED = TRUE | EXPORT = TRUE {                
+                lda #0
 		sta state
+}                
 ;;; ----------------------------------------
 ;;; filter routine
 ;;; ----------------------------------------
