@@ -1644,6 +1644,8 @@ vibracnt	!8 0,0,0 ;Count
 vibradir	!8 0,0,0 ;Direction
 vibraamp	!8 0,0,0 ;Amplitude
 vibrafrq	!8 0,0,0 ;Frequency
+}
+!if INCLUDE_CMD_VIBR = TRUE {
 vibracor	!8 0,0,0 ;Tune correction
 vibrafl		!8 0,0,0 ;Vibrato feel low
 vibrafh		!8 0,0,0 ;Vibrato feel high
