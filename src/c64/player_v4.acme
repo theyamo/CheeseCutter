@@ -1,28 +1,7 @@
 ;;; ----------------------------------------
-;;; CCUTTER 2.5.x musicplayer by abad
+;;; CCUTTER 2.x musicplayer by abad
 ;;; Based on JCH NP 21.G4 by Laxity/VIB
 ;;; ----------------------------------------
-;;; 
-;;; Here's how to use this in your program:
-;;; 
-;;; - set EXPORT to TRUE (takes all editor specific code out)
-;;; 
-;;; - set the INCLUDE flags to match what you used in your song
-;;; 
-;;; - set the 'editorflag' byte near the end of the program code to
-;;; value other than 0
-;;; 
-;;; - set INSNO to match the actual number of instruments in your tune
-;;; (note that ct2util currently dumps the whole instrument table, you have
-;;; to manually shorten it to match the actual amount)
-;;; 
-;;; - remove the template tables (starting from where the program counter
-;;; gets set to $2000)
-;;; 
-;;; - paste in your dumped tune data
-;;; 
-;;; - assemble & enjoy
-
 ZREG		= $fb
 FALSE		= 0
 TRUE		= 1
