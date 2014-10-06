@@ -114,8 +114,7 @@ UTILOBJS = src/ct2util.o \
 	src/ct/build.o \
 	$(C_OBJS)
 
-C64OBJS = src/c64/player.bin \
-	src/c64/custplay.bin
+C64OBJS = src/c64/player.bin
 
 CTOBJS	=
 
