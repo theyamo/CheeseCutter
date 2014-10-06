@@ -821,8 +821,9 @@ effdo3
 		sta ZREG+1
 		jmp vibrealadd
 }				
-effdo3a			
-!if INCLUDE_CMD_VIBR = TRUE | INCLUDE_CMD_SET_LOVIB = TRUE {
+effdo3a
+;;; !if INCLUDE_CMD_VIBR = TRUE | INCLUDE_CMD_SET_LOVIB = TRUE {
+!if INCLUDE_CMD_VIBR = TRUE {                
 		cmp #$03
 		beq effvibrato
 		jmp effdo4
@@ -864,6 +865,9 @@ vibadd
 		lda vibrafh,x
 		adc #0
 		sta vibrafh,x
+}
+
+!if INCLUDE_CMD_VIBR = TRUE | INCLUDE_CMD_SET_LOVIB = TRUE {
 vibrealadd	lda vibradir,x
 		and #1
 		bne vibradown
