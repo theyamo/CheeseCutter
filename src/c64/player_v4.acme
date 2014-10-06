@@ -801,8 +801,11 @@ effdo3
 		jmp vibrealadd
 }				
 effdo3a
+!if INCLUDE_CMD_VIBR = FALSE {
+                jmp effdo4
+} else {                
+             
 ;;; !if INCLUDE_CMD_VIBR = TRUE | INCLUDE_CMD_SET_LOVIB = TRUE {
-!if INCLUDE_CMD_VIBR = TRUE {                
 		cmp #$03
 		beq effvibrato
 		jmp effdo4
