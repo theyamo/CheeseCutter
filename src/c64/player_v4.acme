@@ -1509,7 +1509,6 @@ cntr		!8 0
 		
 !if EXPORT = FALSE {
 dummy		!8 0
-		!8 $fc,$3d	; end-of-code mark for packer
 }
 ;---------------------------------------
 freqtable_lo
@@ -1687,7 +1686,6 @@ phi		!8 0,0,0
 }
 clrlast		 ;Clear variables to here
 !if EXPORT = FALSE {
-		!8 $fc,$3c
 *=$2000
 ;---------------------------------------
 songsets	!16 track1,track2,track3
