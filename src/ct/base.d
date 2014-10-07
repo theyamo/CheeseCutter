@@ -1356,7 +1356,7 @@ class Song {
 			seqs[idx].refresh();
 			
 		}
-		// subtunes........
+		// subtunes
 		subtunes.subtunes[][][] = insong.subtunes.subtunes[][][];
 		subtunes.syncFromBuffer();
 		// labels
@@ -1364,7 +1364,12 @@ class Song {
 		title[] = insong.title[];
 		author[] = insong.author[];
 		release[] = insong.release[];
-
+		// vars
+		clock = insong.clock;
+		multiplier = insong.multiplier;
+		sidModel = insong.sidModel;
+		fppres = insong.fppres;
+		// TODO highlight, highlightoffset
 		generateChordIndex();
 	}
 
