@@ -1099,7 +1099,7 @@ final class UI {
 		loadCallback(s, false);
 	}
 
-	void loadCallback(string s, bool doImport) {
+	private void loadCallback(string s, bool doImport) {
 		stop();
 		toplevel.reset();
 		if(std.file.exists(s) == 0 || std.file.isDir(s)) {
