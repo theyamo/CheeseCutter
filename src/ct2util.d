@@ -241,7 +241,6 @@ int main(string[] args) {
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
-			writeln(command == Command.ExportSID);
 			ubyte[] data = doBuild(insong, relocAddress,
 								   command == Command.ExportSID,
 								   verbose);
