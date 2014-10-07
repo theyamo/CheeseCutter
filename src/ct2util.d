@@ -13,8 +13,8 @@ import std.string;
 import std.conv;
 import std.stdio;
 
-enum Command { None, ExportPRG, ExportSID, Dump, Import, Init, ExportAsmSid, ExportAsmPrg }
-const string[] exts = [ "", "prg", "sid", "s", "ct", "ct", "sid", "prg" ];
+enum Command { None, ExportPRG, ExportSID, Dump, Import, Init }
+const string[] exts = [ "", "prg", "sid", "s", "ct", "ct" ];
 
 bool verbose = true;
 bool noPurge;
@@ -126,10 +126,10 @@ int main(string[] args) {
 
 	try {
 		switch(args[1]) {
-		case "prg":
+		case "prg", "build":
 			command = Command.ExportPRG;
 			break;
-		case "sid":
+		case "sid", "buildprg":
 			command = Command.ExportSID;
 			break;
 		case "dump":
@@ -140,12 +140,6 @@ int main(string[] args) {
 			break;
 		case "init":
 			command = Command.Init;
-			break;
-		case "build":
-			command = Command.ExportAsmSid;
-			break;
-		case "buildprg":
-			command = Command.ExportAsmPrg;
 			break;
 		default:
 			throw new UserException(format("command '%s' not recognized.",args[1]));
@@ -166,9 +160,7 @@ int main(string[] args) {
 					break;
 				case "-r":
 					if(command != Command.ExportSID &&
-					   command != Command.ExportPRG &&
-					   command != Command.ExportAsmSid &&
-					   command != Command.ExportAsmPrg)
+					   command != Command.ExportPRG)
 						throw new UserException("Option available only with exporting commands.");
 					int r = str2Value2(nextArg());
 					if(r > 0xffff)
@@ -245,13 +237,13 @@ int main(string[] args) {
 		}
 
 		switch(command) {
-		case Command.ExportPRG, Command.ExportSID,
-			Command.ExportAsmSid, Command.ExportAsmPrg:
+		case Command.ExportPRG, Command.ExportSID:
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
+			writeln(command == Command.ExportSID);
 			ubyte[] data = doBuild(insong, relocAddress,
-								   command == Command.ExportAsmSid || Command.ExportSID,
+								   command == Command.ExportSID,
 								   verbose);
 			std.file.write(outfn, data);
 			break;
