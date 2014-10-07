@@ -126,10 +126,10 @@ int main(string[] args) {
 
 	try {
 		switch(args[1]) {
-		case "prg", "build":
+		case "prg", "buildprg":
 			command = Command.ExportPRG;
 			break;
-		case "sid", "buildprg":
+		case "sid", "build":
 			command = Command.ExportSID;
 			break;
 		case "dump":
