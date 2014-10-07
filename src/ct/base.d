@@ -944,8 +944,8 @@ class Song {
 		int id;
 		char[] high, low;
 
-		high = this.playerID[2..4];
-		low = this.playerID[5..7];
+		high = this.playerID[2..3];
+		low = this.playerID[4..6];
 			
 		return (std.conv.to!int(high) << 8) | std.conv.to!int(low);
 	}
