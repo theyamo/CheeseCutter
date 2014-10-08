@@ -1100,6 +1100,8 @@ class Song {
 			}
 
 		}
+
+		
 		
 		subtunes.syncFromBuffer();
 		speed = songspeeds[0];
@@ -1382,12 +1384,6 @@ class Song {
 		// TODO highlight, highlightoffset
 		generateChordIndex();
 
-		// hack to fix v4.01 change
-		if(playerIDNum <= 0x400) {
-			for(int i = 0; i < 0x30; i++) {
-				instrumentTable[6 + i * 48] = superTable[128];
-			}
-		}
 	}
 
 	// hack to help sequencer rowcounting 
