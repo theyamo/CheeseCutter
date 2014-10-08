@@ -121,9 +121,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 		writeln("Warning: your song uses an old version of the player!\nThe assembled song may sound different.\nSong player: ", to!string(song.playerID[0..6]), ", linked player: ", to!string(linkedPlayerID[0..6]));
 	}
 	+/
-	Song tmpsong = new Song();
-	int linkedPlayerNum = tmpsong.playerIDNum;
-	char[] linkedPlayerID = tmpsong.playerID;
+	int linkedPlayerNum = (new Song()).playerIDNum;
 	if(song.playerIDNum != linkedPlayerNum)
 		writeln("Warning: your song uses an old version of the player!\nThe assembled song may sound different.\nSong player: ", to!string(song.playerID[0..6]), ", linked player: ", to!string(linkedPlayerID[0..6]));
 	
