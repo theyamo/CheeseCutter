@@ -137,7 +137,7 @@ ofe8		!16 dummy
 ofea		!16 dummy
 ofec		!16 dummy
 ofee		!16 newseq
-version		!pet "cc4.04"
+version		!pet "cc4.03"
 }
 ;;; ----------------------------------------
 ;;; editor specific player routines, will be 
@@ -149,8 +149,8 @@ idescr0 !raw "Attack / Decay.",0
 idescr1 !raw "Sustain / Release.",0
 idescr2 !raw "Restart type / arpeggio speed.&$00 = 3 Frame Restart.&$40 = Soft restart.&$80 = Hard Restart. &$00-$0F = Arpeggio delay value.",0
 idescr3 !raw "Hard Restart waveform.",0
-idescr4 !raw "Filter Table pointer.&$80-$ff = Set filter cutoff directly.",0
-idescr5 !raw "Pulse Table pointer $00-$3f.&$80-$ff = Set pulse width directly.",0
+idescr4 !raw "Filter Table pointer.",0 
+idescr5 !raw "Pulse Table pointer $00-$3f.",0
 idescr6 !raw "Hard restart SR envelope value.",0
 idescr7 !raw "Wave Table pointer.",0
 	
@@ -625,12 +625,10 @@ skipsetfrq	ldy shinst,x
 !if INCLUDE_DIRECT_PULSE = TRUE {                
 		bpl skippdirect
 
-		and #$7f
+		and #$0f
 		sta pulsehi,x
-                and #$70
-                asl
-		sta pulselo,x
                 lda #0
+		sta pulselo,x
 		jmp pulsdirset
 }
 skippdirect	asl				
@@ -643,11 +641,6 @@ setflt
 !if INCLUDE_FILTER = TRUE {		
 		lda inst+INS_FLTP,y
 		beq filterdone			;no filter reset
-                bpl skipcutdirect
-
-		asl
-		sta filter
-                lda #0
 skipcutdirect	asl				
 		asl
                 sta filtnxt
