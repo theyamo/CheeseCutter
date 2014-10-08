@@ -940,16 +940,6 @@ class Song {
 		initialize(debuf[0..65536]);
 	}
 
-	@property int playerIDNum() {
-		int id;
-		char[] high, low;
-
-		high = this.playerID[2..4];
-		low = this.playerID[5..7];
-			
-		return (std.conv.to!int(high) << 8) | std.conv.to!int(low);
-	}
-	
 	void setMultiplier(int m) {
 		assert(m > 0 && m < 16);
 		multiplier = m;
@@ -1100,8 +1090,6 @@ class Song {
 			}
 
 		}
-
-		
 		
 		subtunes.syncFromBuffer();
 		speed = songspeeds[0];
@@ -1383,7 +1371,6 @@ class Song {
 		fppres = insong.fppres;
 		// TODO highlight, highlightoffset
 		generateChordIndex();
-
 	}
 
 	// hack to help sequencer rowcounting 
