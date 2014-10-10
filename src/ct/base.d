@@ -756,6 +756,16 @@ class Song {
 			syncFromBuffer();
 		}
 
+		void clearSubtune(int no) {
+			auto tune = subtunes[no];
+			foreach(ref voice; tune) {
+				voice[0 .. 2] = cast(ubyte[])[0xa0, 0x00];
+				for(int i = 2; i < voice.length; i += 2) {
+					voice[i .. i+2] = cast(ubyte[])[0xf0, 0x00];
+				}
+			}
+		}
+
 		void syncFromBuffer() {
 			for(int i = 0; i < 3; i++) {
 				data[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400] =

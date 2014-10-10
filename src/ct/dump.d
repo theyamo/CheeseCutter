@@ -19,9 +19,9 @@ string dumpData(Song sng, string title) {
 	string output;
 
 	int getHighestUsed(ubyte[] array) {
-		for(int i = cast(int)(array.length - 1); i >= 0; i--) {
+		for(size_t i = array.length - 1; i >= 0; i--) {
 			if(array[i] > 0)
-				return i;
+				return cast(int)i;
 		}
 		return -1;
 	}

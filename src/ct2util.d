@@ -87,7 +87,7 @@ void doPurge(ref Song sng) {
 int main(string[] args) {
 	address relocAddress = 0x1000;
 	int[] speeds, masks;
-	int defaultTune;
+	int defaultTune, onlySubtune = -1;
 	bool outfnDefined = false, infnDefined = false;
 	int command;
 	Song insong;
@@ -113,8 +113,9 @@ int main(string[] args) {
 		writefln("  -n            Do not purge before exporting/dumping (leaves unused data)");
 		writefln("  -r <addr>     Relocate output to address (default = $1000)");
 		writefln("  -d <num>      Set the default subtune (1-32)");
-		writefln("  -s [subtune]:[speed],...    Set speeds for subtunes");
-		writefln("  -c [subtune]:[voicemask],...Set voice bitmasks for subtunes");
+//		writefln("  -s [subtune]:[speed],...    Set speeds for subtunes");
+//		writefln("  -c [subtune]:[voicemask],...Set voice bitmasks for subtunes");
+		writefln("  -s <num>      Export only subtune (1-32)");
 		writefln("  -q            Don't output information");
 		writefln("\nPrefix value options with '0x' or '$' to indicate a hexadecimal value.");
 	}
@@ -171,7 +172,11 @@ int main(string[] args) {
 					if(command != Command.ExportSID &&
 					   command != Command.ExportPRG)
 						throw new UserException("Option available only with exporting commands.");
-					parseList(speeds, nextArg());
+					//parseList(speeds, nextArg());
+					int value = str2Value(nextArg());
+					if(value < 1 || value > 32)
+						throw new UserException("Valid range for subtunes is 1 - 32.");
+					onlySubtune = value - 1;
 					break;
 				case "-c":
 					if(command != Command.ExportSID &&
@@ -183,7 +188,7 @@ int main(string[] args) {
 					if(command != Command.ExportSID)
 						throw new UserException("Option available only when exporting to SID.");
 					defaultTune = to!int(nextArg());
-					if(defaultTune <= 0)
+					if(defaultTune < 1 || defaultTune > 32)
 						throw new UserException("Valid range for subtunes is 1 - 32.");
 					break;
 				case "-o":
@@ -240,6 +245,12 @@ int main(string[] args) {
 		case Command.ExportPRG, Command.ExportSID:
 			insong = new Song;
 			insong.open(infn);
+			if(onlySubtune >= 0) {
+				if(defaultSubtune != 1)
+				insong.activate(onlySubtune);
+				for(int i = 1; i < 32; i++)
+					insong.subtunes.clearSubtune(i);
+			}
 			doPurge(insong);
 			ubyte[] data = doBuild(insong, relocAddress,
 								   command == Command.ExportSID,
