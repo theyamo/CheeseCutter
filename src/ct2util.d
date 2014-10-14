@@ -87,7 +87,7 @@ void doPurge(ref Song sng) {
 int main(string[] args) {
 	address relocAddress = 0x1000;
 	int[] speeds, masks;
-	int defaultTune, onlySubtune = -1;
+	int defaultTune, singleSubtune = -1;
 	bool outfnDefined = false, infnDefined = false;
 	int command;
 	Song insong;
@@ -110,12 +110,12 @@ int main(string[] args) {
 		writefln("\nGeneral options:");
 		writefln("  -o <outfile>  Set output filename (by default gathered from input filename)");
 		writefln("\nExport options:");
-		writefln("  -n            Do not purge before exporting/dumping (leaves unused data)");
+//		writefln("  -n            Do not purge before exporting/dumping (leaves unused data)");
 		writefln("  -r <addr>     Relocate output to address (default = $1000)");
 		writefln("  -d <num>      Set the default subtune (1-32)");
 //		writefln("  -s [subtune]:[speed],...    Set speeds for subtunes");
 //		writefln("  -c [subtune]:[voicemask],...Set voice bitmasks for subtunes");
-		writefln("  -s <num>      Export only subtune (1-32)");
+		writefln("  -s <num>      Export single subtune (1-32) (disables -d)");
 		writefln("  -q            Don't output information");
 		writefln("\nPrefix value options with '0x' or '$' to indicate a hexadecimal value.");
 	}
@@ -176,7 +176,7 @@ int main(string[] args) {
 					int value = str2Value(nextArg());
 					if(value < 1 || value > 32)
 						throw new UserException("Valid range for subtunes is 1 - 32.");
-					onlySubtune = value - 1;
+					singleSubtune = value - 1;
 					break;
 				case "-c":
 					if(command != Command.ExportSID &&
@@ -245,16 +245,16 @@ int main(string[] args) {
 		case Command.ExportPRG, Command.ExportSID:
 			insong = new Song;
 			insong.open(infn);
-			if(onlySubtune >= 0) {
-				if(defaultSubtune != 1)
-				insong.activate(onlySubtune);
+			if(singleSubtune >= 0) {
+				insong.subtunes.activate(singleSubtune);
 				for(int i = 1; i < 32; i++)
 					insong.subtunes.clearSubtune(i);
+				defaultTune = 1;
 			}
 			doPurge(insong);
 			ubyte[] data = doBuild(insong, relocAddress,
 								   command == Command.ExportSID,
-								   verbose);
+								   defaultTune, verbose);
 			std.file.write(outfn, data);
 			break;
 		case Command.Import:

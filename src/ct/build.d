@@ -14,7 +14,7 @@ extern(C) {
 	extern char* acme_assemble(const char*,int*,char*);
 }
 
-static const string playerCode = import("player_v4.acme");
+static const string playerSource = import("player_v4.acme");
 
 const ubyte[] SIDHEADER = [
   0x50, 0x53, 0x49, 0x44, 0x00, 0x02, 0x00, 0x7c, 0x00, 0x00, 0x10, 0x00,
@@ -70,7 +70,8 @@ private char[] assemble(string source) {
 	return assembled;
 }
 
-private ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int playAddress, int defaultSubtune, bool verbose) {
+private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
+								   int playAddress, int defaultSubtune) {
 	int custBase, custInit, custPlay, custTimerlo, custTimerhi;
 	/+ SID default tune indicatior starts from value 1... +/
 	if(defaultSubtune > insong.subtunes.numOf)
@@ -98,7 +99,8 @@ private ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int
 	data[PSID_INIT_OFFSET .. PSID_INIT_OFFSET + 2] = cast(ubyte[])[ initAddress >> 8, initAddress & 255 ];
 	data[PSID_PLAY_OFFSET .. PSID_PLAY_OFFSET + 2] = cast(ubyte[])[ playAddress >> 8, playAddress & 255 ];
 	int endAddr = cast(int)(initAddress + data.length);
-	if(endAddr > 0xfff9) throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9));
+	if(endAddr > 0xfff9)
+		throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9));
 	
 	data[PSID_FLAGS_OFFSET + 1] 
 		= cast(ubyte)(0x04 /+ PAL +/ | (insong.sidModel ? 0x20 : 0x10));
@@ -106,8 +108,9 @@ private ubyte[] generatePSIDFile(Song insong, ubyte[] data, int initAddress, int
 	return data;
 }
 
-ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
-	string input = playerCode;
+ubyte[] doBuild(Song song, int address, bool genPSID,
+				int defaultSubtune, bool verbose) {
+	string input = playerSource;
 	input ~= dumpData(song, "");
 	int maxInsno;
 	song.seqIterator((Sequence s, Element e) { 
@@ -217,8 +220,9 @@ ubyte[] doBuild(Song song, int address, bool genPSID, bool verbose) {
 	ubyte[] assembled = cast(ubyte[])assemble(input);
 	
 	if(verbose)
-		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length, address, address + assembled.length));
+		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length, address,
+					   address + assembled.length));
 
-	return genPSID ? generatePSIDFile(song, assembled, address, address + 3, 1, true) : assembled;
+	return genPSID ? generatePSIDHeader(song, assembled, address, address + 3,
+										defaultSubtune) : assembled;
 }
-
