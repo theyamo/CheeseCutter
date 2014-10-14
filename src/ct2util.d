@@ -191,7 +191,7 @@ int main(string[] args) {
 				case "-d":
 					if(command != Command.ExportSID)
 						throw new UserException("Option available only when exporting to SID.");
-					defaultTune = to!int(nextArg());
+					defaultTune = str2Value2(nextArg());
 					if(defaultTune < 1 || defaultTune > 32)
 						throw new UserException("Valid range for subtunes is 1 - 32.");
 					break;
@@ -250,9 +250,11 @@ int main(string[] args) {
 			insong = new Song;
 			insong.open(infn);
 			if(singleSubtune >= 0) {
-				insong.subtunes.activate(singleSubtune);
-				for(int i = 1; i < 32; i++)
-					insong.subtunes.clearSubtune(i);
+				for(int i = 0; i < 32; i++) {
+					if(i == singleSubtune) continue;
+					insong.subtunes.clear(i);
+				}
+				insong.subtunes.swap(0, singleSubtune);
 				defaultTune = 1;
 			}
 			doPurge(insong);

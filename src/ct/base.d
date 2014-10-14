@@ -751,21 +751,39 @@ class Song {
 			}
 		}
 
-		void clear() {
+		void clearAll() {
 			initArray();
 			syncFromBuffer();
 		}
 
-		void clearSubtune(int no) {
-			auto tune = subtunes[no];
-			foreach(ref voice; tune) {
+		void clear(int no) {
+			foreach(ref voice; subtunes[no]) {
 				voice[0 .. 2] = cast(ubyte[])[0xa0, 0x00];
 				for(int i = 2; i < voice.length; i += 2) {
 					voice[i .. i+2] = cast(ubyte[])[0xf0, 0x00];
 				}
 			}
+			if(no == active)
+				syncFromBuffer();
 		}
 
+		void swap(int targetNo, int sourceNo) {
+			if(targetNo == sourceNo) return;
+			if(targetNo == active || sourceNo == active)
+				sync();
+			ubyte[1024][3] sourcebuf, targetbuf;
+			for(int i = 0; i < 3; i++) {
+				targetbuf[i][] = subtunes[targetNo][i][];
+				subtunes[targetNo][i][] = subtunes[sourceNo][i][];
+				subtunes[sourceNo][i][] = targetbuf[i][];
+			}
+			ubyte spdtemp = songspeeds[targetNo];
+			songspeeds[targetNo] = songspeeds[sourceNo];
+			songspeeds[sourceNo] = spdtemp;
+			if(active == targetNo || active == sourceNo)
+				syncFromBuffer();
+		}
+		
 		void syncFromBuffer() {
 			for(int i = 0; i < 3; i++) {
 				data[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400] =
@@ -820,8 +838,9 @@ class Song {
 		int numOf() {
 			foreach_reverse(idx, ref tune; subtunes) {
 				foreach(ref voice; tune) {
-					if(voice[1 .. 4] != cast(ubyte[])[0x00, 0xf0, 0x00])
+					if(voice[1 .. 4] != cast(ubyte[])[0x00, 0xf0, 0x00]) {
 						return cast(int)(idx + 1);
+					}
 				}
 			}
 			return 0;
@@ -1330,7 +1349,7 @@ class Song {
 		for(int i = 1; i < MAX_SEQ_NUM; i++) {
 			seqs[i].clear();
 		}
-		subtunes.clear();
+		subtunes.clearAll();
 	}
 	
 	void incSubtune() { 
