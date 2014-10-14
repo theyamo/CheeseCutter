@@ -30,12 +30,16 @@ int str2Value2(string s) {
 	}
 	if(hexUsed) {
 		int val, i;
-		foreach_reverse(c; toUpper(s[idx..$])) {
+		foreach_reverse(char c; toUpper(s[idx..$])) {
 			if("0123456789ABCDEF".indexOf(c) < 0)
-				throw new UserException("Illegal hexadecimal value in string.");
+				throw new UserException("Illegal hexadecimal value in argument.");
 			val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
 		}
 		return val;
+	}
+	foreach(char c; s) {
+		if("0123456789".indexOf(c) < 0)
+			throw new UserException("Illegal value in argument.");
 	}
 	return to!int(s);
 }
@@ -173,7 +177,7 @@ int main(string[] args) {
 					   command != Command.ExportPRG)
 						throw new UserException("Option available only with exporting commands.");
 					//parseList(speeds, nextArg());
-					int value = str2Value(nextArg());
+					int value = str2Value2(nextArg());
 					if(value < 1 || value > 32)
 						throw new UserException("Valid range for subtunes is 1 - 32.");
 					singleSubtune = value - 1;
