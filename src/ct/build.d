@@ -72,7 +72,6 @@ private char[] assemble(string source) {
 
 private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 								   int playAddress, int defaultSubtune) {
-	int custBase, custInit, custPlay, custTimerlo, custTimerhi;
 	/+ SID default tune indicatior starts from value 1... +/
 	if(defaultSubtune > insong.subtunes.numOf)
 		throw new UserException(format("This song only has %d subtunes", insong.subtunes.numOf));
@@ -120,7 +119,10 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 	input = setArgumentValue("INSNO", format("%d", maxInsno+1), input);
 	char[] linkedPlayerID = (new Song()).playerID;
 	if(song.playerID[0..6] != linkedPlayerID[0..6] && verbose) {
-		writeln("Warning: your song uses an old version of the player!\nThe assembled song may sound different.\nSong player: ", to!string(song.playerID[0..6]), ", linked player: ", to!string(linkedPlayerID[0..6]));
+		writeln("Warning: your song uses an old version of the player!\n",
+				"The assembled song may sound different.\nSong player: ",
+				to!string(song.playerID[0..6]), ", linked player: ",
+				to!string(linkedPlayerID[0..6]));
 	}
 	
 	bool chordUsed, swingUsed, filterUsed, vibratoUsed;
@@ -220,8 +222,8 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 	ubyte[] assembled = cast(ubyte[])assemble(input);
 	
 	if(verbose)
-		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length, address,
-					   address + assembled.length));
+		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length - 2,
+					   address, address + assembled.length - 2));
 
 	return genPSID ? generatePSIDHeader(song, assembled, address, address + 3,
 										defaultSubtune) : assembled;
