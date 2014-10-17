@@ -629,8 +629,7 @@ class Sequence {
 	}
 	
 	ubyte[] compact() {
-		ubyte[] outarr;
-		outarr.length = 256;
+		ubyte[] outarr = new ubyte[256];
 		int i, outp, olddel, oldins = -1, 
 			olddelay = -1, delay;
 		for(i = 0; i < rows;) {
@@ -687,8 +686,7 @@ class Sequence {
 			i++;
 		}
 		outarr[outp++] = cast(ubyte)SEQ_END_MARK;
-		outarr.length = outp;
-		return outarr;
+		return outarr[0..outp];
 	}
 	
 }
