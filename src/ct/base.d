@@ -1266,22 +1266,26 @@ class Song {
 	}
 	
 	@property int numOfSeqs() {
-
 		// this worked only because the song was always purged just before
-		/*
-		int upto;
-		foreach(int i, s; seqs) {
-			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
+		int numOfSeqs_old() {
+			int upto;
+			foreach(int i, s; seqs) {
+				if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
+			}
+			return upto + 1;
 		}
-		return upto + 1;
-		*/
+		
 		int upto = 0;
 		trackIterator((Track trk) {
 				if(trk.no > upto) upto = trk.no;
 			});
 
+		if((upto + 1) != numOfSeqs_old())
+			throw new Error("failed counting num of used sequences");
 		return upto + 1;
 	}
+
+	
 	
 	@property int speed() {
 		return memspace[offsets[Offsets.SPEED]];
