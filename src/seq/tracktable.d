@@ -160,7 +160,7 @@ protected:
 				else {
 					tracks.deleteAt(activeRow.trkOffset);
 
-					// TODO: add check that tracklist is not shrinked below trkOffset
+					// TODO: add check that tracklist hasn't been shrunk below trkOffset
 					/+
 					if(pos.trkOffset >= tracks.trackLength()-1) 
 						super.step(-1);+/

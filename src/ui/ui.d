@@ -224,7 +224,8 @@ class Infobar : Window {
 		screen.cprint(screen.width - 14, 0, 1, headerColor, "F12 = Help");
 		int c1 = audio.player.isPlaying ? 13 : 12;
 		screen.fprint(x1,area.y,format("`05Time: `0%x%02d:%02d / $%02x",
-									c1,audio.timer.min, audio.timer.sec, audio.callback.linesPerFrame));
+									   c1,audio.timer.min, audio.timer.sec,
+									   audio.callback.linesPerFrame));
 		
 		screen.fprint(x1 + 19,area.y,
 				   format("`05Oct: `0d%d  `05Spd: `0d%X  `05St: `0d%d ",
@@ -236,8 +237,9 @@ class Infobar : Window {
 						  audio.player.badline ? "&0fb" : " "));
 		screen.fprint(x1,area.y+1,format("`05Filename: `0d%s", com.session.filename.leftJustify(38)));
 		//screen.fprint(x2,area.y,format("`05  `b1T`01itle: `0d%-32s", std.string.toString(cast(char *)song.title))); 
-		screen.fprint(x2,area.y,format("`05%s `0d%-32s", (["  `b1T`01itle:", " `01Author:", "`01Release:" ])[idx],
-									song.title));
+		screen.fprint(x2,area.y,
+					  format("`05%s `0d%-32s", (["  `b1T`01itle:", " `01Author:", "`01Release:" ])[idx],
+							 song.title));
 		screen.fprint(x2,area.y+2,format("`05 Player: `0d%s", ztos(song.playerID)));
 	}
 
@@ -362,8 +364,10 @@ final private class Toplevel : WindowSwitcher {
 		}
 		else ca = Rectangle(tx, zone2y, zone2h, 6);
 		chordtable = new ChordTable(ca);
-		bottomTabSwitcher = new WindowSwitcher(Rectangle(zone2x, zone2y, zone2h, tx + com.fb.border + 10),
-											   [cast(Window)wavetable, pulsetable, filtertable, cmdtable, chordtable],
+		bottomTabSwitcher = new WindowSwitcher(Rectangle(zone2x, zone2y, zone2h,
+														 tx + com.fb.border + 10),
+											   [cast(Window)wavetable, pulsetable,
+												filtertable, cmdtable, chordtable],
 											   "wpfmd");
 
 		/+
@@ -751,8 +755,10 @@ final class UI {
 		int dialog_x = screen.width / 2 - dialog_width / 2;
 		int dialog_y = screen.height / 2 - dialog_height / 2;
 
-		loaddialog = new LoadFileDialog(Rectangle(dialog_x, dialog_y, dialog_height, dialog_width), &loadCallback, &importCallback);
-		savedialog = new SaveFileDialog(Rectangle(dialog_x, dialog_y, dialog_height, dialog_width), &saveCallback);
+		loaddialog = new LoadFileDialog(Rectangle(dialog_x, dialog_y, dialog_height,
+												  dialog_width), &loadCallback, &importCallback);
+		savedialog = new SaveFileDialog(Rectangle(dialog_x, dialog_y, dialog_height,
+												  dialog_width), &saveCallback);
 
 		int aboutdlg_width = screen.width - 18;
 		int aboutdlg_height = 12;

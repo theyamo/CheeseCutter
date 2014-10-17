@@ -874,7 +874,7 @@ class Song {
 	int ver = SONG_REVISION, clock, multiplier = 1, sidModel, fppres;
 	char[32] title = ' ', author = ' ', release = ' ', message = ' ';
 	char[32][48] insLabels;
-	Features features;
+	private Features features;
 	CPU cpu;
 	ubyte[] sidbuf;
 	ubyte[65536] data;
@@ -884,26 +884,46 @@ class Song {
 	Sequence[] seqs;
 	alias seqs sequences;
 	address[] offsets;
-	ubyte[] pparams; // filttab bytes 0-3
 	ubyte[32] songspeeds;
-	ubyte[] songsets;
-	ubyte[] wave1Table, wave2Table, waveTable;
-	ubyte[] instrumentTable, pulseTable, filterTable, superTable, chordTable, chordIndexTable;
-	ubyte[] seqlo, seqhi;
+	ubyte[] songsets,
+		wave1Table,
+		wave2Table,
+		waveTable,
+		instrumentTable,
+		pulseTable,
+		filterTable,
+		superTable,
+		chordTable,
+		chordIndexTable,
+		seqlo,
+		seqhi;
 	ByteDescription instrumentByteDescriptions,
-		pulseDescriptions, filterDescriptions,
-		waveDescriptions, cmdDescriptions;
+		pulseDescriptions,
+		filterDescriptions,
+		waveDescriptions,
+		cmdDescriptions;
 
 	// dupes of raw tables above, will eventually update all code to use these 
-	Table tSongsets, tWave1, tWave2, tWave, tInstr, tPulse, tFilter, tSuper, tChord, tChordIndex, tSeqlo, tSeqhi;
+	Table tSongsets,
+		tWave1,
+		tWave2,
+		tWave,
+		tInstr,
+		tPulse,
+		tFilter,
+		tSuper,
+		tChord,
+		tChordIndex,
+		tSeqlo,
+		tSeqhi;
 	Table tTrack1, tTrack2, tTrack3;
 	Table[string] tables;
 	char[] playerID;
 	int subtune;
 	Subtunes subtunes;
 	// these used to be sequencer vars but they're here now since they get saved with the tune
-	int highlight = 4;
-	int highlightOffset = 0;
+	int highlight = 4,
+		highlightOffset = 0;
 
 	this() {
 		this(cast(ubyte[])import("player.bin"));
@@ -1037,7 +1057,6 @@ class Song {
 		tPulse = Table(pulseTable, i);
 
 		i = offsets[Offsets.FILTTAB];
-		pparams = memspace[i .. i + 4]; 
 		filterTable = data[i .. i + 256];
 		tFilter = Table(filterTable, i);
 
@@ -1305,28 +1324,29 @@ class Song {
 	}
 	
 	int getFreeSequence(int start) {
-  		bool flag;
+  		bool seqUsed;
 		subtunes.sync();
-		for(int s = start; s < MAX_SEQ_NUM; s++) {
-			flag = false;
+		for(int seqnum = start; seqnum < MAX_SEQ_NUM; seqnum++) {
+			seqUsed = false;
 			foreach(ist, st; subtunes.subtunes) {
 				foreach(voice; st) {
 					foreach(t; voice) {
-						if(t == s)
-							flag = true;
+						if(t == seqnum)
+							seqUsed = true;
 					}
 				}
 			}
-			if(!flag) return s;
+			if(!seqUsed) return seqnum;
 		}
 		return -1;
 	}
 
-	// FIX: move to tablecode
+	// will some day be moved to tablecode
 	void wavetableRemove(int pos) {
 		wavetableRemove(pos, 1);
 	}
 
+	// will some day be moved to tablecode
 	void wavetableRemove(int pos, int num) {
 		for(int n = 0; n < num; n++) {
 			int i;

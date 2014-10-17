@@ -550,7 +550,8 @@ class ChordTable : HexTable {
 			int row = (i + viewOffset) & 127;
 			string col = "`05";
 			if(data[row] >= 0x80) col = "`0d";
-			screen.fprint(area.x, area.y + i + 1, format("`0c%02X:%s%02X", (i + viewOffset) & 0x7f, col, data[row]));
+			screen.fprint(area.x, area.y + i + 1,
+						  format("`0c%02X:%s%02X", (i + viewOffset) & 0x7f, col, data[row]));
 		}
 
 		for(i = 0; i < visibleRows; i++) {

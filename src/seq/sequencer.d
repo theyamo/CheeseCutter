@@ -62,9 +62,9 @@ private struct Clip {
 }
 
 protected class Posinfo {
-	int _pointerOffset = 0;
-	int pointerOffset() { return _pointerOffset - anchor; }
-	int pointerOffset(int i) { return _pointerOffset = i + anchor; }
+	int pointerOffsetValue = 0;
+	int pointerOffset() { return pointerOffsetValue - anchor; }
+	int pointerOffset(int i) { return pointerOffsetValue = i + anchor; }
 	int trkOffset = 0;
 	int seqOffset;
 	int mark; 
@@ -256,18 +256,17 @@ public:
 			while(seqOffset + pointerOffset >= s.clippedRows) {
 				seqOffset -= s.clippedRows;
 				steps -= s.clippedRows;
-				if(++trkOffset >= tracks.trackLength()) {
+				if(++trkOffset >= tracks.trackLength) {
 					if(canWrap) {
 						trkOffset = 0;
 						rowCounter = seqOffset;
 					}
 					else { 
-						trkOffset = tracks.trackLength()-1; 
+						trkOffset = tracks.trackLength - 1; 
 						rowCounter = oldRowcounter;
 					}
 				}
 				s = getRowData(trkOffset);
-				
 			}
 		}
 	}
@@ -285,7 +284,7 @@ public:
 
 protected:
 	override void update();
-	void refreshPointer()  {
+	void refreshPointer() {
 		refreshPointer(pos.pointerOffset);
 	}
 	void refreshPointer(int y);
@@ -715,7 +714,7 @@ protected abstract class VoiceTable : Window {
 		return v.tracks[v.activeRow.trkOffset .. v.tracks.length];
 	}
 
-	Tracklist getTracklist() {
+	@property Tracklist tracklist() {
 		return getTracklist(activeVoice);
 	}
 
@@ -948,7 +947,7 @@ private:
 	void clipCallback(int num) {
 		const int trackLength = activeView.activeVoice.tracks.trackLength;
 		int curTrkOffset = activeView.activeVoice.activeRow.trkOffset;
-		Tracklist tl = activeView.getTracklist[0..num];
+		Tracklist tl = activeView.tracklist[0..num];
 		int length = tl.length;
 		
 		if(curTrkOffset + num >= trackLength)
@@ -963,7 +962,7 @@ private:
   
 	void pasteCallback() {
 		// FIX: ADD .dup operator to Tracklist
-		Tracklist vtr = activeView.getTracklist()[0..clip.length];
+		Tracklist vtr = activeView.tracklist[0..clip.length];
 		for(int i = 0; i < clip.length; i++) {
 			vtr[i].setValue(clip[i].trans,clip[i].no);
 		}
