@@ -18,6 +18,7 @@ private const string byteOp = "!byte", wordOp = "!word";
 string dumpData(Song sng, string title) {
 	string output;
 
+	// really needs to be rewritten with table specific routine
 	int getHighestUsed(ubyte[] array) {
 		for(size_t i = array.length - 1; i >= 0; i--) {
 			if(array[i] > 0)
@@ -74,15 +75,15 @@ string dumpData(Song sng, string title) {
 
 
 	append( "\nseqlo = *\n\t\t!8 ");
-	for(int i = 0; i < sng.numOfSeqs(); i++) {
+	for(int i = 0; i < sng.numOfSeqs; i++) {
 		append(format("<s%02x", i));
-		if(i < sng.numOfSeqs() - 1)
+		if(i < sng.numOfSeqs - 1)
 			append(",");
 	}
 	append( "\nseqhi = *\n\t\t!8 ");
-	for(int i = 0; i < sng.numOfSeqs(); i++) {
+	for(int i = 0; i < sng.numOfSeqs; i++) {
 		append(format(">s%02x", i));
-		if(i < sng.numOfSeqs() - 1)
+		if(i < sng.numOfSeqs - 1)
 			append(",");
 	}
 
@@ -115,7 +116,7 @@ string dumpData(Song sng, string title) {
 		}
 	}
 
-	for(int i = 0; i < sng.numOfSeqs(); i++) {
+	for(int i = 0; i < sng.numOfSeqs; i++) {
 		append( format("s%02x = *\n", i));
 		Sequence s = sng.seqs[i];
 		hexdump(s.compact(), 16);

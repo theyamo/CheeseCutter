@@ -168,10 +168,6 @@ struct Note {
 	
 	void setTied(bool t) {
 		data[1] = t ? 0x5f : 0xf0;
-		/+
-		if(t) 
-			data[1] = 0x5f;
-		else data[1] = 0xf0;+/
 	}
 
 	bool isTied() {	return data[1] == 0x5f;	}
@@ -833,7 +829,7 @@ class Song {
 			}
 		}
 
-		int numOf() {
+		@property int numOf() {
 			foreach_reverse(idx, ref tune; subtunes) {
 				foreach(ref voice; tune) {
 					if(voice[1 .. 4] != cast(ubyte[])[0x00, 0xf0, 0x00]) {
@@ -1258,12 +1254,32 @@ class Song {
 		}
 	}
 
-	int numOfSeqs() {
+	void trackIterator(void delegate(Track t) dg) {
+		for(int sidx = 0; sidx < 32; sidx++) {
+			Tracklist[] subtune = subtunes[sidx];
+			foreach(voice; subtune) {
+				foreach(track; voice) {
+					dg(track);
+				}
+			}
+		}
+	}
+	
+	@property int numOfSeqs() {
+
+		// this worked only because the song was always purged just before
+		/*
 		int upto;
 		foreach(int i, s; seqs) {
-			//if(s != seqs[0]) upto = i;
 			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
 		}
+		return upto + 1;
+		*/
+		int upto = 0;
+		trackIterator((Track trk) {
+				if(trk.no > upto) upto = trk.no;
+			});
+
 		return upto + 1;
 	}
 	
