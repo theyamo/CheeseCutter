@@ -86,7 +86,7 @@ private void initTabLengths(Song sng) {
 	}
 
 	// TO TEST: make last pulsetable entry point > current row
-	for(int i = 256 - 4; i > 0; i -= 4) {
+	for(int i = 256 - 4; i >= 0; i -= 4) {
 		int pptr = sng.pulseTable[i + 3];
 		if(pptr < 0x40 && pptr > highestPulse) {
 			highestPulse = pptr;
@@ -97,7 +97,7 @@ private void initTabLengths(Song sng) {
 		}
 	}
 	// TO TEST: make last filtertable entry point > current row
-	for(int i = 256 - 4; i > 0; i -= 4) {
+	for(int i = 256 - 4; i >= 0; i -= 4) {
 		int fptr = sng.filterTable[i + 3];
 		if(fptr < 0x40 && fptr > highestPulse) {
 			highestFilter = fptr;
