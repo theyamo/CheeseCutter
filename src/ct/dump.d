@@ -2,9 +2,6 @@
 CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
-/** date to source dumper. very ugly quick and dirty hack
- */
-
 module ct.dump;
 
 import ct.base;
