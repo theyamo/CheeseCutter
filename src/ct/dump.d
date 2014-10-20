@@ -38,7 +38,7 @@ private void initSizes(Song sng) {
 				}
 				else if(e.cmd.value < 0xa0 &&
 						highestChord < e.cmd.value) {
-					highestChord = e.cmd.value;
+					highestChord = e.cmd.value & 0x1f;
 				}
 			}
 		});
@@ -105,7 +105,6 @@ string dumpData(Song sng, string title) {
 	auto packedTracks = sng.subtunes.compact();	
 	
 	append( "arp1 = *\n");
-	//tablen = getHighestUsed(sng.wave1Table) + 1;
 	hexdump(sng.wave1Table[0 .. highestWave], 16);
 	append( "arp2 = *\n");
 	hexdump(sng.wave2Table[0 .. highestWave], 16);
@@ -115,13 +114,6 @@ string dumpData(Song sng, string title) {
 	hexdump(sng.pulseTable[0 .. highestPulse * 4], 4);
 	append( "inst = *\n");
 	ubyte[512] instab = 0;
-/*
-	int maxInsno;
-	sng.seqIterator((Sequence s, Element e) { 
-			int insval = e.instr.value;
-			if(insval > 0x2f) return;
-			if(insval > maxInsno) maxInsno = insval;
-		});
 */
 	for(int i = 0; i < 8; i++) {
 		append( format("\ninst%d = *\n",i));
@@ -185,13 +177,6 @@ string dumpData(Song sng, string title) {
 	hexdump(sng.chordTable[0 .. tablen], 16);
 	append("\nchordindex = *\n");
 	
-/*
-	sng.seqIterator((Sequence s, Element e) { 				
-			if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f &&
-			   (e.cmd.value & 0x1f) > highestChord)
-				highestChord = e.cmd.value & 0x1f;
-		});
-*/
 	hexdump(sng.chordIndexTable[0 .. highestChord], 16);
 	return output;
 }
