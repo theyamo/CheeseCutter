@@ -21,21 +21,25 @@ private void initTabLengths(Song sng) {
 				highestInstr = e.instr.value;
 			}
 			if(e.cmd.value > 0) {
-				if(e.cmd.value < 0x40 &&
-				   highestCmd < e.cmd.value) {
-					highestCmd = e.cmd.value;
+				if(e.cmd.value < 0x40) {
+					if(highestCmd < e.cmd.value) {
+						highestCmd = e.cmd.value;
+					}
 				}
-				else if(e.cmd.value < 0x60 &&
-						highestPulse < e.cmd.value) {
-					highestPulse = e.cmd.value & 0x1f;
+				else if(e.cmd.value < 0x60) {
+					if(highestPulse < e.cmd.value) {
+						highestPulse = e.cmd.value & 0x1f;
+					}
 				}
-				else if(e.cmd.value < 0x80 &&
-						highestPulse < e.cmd.value) {
-					highestFilter = e.cmd.value & 0x1f;
+				else if(e.cmd.value < 0x80) {
+					if(highestFilter < e.cmd.value) {
+						highestFilter = e.cmd.value & 0x1f;
+					}
 				}
-				else if(e.cmd.value < 0xa0 &&
-						highestChord < e.cmd.value) {
-					highestChord = e.cmd.value & 0x1f;
+				else if(e.cmd.value < 0xa0) {
+					if(highestChord < e.cmd.value) {
+						highestChord = e.cmd.value & 0x1f;
+					}
 				}
 			}
 		});
