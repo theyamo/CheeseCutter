@@ -111,7 +111,7 @@ string dumpData(Song sng, string title) {
 	hexdump(sng.pulseTable[0 .. highestPulse * 4], 4);
 	append( "inst = *\n");
 	ubyte[512] instab = 0;
-*/
+
 	for(int i = 0; i < 8; i++) {
 		append( format("\ninst%d = *\n",i));
 		hexdump(sng.instrumentTable[i * 48 .. i * 48 + (highestInstr+1)], 8);
