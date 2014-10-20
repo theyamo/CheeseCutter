@@ -14,6 +14,15 @@ private const string byteOp = "!byte", wordOp = "!word";
 private int highestChord, highestCmd, highestInstr,
 	highestPulse, highestFilter, highestWave;
 
+// ugly hack
+private int getHighestUsed(ubyte[] array) {
+	for(size_t i = array.length - 1; i >= 0; i--) {
+		if(array[i] > 0)
+			return cast(int)i;
+	}
+	return -1;
+}
+
 private void initTabLengths(Song sng) {
 	sng.seqIterator((Sequence seq, Element e) {
 			if(e.instr.hasValue() &&
@@ -22,27 +31,28 @@ private void initTabLengths(Song sng) {
 			}
 			if(e.cmd.value > 0) {
 				if(e.cmd.value < 0x40) {
-					if(highestCmd < e.cmd.value) {
+					if(highestCmd < (e.cmd.value & 0x1f)) {
 						highestCmd = e.cmd.value;
 					}
 				}
 				else if(e.cmd.value < 0x60) {
-					if(highestPulse < e.cmd.value) {
+					if(highestPulse < (e.cmd.value & 0x1f)) {
 						highestPulse = e.cmd.value & 0x1f;
 					}
 				}
 				else if(e.cmd.value < 0x80) {
-					if(highestFilter < e.cmd.value) {
+					if(highestFilter < (e.cmd.value & 0x1f)) {
 						highestFilter = e.cmd.value & 0x1f;
 					}
 				}
 				else if(e.cmd.value < 0xa0) {
-					if(highestChord < e.cmd.value) {
+					if(highestChord < (e.cmd.value & 0x1f)) {
 						highestChord = e.cmd.value & 0x1f;
 					}
 				}
 			}
 		});
+
 	for(int i = 0; i < highestInstr; i++) {
 		int waveptr = sng.getWavetablePointer(i);
 		if(waveptr > highestWave) {
@@ -64,6 +74,44 @@ private void initTabLengths(Song sng) {
 	highestPulse++;
 	highestFilter++;
 	highestWave++;
+	
+	for(int i = 255; i >= highestWave; i--) {
+		if(sng.wave1Table[i] == 0x7e ||
+		   sng.wave1Table[i] == 0x7f) {
+			if(sng.wave2Table[i] > i)
+				throw new UserException("Overflow in wave table");
+			highestWave = i;
+			break;
+		}
+	}
+
+	// TO TEST: make last pulsetable entry point > current row
+	for(int i = 256 - 4; i > 0; i -= 4) {
+		int pptr = sng.pulseTable[i + 3];
+		if(pptr < 0x40 && pptr > highestPulse) {
+			highestPulse = pptr;
+		}
+		if(pptr == 0x7f) {
+			highestPulse = i / 4;
+			break;
+		}
+	}
+	// TO TEST: make last filtertable entry point > current row
+	for(int i = 256 - 4; i > 0; i -= 4) {
+		int fptr = sng.filterTable[i + 3];
+		if(fptr < 0x40 && fptr > highestPulse) {
+			highestFilter = fptr;
+		}
+		if(fptr == 0x7f) {
+			highestFilter = i / 4;
+			break;
+		}
+	}
+
+	// TODO: add code to test table overflows
+	
+	highestPulse++;
+	highestFilter++;
 }
 
 		
@@ -71,20 +119,11 @@ string dumpData(Song sng, string title) {
 	string output;
 
 	initTabLengths(sng);
-
-	// ugly hack
-	int getHighestUsed(ubyte[] array) {
-		for(size_t i = array.length - 1; i >= 0; i--) {
-			if(array[i] > 0)
-				return cast(int)i;
-		}
-		return -1;
-	}
 	
 	void append(string s) {
 		output ~= s;
 	}
-	
+
 	void hexdump(ubyte[] buf, int rowlen) {
 		int c;
 		append("\t\t" ~ byteOp ~ " ");
@@ -100,6 +139,8 @@ string dumpData(Song sng, string title) {
 		}
 		append("\n");
 	}
+
+
 	int tablen;
 	ushort[][] trackpointers = new ushort[][sng.subtunes.numOf];
 	sng.subtunes.activate(0);
@@ -177,7 +218,7 @@ string dumpData(Song sng, string title) {
 	if(tablen < 1) tablen = 1;
 	hexdump(sng.chordTable[0 .. tablen], 16);
 	append("\nchordindex = *\n");
-	
 	hexdump(sng.chordIndexTable[0 .. highestChord], 16);
+	writeln(output);
 	return output;
 }
