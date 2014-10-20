@@ -258,7 +258,32 @@ class Purge {
 			if(!pulse_used[i]) 
 				song.pulseTable[i * 4 .. i * 4 + 4] = 0;
 			if(!filter_used[i])
-				song.filterTable[i * 4 .. i * 4 + 4] = 0;
+				song.filterTable[i * 4 .. i * 4 + 4] = 0xfe;
+		}
+
+		// compact filter table
+		for(i = 0; i < 0x3e; i++) {
+			int seek = i + 1;
+			while(!filter_used[i] && seek < 64) {
+				{
+					int pos = i * 4;
+					song.filterTable[pos .. $ - 4] =
+						song.filterTable[pos + 4 .. $].dup;
+					filter_used[i .. $-1] = filter_used[i+1 .. $].dup;
+				}
+				{
+					for(int j = 0; j < 64; j++) {
+						int fptr = song.filterTable[j * 4 + 3];
+						if(fptr > 0 && fptr < 0x40) {
+							if(fptr >= seek) song.filterTable[j * 4 + 3]--;
+						}
+					}
+				}
+				{
+					replaceCmdColumnvalue(0x40 + seek, 0x40 + i);
+				}
+				seek++;
+			}
 		}
 		
 	}
