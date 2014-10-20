@@ -14,7 +14,7 @@ private const string byteOp = "!byte", wordOp = "!word";
 private int highestChord, highestCmd, highestInstr,
 	highestPulse, highestFilter, highestWave;
 
-private void initSizes(Song sng) {
+private void initTabLengths(Song sng) {
 	sng.seqIterator((Sequence seq, Element e) {
 			if(e.instr.hasValue() &&
 			   highestInstr < e.instr.value) {
@@ -66,7 +66,7 @@ private void initSizes(Song sng) {
 string dumpData(Song sng, string title) {
 	string output;
 
-	initSizes(sng);
+	initTabLengths(sng);
 
 	// ugly hack
 	int getHighestUsed(ubyte[] array) {
