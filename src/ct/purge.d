@@ -265,8 +265,6 @@ class Purge {
 
 	void purgeChordtable() {
 		bool chordsUsed[0x20];
-		ubyte[] newtable;
-		newtable.length = 256;
 		seqIterator((Sequence s, Element e) { 				
 				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f)
 					chordsUsed[e.cmd.value & 0x1f] = true;
@@ -285,7 +283,6 @@ class Purge {
 		}
 
 		song.generateChordIndex();
-		int np;
 		Chunk[] chunks;
 		chunks ~= Chunk(song.chordTable[0 .. song.chordIndexTable[1]].dup, 0);
 		int tablestart = 1;
@@ -321,6 +318,7 @@ class Purge {
 
 		int counter;
 		int idx;
+		int np;
 
 		foreach(chunk; chunks) {
 			if(chunk.data.length == 0) continue;
