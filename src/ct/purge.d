@@ -258,7 +258,7 @@ class Purge {
 			if(!pulse_used[i]) 
 				song.pulseTable[i * 4 .. i * 4 + 4] = 0;
 			if(!filter_used[i])
-				song.filterTable[i * 4 .. i * 4 + 4] = 0xfe;
+				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 		}
 
 		// compact filter table
@@ -280,7 +280,14 @@ class Purge {
 					}
 				}
 				{
-					replaceCmdColumnvalue(0x40 + seek, 0x40 + i);
+					replaceCmdColumnvalue(0x60 + (seek & 0x1f), 0x60 + (i & 0x1f));
+				}
+				{
+					for(int j = 0; j < 48; j++) {
+						int fptr = song.instrumentTable[4 * 48 + j];
+						if(fptr >= i)
+							song.instrumentTable[4 * 48 + j]--;// = cast(ubyte)i;
+					}
 				}
 				seek++;
 			}
