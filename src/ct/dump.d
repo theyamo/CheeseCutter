@@ -118,7 +118,7 @@ string dumpData(Song sng, string title) {
 
 	for(int i = 0; i < 8; i++) {
 		append( format("\ninst%d = *\n",i));
-		hexdump(sng.instrumentTable[i * 48 .. i * 48 + (highestInstr+1)], 8);
+		hexdump(sng.instrumentTable[i * 48 .. i * 48 + highestInstr], 8);
 	}
 
 	append( "\nseqlo = *\n\t\t!8 ");
