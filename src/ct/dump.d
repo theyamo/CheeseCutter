@@ -24,6 +24,9 @@ private int getHighestUsed(ubyte[] array) {
 }
 
 private void initTabLengths(Song sng) {
+	highestChord = highestCmd = highestInstr =
+		highestPulse = highestFilter = highestWave = 0;
+	
 	sng.seqIterator((Sequence seq, Element e) {
 			if(e.instr.hasValue() &&
 			   highestInstr < e.instr.value) {
