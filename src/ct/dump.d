@@ -73,12 +73,11 @@ private void initTabLengths(Song sng) {
 	highestInstr++;
 	highestPulse++;
 	highestFilter++;
-	highestWave++;
 	
 	for(int i = 255; i >= highestWave; i--) {
 		if(sng.wave1Table[i] == 0x7e ||
 		   sng.wave1Table[i] == 0x7f) {
-			if(sng.wave2Table[i] > i)
+			if(sng.wave1Table[i] == 0x7f && sng.wave2Table[i] > i)
 				throw new UserException("Overflow in wave table");
 			highestWave = i;
 			break;
@@ -112,6 +111,7 @@ private void initTabLengths(Song sng) {
 	
 	highestPulse++;
 	highestFilter++;
+	highestWave++;
 }
 
 		
