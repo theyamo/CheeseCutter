@@ -187,7 +187,7 @@ class Purge {
 		for(int i = cast(int)(chunks.length - 1); i >= 0; i--) {
 			Chunk chunk = chunks[i];
 			if(chunk.used) continue;
-			song.wavetableRemove(chunk.offset, cast(int)chunk.wave1.length);
+			waveDeleteRow(song, chunk.offset, cast(int)chunk.wave1.length);
 			numcleared++;
 		}
 		explain(format("%d wave programs removed.", numcleared));
@@ -473,7 +473,46 @@ void pulseDeleteRow(Song song, int row) {
 		if(pptr >= row)
 			song.instrumentTable[5 * 48 + j]--;
 	}
-		
+}
+
+// will some day be moved to tablecode
+void waveDeleteRow(Song song, int pos) {
+	waveDeleteRow(song, pos, 1);
+}
+
+// will some day be moved to tablecode
+void waveDeleteRow(Song song, int pos, int num) {
+	for(int n = 0; n < num; n++) {
+		int i;
+		assert(pos < 255 && pos >= 0);
+		for(i = pos; i < 255; i++) {
+			song.wave1Table[i] = song.wave1Table[i + 1];
+			song.wave2Table[i] = song.wave2Table[i + 1];
+		}
+		for(i=0;i < 256;i++) {
+			if((song.wave1Table[i] == 0x7f || song.wave1Table[i] == 0x7e) &&
+			   song.wave2Table[i] >= pos) {
+				if(song.wave2Table[i] > 0) --song.wave2Table[i];
+			}
+		}
+		arpPointerUpdate(song, pos, -1);
+	}	
+}
+
+void waveInsertRow(Song song, int pos) {
+	int i;
+	for(i = 254; i >= pos; i--) {
+		song.wave1Table[i + 1] = song.wave1Table[i];
+		song.wave2Table[i + 1] = song.wave2Table[i];
+	}
+	for(i=0;i<256;i++) {
+		if(song.wave1Table[i] == 0x7f &&
+		   song.wave2Table[i] >= pos)
+			song.wave2Table[i]++;
+	}
+	song.wave1Table[pos] = 0;
+	song.wave2Table[pos] = 0;
+	arpPointerUpdate(song, pos, 1);
 }
 
 private void replaceCmdColumnvalue(Song song, int seek, int repl) {
@@ -485,6 +524,18 @@ private void replaceCmdColumnvalue(Song song, int seek, int repl) {
 				e.cmd = cast(ubyte)repl;
 		});
 }
+
+private void arpPointerUpdate(Song song, int pos, int val) {
+	for(int j = 0; j < 48; j++) {
+		ubyte b7 = song.instrumentTable[j + 7 * 48];
+		if(b7 > pos) {
+			int v = b7 + val;
+			if(v < 0) v = 0;
+			song.instrumentTable[j + 7 * 48] = cast(ubyte)v;
+		}
+	}
+}
+
 
 private void genericDeleteRow(Song song, ubyte[] table, int row) {
 	assert(row < 64 && row >= 0);

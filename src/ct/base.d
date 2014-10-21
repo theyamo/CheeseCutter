@@ -1303,37 +1303,6 @@ class Song {
 		return memspace[offsets[Offsets.PlaySpeed]];
 	}
 
-	private void arpPointerUpdate(int pos, int val) {
-		foreach(i, flag; features.instrumentFlags) {
-			if(flag != 1) continue;
-			for(int j = 0; j < 48; j++) {
-				ubyte b7 = instrumentTable[j + i * 48];
-				if(b7 > pos) {
-					int v = b7 + val;
-					if(v < 0) v = 0;
-					instrumentTable[j + i * 48] = cast(ubyte)v;
-				}
-			}
-			
-		}
-	}
-
-	void wavetableInsert(int pos) {
-		int i;
-		for(i = 254; i >= pos; i--) {
-			wave1Table[i + 1] = wave1Table[i];
-			wave2Table[i + 1] = wave2Table[i];
-		}
-		for(i=0;i<256;i++) {
-			if(wave1Table[i] == 0x7f &&
-			   wave2Table[i] >= pos)
-				wave2Table[i]++;
-		}
-		wave1Table[pos] = 0;
-		wave2Table[pos] = 0;
-		arpPointerUpdate(pos, 1);
-	}
-
 	void setVoicon(shared int[] m) {
 		//setVoicon(m[0], m[1], m[2]);
 		buffer[offsets[Offsets.VOICE]+0] = m[0] ? 0x19 : 0x00;
@@ -1357,30 +1326,6 @@ class Song {
 			if(!seqUsed) return seqnum;
 		}
 		return -1;
-	}
-
-	// will some day be moved to tablecode
-	void wavetableRemove(int pos) {
-		wavetableRemove(pos, 1);
-	}
-
-	// will some day be moved to tablecode
-	void wavetableRemove(int pos, int num) {
-		for(int n = 0; n < num; n++) {
-			int i;
-			assert(pos < 255 && pos >= 0);
-			for(i = pos; i < 255; i++) {
-				wave1Table[i] = wave1Table[i + 1];
-				wave2Table[i] = wave2Table[i + 1];
-			}
-			for(i=0;i < 256;i++) {
-				if((wave1Table[i] == 0x7f || wave1Table[i] == 0x7e) &&
-				   wave2Table[i] >= pos) {
-					if(wave2Table[i] > 0) --wave2Table[i];
-				}
-			}
-			arpPointerUpdate(pos, -1);
-		}	
 	}
 
 	void clearSeqs() {

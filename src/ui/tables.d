@@ -682,12 +682,12 @@ class WaveTable : HexTable {
 				seekCurWave();
 				return OK;
 			case SDLK_DELETE:
-				song.wavetableRemove(row);
+				ct.purge.waveDeleteRow(song, row);
 				refresh();
 				set();
 				return OK;
 			case SDLK_INSERT:
-				song.wavetableInsert(row);
+				ct.purge.waveInsertRow(song, row);
 				refresh();
 				set();
 				return OK;
