@@ -12,23 +12,26 @@ import com.util;
 class Purge {
 	Song song;
 	private {
+		// song.seqIterator does not care if seq is in use or not
+		// therefore purgeSeqs must be done always 1st on purgeAll - unused seqs get cleared
 		bool[0x80] seqUsed;
 		bool[0x30] instrUsed;
 		bool[0x40] super_used, pulse_used, filter_used;
 	}
 	bool verbose;
 
-	this(Song sng) {
-		song = sng;
+	this(Song song) {
+		this.song = song;
+		seqUsed[] = true;
 	}
 
 	this(Song sng, bool v) {
 		verbose = v;
-		this(sng);
+		this(song);
 	}
 
 	void purgeAll() {
-		// get unused seqs
+		seqUsed[] = false;
 		trackIterator((Track t) {
 				seqUsed[t.no] = true;
 			});
