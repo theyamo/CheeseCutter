@@ -475,6 +475,14 @@ void pulseDeleteRow(Song song, int row) {
 	}
 }
 
+void filterInsertRow(Song song, int row) {
+	
+}
+
+void pulseInsertRow(Song song, int row) {
+
+}
+
 // will some day be moved to tablecode
 void waveDeleteRow(Song song, int pos) {
 	waveDeleteRow(song, pos, 1);
@@ -544,12 +552,10 @@ private void genericDeleteRow(Song song, ubyte[] table, int row) {
 	table[row4 .. $ - 4] =
 		table[row4 + 4 .. $].dup;
 
-	{
-		for(int j = 0; j < 64; j++) {
-			int fptr = table[j * 4 + 3];
-			if(fptr > 0 && fptr < 0x40) {
-				if(fptr >= row) table[j * 4 + 3]--;
-			}
+	for(int j = 0; j < 64; j++) {
+		int fptr = table[j * 4 + 3];
+		if(fptr > 0 && fptr < 0x40) {
+			if(fptr >= row) table[j * 4 + 3]--;
 		}
 	}
 }

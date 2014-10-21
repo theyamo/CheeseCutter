@@ -9,6 +9,7 @@ import ui.input;
 import ui.help;
 import com.session;
 import com.util;
+import ct.purge;
 import derelict.sdl.sdl;
 import std.string;
 
@@ -750,6 +751,28 @@ class SweepTable : HexTable {
 		super(a, d, 4, 64);
 	}
 
+	override int keypress(Keyinfo key) {
+		if(key.mods & KMOD_SHIFT) {
+			switch(key.raw) {
+			case SDLK_DELETE:
+				deleteRow();
+				refresh();
+				set();
+				return OK;
+			case SDLK_INSERT:
+				insertRow();
+				refresh();
+				set();
+				return OK;
+			default: break;
+			}
+		}
+		else if(key.raw == SDLK_DELETE ||
+				key.raw == SDLK_INSERT) return OK;
+		
+		return super.keypress(key);
+	}
+	
 	override void update() {
 		for(int i=0; i < visibleRows; i++) {
 			int p = ((i + viewOffset) & 63) * 4;
@@ -815,7 +838,16 @@ class PulseTable : SweepTable {
 			return genPlayerContextHelp("Pulse table", 
 										song.pulseDescriptions);
 		return ui.help.HELPMAIN;
-	}		
+	}
+
+	override void deleteRow() {
+		ct.purge.pulseDeleteRow(song, row);
+	}
+
+	override void insertRow() {
+		ct.purge.pulseInsertRow(song, row);
+	}
+	
 }
 
 class FilterTable : SweepTable {
@@ -849,5 +881,14 @@ class FilterTable : SweepTable {
 			super.showByteDescription(song.filterDescriptions[column]);
 		}
 	}
+
+	override void deleteRow() {
+		ct.purge.filterDeleteRow(song, row);
+	}
+
+	override void insertRow() {
+		ct.purge.filterInsertRow(song, row);
+	}
+	
 }
 
