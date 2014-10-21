@@ -782,12 +782,13 @@ class SweepTable : HexTable {
 		for(int i = 0; i < visibleRows; i++) {
 			int curRow = (i + viewOffset) & 63;
 			int p = curRow * 4;
-			string col = "`05";
-			if(data[p+3] > 0 || highlightRow(curRow)) col = "`0d";
+			string col = "`05", col2 = "`05";
+			if(data[p+3] > 0) col = "`0d";
 			if(data[p+3] > 0x3f && data[p+3] != 0x7f) col = "`0a";
+			if(highlightRow(curRow)) { col2 = col = "`01"; }
 			screen.fprint(area.x,area.y + i + 1, 
-						  format("`0c%02X:`05%02X %02X %02X %s%02X", 
-								 curRow,
+						  format("`0c%02X:%s%02X %02X %02X %s%02X", 
+								 curRow, col2,
 								 data[p], data[p+1], data[p+2], col, data[p+3]));
 		}
 	}
@@ -820,8 +821,11 @@ class SweepTable : HexTable {
 			return true;
 
 		if(startFrom > 0x3f || startFrom == 0) return false;
-		
+
+		bool[0x40] visited;
 		for(int row = startFrom;;) {
+			if(visited[row]) return true;
+			visited[row] = true;
 			if(row == currentRow) return true;
 			int jumpValue = data[row * 4 + 3];
 			if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break

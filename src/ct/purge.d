@@ -25,7 +25,7 @@ class Purge {
 		seqUsed[] = true;
 	}
 
-	this(Song sng, bool v) {
+	this(Song song, bool v) {
 		verbose = v;
 		this(song);
 	}
