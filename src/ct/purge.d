@@ -264,7 +264,6 @@ class Purge {
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 		}
 
-		hexdump(song.filterTable[0 .. 24*4], 4, true);
 		// compact filter table
 
 		for(i = 0; i < 0x3e; i++) {
@@ -277,7 +276,6 @@ class Purge {
 				seek++;
 			}
 		}
-		hexdump(song.filterTable[0 .. 24*4], 4, true);
 
 		for(i = 0; i < 0x3e; i++) {
 			int seek = i + 1;
@@ -450,11 +448,11 @@ private:
 void filterDeleteRow(Song song, int row) {
 	genericDeleteRow(song, song.filterTable, row);
 
-	replaceCmdColumnvalue(song, 0x60 + ((row + 1) & 0x1f), 0x60 + (row & 0x1f));
-	/+
-	 replaceCmdColumnvalue(song, umod(row + 1, 0x60, 0x80),
-	 umod(row, 0x60, 0x80));
-	 +/
+	song.seqIterator((Sequence s, Element e) {
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() >= (0x60 + (row & 0x1f) + 1) && e.cmd.value() < 0x80)
+				e.cmd = cast(ubyte)(e.cmd.value - 1);
+		});
 			
 	for(int j = 0; j < 48; j++) {
 		int fptr = song.instrumentTable[4 * 48 + j];
@@ -465,12 +463,13 @@ void filterDeleteRow(Song song, int row) {
 
 void pulseDeleteRow(Song song, int row) {
 	genericDeleteRow(song, song.pulseTable, row);
-		
-	replaceCmdColumnvalue(song, 0x40 + ((row + 1) & 0x1f), 0x40 + (row & 0x1f));
-	/+
-	 replaceCmdColumnvalue(song, umod(row + 1, 0x60, 0x80),
-	 umod(row, 0x60, 0x80));
-	 +/
+
+	song.seqIterator((Sequence s, Element e) {
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() >= (0x40 + (row & 0x1f) + 1) && e.cmd.value() < 0x60)
+				e.cmd = cast(ubyte)(e.cmd.value - 1);
+		});
+
 	for(int j = 0; j < 48; j++) {
 		int pptr = song.instrumentTable[5 * 48 + j];
 		if(pptr >= row && pptr < 0x40)
