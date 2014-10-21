@@ -785,7 +785,7 @@ class SweepTable : HexTable {
 			string col = "`05", col2 = "`05";
 			if(data[p+3] > 0) col = "`0d";
 			if(data[p+3] > 0x3f && data[p+3] != 0x7f) col = "`0a";
-			if(highlightRow(curRow)) { col2 = col = "`01"; }
+			if(highlightRow(curRow)) { col2 = col = "`0d"; }
 			screen.fprint(area.x,area.y + i + 1, 
 						  format("`0c%02X:%s%02X %02X %02X %s%02X", 
 								 curRow, col2,
@@ -817,20 +817,21 @@ class SweepTable : HexTable {
 	}
 
 	protected bool highlightActiveFor(int startFrom, int currentRow) {
-		if(startFrom == currentRow)
-			return true;
-
 		if(startFrom > 0x3f || startFrom == 0) return false;
 
+		if(startFrom == currentRow)
+			return true;
+		
 		bool[0x40] visited;
-		for(int row = startFrom;;) {
-			if(visited[row]) return true;
+		for(int row = startFrom; row < 0x40;) {
+			if(visited[row]) break;
 			visited[row] = true;
 			if(row == currentRow) return true;
 			int jumpValue = data[row * 4 + 3];
 			if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break
 				break;
-			if(jumpValue == row || jumpValue == 0x7f) break; // if loops or ends, break
+			if(jumpValue == 0x7f)
+				break; // if loops or ends, break
 			else if(jumpValue == 0) 
 				row++;
 			else row = jumpValue;
