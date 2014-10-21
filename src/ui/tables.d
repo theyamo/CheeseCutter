@@ -210,6 +210,10 @@ protected:
 			outstr ~= " `01[F12 for more]";
 		UI.statusline.display(format("Byte %d: %s", column + 1, outstr));
 	}
+
+	bool highlightRow(int row) {
+		return false;
+	}
 }
 
 class InsValueTable : HexTable {
@@ -774,10 +778,11 @@ class SweepTable : HexTable {
 	}
 	
 	override void update() {
-		for(int i=0; i < visibleRows; i++) {
-			int p = ((i + viewOffset) & 63) * 4;
+		for(int i = 0; i < visibleRows; i++) {
+			int curRow = (i + viewOffset) & 63;
+			int p = curRow * 4;
 			string col = "`05";
-			if(data[p+3] > 0) col = "`0d";
+			if(data[p+3] > 0 || highlightRow(curRow)) col = "`0d";
 			screen.fprint(area.x,area.y + i + 1, 
 						  format("`0c%02X:`05%02X %02X %02X %s%02X", 
 								 (i + viewOffset) & 63,
@@ -806,6 +811,25 @@ class SweepTable : HexTable {
 				}
 			}
 		}
+	}
+
+	protected bool highlightActiveFor(int startFrom, int currentRow) {
+		if(startFrom == currentRow)
+			return true;
+
+		if(startFrom > 0x3f || startFrom == 0) return false;
+		
+		for(int row = startFrom;;) {
+			if(row == currentRow) return true;
+			int jumpValue = data[row * 4 + 3];
+			if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break
+				break;
+			if(jumpValue == row || jumpValue == 0x7f) break; // if loops or ends, break
+			else if(jumpValue == 0) 
+				row++;
+			else row = jumpValue;
+		}
+		return false;
 	}
 }
 
@@ -847,7 +871,10 @@ class PulseTable : SweepTable {
 	override void insertRow() {
 		ct.purge.pulseInsertRow(song, row);
 	}
-	
+
+	override bool highlightRow(int row) {
+		return highlightActiveFor(song.instrumentTable[com.session.activeInstrument + 5 * 48], row);
+	}
 }
 
 class FilterTable : SweepTable {
@@ -888,6 +915,10 @@ class FilterTable : SweepTable {
 
 	override void insertRow() {
 		ct.purge.filterInsertRow(song, row);
+	}
+
+	override bool highlightRow(int row) {
+		return highlightActiveFor(song.instrumentTable[com.session.activeInstrument + 4 * 48], row);
 	}
 	
 }
