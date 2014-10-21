@@ -263,23 +263,70 @@ class Purge {
 
 		hexdump(song.filterTable[0 .. 24*4], 4, true);
 		// compact filter table
+		int numcleared;
 		for(i = 0; i < 0x3e; i++) {
 			int seek = i + 1;
 			while(!filter_used[i] && seek < 64) {
 				{
 					filterDeleteRow(song, i);
 					filter_used[i .. $-1] = filter_used[i+1 .. $].dup;
+					numcleared++;
 				}
 				seek++;
 			}
 		}
-
 		hexdump(song.filterTable[0 .. 24*4], 4, true);
+		numcleared = 0;
+		for(i = 0; i < 0x3e; i++) {
+			int seek = i + 1;
+			while(!pulse_used[i] && seek < 64) {
+				{
+					pulseDeleteRow(song, i);
+					pulse_used[i .. $-1] = pulse_used[i+1 .. $].dup;
+					numcleared++;
+				}
+				seek++;
+			}
+		}
+		
 
 	}
 
 	static void filterDeleteRow(Song song, int row) {
+		genericDeleteRow(song, song.filterTable, row);
+
+		replaceCmdColumnvalue(song, 0x60 + ((row + 1) & 0x3f), 0x60 + (row & 0x3f));
+		/+
+		 replaceCmdColumnvalue(song, umod(row + 1, 0x60, 0x80),
+		 umod(row, 0x60, 0x80));
+		 +/
+			
+		for(int j = 0; j < 48; j++) {
+			int fptr = song.instrumentTable[4 * 48 + j];
+			if(fptr >= row)
+				song.instrumentTable[4 * 48 + j]--;// = cast(ubyte)i;
+		}
+	}
+
+	static void pulseDeleteRow(Song song, int row) {
+		genericDeleteRow(song, song.pulseTable, row);
+		
+		replaceCmdColumnvalue(song, 0x40 + ((row + 1) & 0x1f), 0x40 + (row & 0x1f));
+			/+
+			replaceCmdColumnvalue(song, umod(row + 1, 0x60, 0x80),
+								  umod(row, 0x60, 0x80));
+								  +/
+		for(int j = 0; j < 48; j++) {
+			int pptr = song.instrumentTable[5 * 48 + j];
+			if(pptr >= row)
+				song.instrumentTable[5 * 48 + j]--;// = cast(ubyte)i;
+		}
+		
+	}
+
+	static private void genericDeleteRow(Song song, ubyte[] table, int row) {
 		assert(row < 64 && row >= 0);
+		
 		int row4 = row * 4;
 		song.filterTable[row4 .. $ - 4] =
 			song.filterTable[row4 + 4 .. $].dup;
@@ -292,24 +339,6 @@ class Purge {
 				}
 			}
 		}
-
-		{
-			replaceCmdColumnvalue(song, 0x60 + ((row + 1) & 0x3f), 0x60 + (row & 0x3f));
-			/*
-			replaceCmdColumnvalue(song, umod(row + 1, 0x60, 0x80),
-			umod(row, 0x60, 0x80));*/
-		}
-		{
-			for(int j = 0; j < 48; j++) {
-				int fptr = song.instrumentTable[4 * 48 + j];
-				if(fptr >= row)
-					song.instrumentTable[4 * 48 + j]--;// = cast(ubyte)i;
-			}
-		}
-	}
-
-	static void pulseDeleteRow(Song song, int row) {
-		
 	}
 	
 	void purgeChordtable() {
