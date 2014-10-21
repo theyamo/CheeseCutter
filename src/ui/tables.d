@@ -553,11 +553,11 @@ class ChordTable : HexTable {
 			screen.fprint(area.x,area.y, "`01Chd (A-D)");
 
 		for(i = 0; i < visibleRows; i++) {
-			int row = (i + viewOffset) & 127;
+			int row = (i + viewOffset) & 0x7f;
 			string col = "`05";
 			if(data[row] >= 0x80) col = "`0d";
 			screen.fprint(area.x, area.y + i + 1,
-						  format("`0c%02X:%s%02X", (i + viewOffset) & 0x7f, col, data[row]));
+						  format("`0c%02X:%s%02X", row, col, data[row]));
 		}
 
 		for(i = 0; i < visibleRows; i++) {
@@ -720,7 +720,7 @@ class WaveTable : HexTable {
 			t2 = data[row+256];
 			int col = (t1 == 0x7e || t1 == 0x7f) ?  0x0d : 0x05;
 			screen.fprint(area.x,area.y + i + 1, format("`0c%02X:`%02x%02X %02X", 
-														(i + viewOffset)&255, col, t1, t2));
+														row, col, t1, t2));
 
 		}
 	}
@@ -784,10 +784,10 @@ class SweepTable : HexTable {
 			int p = curRow * 4;
 			string col = "`05";
 			if(data[p+3] > 0 || highlightRow(curRow)) col = "`0d";
-			if(data[p+3] > 0x3f && data[p+3] != 0x7f) col = "`02";
+			if(data[p+3] > 0x3f && data[p+3] != 0x7f) col = "`0a";
 			screen.fprint(area.x,area.y + i + 1, 
 						  format("`0c%02X:`05%02X %02X %02X %s%02X", 
-								 (i + viewOffset) & 63,
+								 curRow,
 								 data[p], data[p+1], data[p+2], col, data[p+3]));
 		}
 	}
