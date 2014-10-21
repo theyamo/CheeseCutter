@@ -786,7 +786,7 @@ final class InputSeq : Newinput {
 	Newinput activeInput;
 	int activeInputNo;
 	alias activeInputNo activeColumn;
-	immutable columns = 3;
+	enum columns = 3;
 	
 	this() {
 		super();
