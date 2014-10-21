@@ -214,6 +214,7 @@ protected:
 	bool highlightRow(int row) {
 		return false;
 	}
+
 }
 
 class InsValueTable : HexTable {
@@ -783,6 +784,7 @@ class SweepTable : HexTable {
 			int p = curRow * 4;
 			string col = "`05";
 			if(data[p+3] > 0 || highlightRow(curRow)) col = "`0d";
+			if(data[p+3] > 0x3f && data[p+3] != 0x7f) col = "`02";
 			screen.fprint(area.x,area.y + i + 1, 
 						  format("`0c%02X:`05%02X %02X %02X %s%02X", 
 								 (i + viewOffset) & 63,
