@@ -450,7 +450,7 @@ private:
 void filterDeleteRow(Song song, int row) {
 	genericDeleteRow(song, song.filterTable, row);
 
-	replaceCmdColumnvalue(song, 0x60 + ((row + 1) & 0x3f), 0x60 + (row & 0x3f));
+	replaceCmdColumnvalue(song, 0x60 + ((row + 1) & 0x1f), 0x60 + (row & 0x1f));
 	/+
 	 replaceCmdColumnvalue(song, umod(row + 1, 0x60, 0x80),
 	 umod(row, 0x60, 0x80));
@@ -458,7 +458,7 @@ void filterDeleteRow(Song song, int row) {
 			
 	for(int j = 0; j < 48; j++) {
 		int fptr = song.instrumentTable[4 * 48 + j];
-		if(fptr >= row)
+		if(fptr >= row && fptr < 0x40)
 			song.instrumentTable[4 * 48 + j]--;
 	}
 }
@@ -473,7 +473,7 @@ void pulseDeleteRow(Song song, int row) {
 	 +/
 	for(int j = 0; j < 48; j++) {
 		int pptr = song.instrumentTable[5 * 48 + j];
-		if(pptr >= row)
+		if(pptr >= row && pptr < 0x40)
 			song.instrumentTable[5 * 48 + j]--;
 	}
 }
