@@ -222,6 +222,5 @@ string dumpData(Song sng, string title) {
 	hexdump(sng.chordTable[0 .. tablen], 16);
 	append("\nchordindex = *\n");
 	hexdump(sng.chordIndexTable[0 .. highestChord], 16);
-	writeln(output);
 	return output;
 }

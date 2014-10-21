@@ -261,6 +261,7 @@ class Purge {
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 		}
 
+		hexdump(song.filterTable[0 .. 24*4], 4, true);
 		// compact filter table
 		for(i = 0; i < 0x3e; i++) {
 			int seek = i + 1;
@@ -275,7 +276,7 @@ class Purge {
 					for(int j = 0; j < 64; j++) {
 						int fptr = song.filterTable[j * 4 + 3];
 						if(fptr > 0 && fptr < 0x40) {
-							if(fptr >= seek) song.filterTable[j * 4 + 3]--;
+							if(fptr >= i) song.filterTable[j * 4 + 3]--;
 						}
 					}
 				}
@@ -285,14 +286,16 @@ class Purge {
 				{
 					for(int j = 0; j < 48; j++) {
 						int fptr = song.instrumentTable[4 * 48 + j];
-						if(fptr >= i)
+						if(fptr >= seek)
 							song.instrumentTable[4 * 48 + j]--;// = cast(ubyte)i;
 					}
 				}
 				seek++;
 			}
 		}
-		
+
+		hexdump(song.filterTable[0 .. 24*4], 4, true);
+
 	}
 
 	void purgeChordtable() {

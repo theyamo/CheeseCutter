@@ -26,13 +26,21 @@ int paddedStringLength(string s, char padchar) {
 }
 
 void hexdump(ubyte[] buf, int rowlen) {
-	int c;
+	hexdump(buf, rowlen, false);
+}
+
+void hexdump(ubyte[] buf, int rowlen, bool prrow) {
+	int c, r;
+	if(prrow)
+		writef("%02x: ", 0);
+	
 	foreach(b; buf) {
 		writef("%02X ", b);
 		c++;
 		if(c >= rowlen) {
 			c = 0;
 			writef("\n");
+			if(prrow) writef("%02x: ",++r);
 		}
 	}
 	writef("\n");
