@@ -449,6 +449,7 @@ void filterDeleteRow(Song song, int row) {
 	genericDeleteRow(song, song.filterTable, row);
 
 	song.seqIterator((Sequence s, Element e) {
+			if(row > 0x1f) return;
 			if(e.cmd.value == 0) return;
 			if(e.cmd.value() >= (0x60 + (row & 0x1f) + 1) && e.cmd.value() < 0x80)
 				e.cmd = cast(ubyte)(e.cmd.value - 1);
@@ -465,6 +466,7 @@ void pulseDeleteRow(Song song, int row) {
 	genericDeleteRow(song, song.pulseTable, row);
 
 	song.seqIterator((Sequence s, Element e) {
+			if(row > 0x1f) return;
 			if(e.cmd.value == 0) return;
 			if(e.cmd.value() >= (0x40 + (row & 0x1f) + 1) && e.cmd.value() < 0x60)
 				e.cmd = cast(ubyte)(e.cmd.value - 1);
