@@ -222,7 +222,7 @@ class Purge {
 			}
 		}
 
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(e.cmd.value >= 0x40 && e.cmd.value < 0x60)
 					seekNMark(song.pulseTable, &pulse_used[0], e.cmd.value - 0x40);
 				if(e.cmd.value >= 0x60 && e.cmd.value < 0x80)
@@ -267,28 +267,8 @@ class Purge {
 			int seek = i + 1;
 			while(!filter_used[i] && seek < 64) {
 				{
-					int pos = i * 4;
-					song.filterTable[pos .. $ - 4] =
-						song.filterTable[pos + 4 .. $].dup;
+					filterDeleteRow(song, i);
 					filter_used[i .. $-1] = filter_used[i+1 .. $].dup;
-				}
-				{
-					for(int j = 0; j < 64; j++) {
-						int fptr = song.filterTable[j * 4 + 3];
-						if(fptr > 0 && fptr < 0x40) {
-							if(fptr >= i) song.filterTable[j * 4 + 3]--;
-						}
-					}
-				}
-				{
-					replaceCmdColumnvalue(0x60 + (seek & 0x1f), 0x60 + (i & 0x1f));
-				}
-				{
-					for(int j = 0; j < 48; j++) {
-						int fptr = song.instrumentTable[4 * 48 + j];
-						if(fptr >= seek)
-							song.instrumentTable[4 * 48 + j]--;// = cast(ubyte)i;
-					}
 				}
 				seek++;
 			}
@@ -298,9 +278,43 @@ class Purge {
 
 	}
 
+	static void filterDeleteRow(Song song, int row) {
+		assert(row < 64 && row >= 0);
+		int row4 = row * 4;
+		song.filterTable[row4 .. $ - 4] =
+			song.filterTable[row4 + 4 .. $].dup;
+
+		{
+			for(int j = 0; j < 64; j++) {
+				int fptr = song.filterTable[j * 4 + 3];
+				if(fptr > 0 && fptr < 0x40) {
+					if(fptr >= row) song.filterTable[j * 4 + 3]--;
+				}
+			}
+		}
+
+		{
+			replaceCmdColumnvalue(song, 0x60 + ((row + 1) & 0x3f), 0x60 + (row & 0x3f));
+			/*
+			replaceCmdColumnvalue(song, umod(row + 1, 0x60, 0x80),
+			umod(row, 0x60, 0x80));*/
+		}
+		{
+			for(int j = 0; j < 48; j++) {
+				int fptr = song.instrumentTable[4 * 48 + j];
+				if(fptr >= row)
+					song.instrumentTable[4 * 48 + j]--;// = cast(ubyte)i;
+			}
+		}
+	}
+
+	static void pulseDeleteRow(Song song, int row) {
+		
+	}
+	
 	void purgeChordtable() {
 		bool chordsUsed[0x20];
-		seqIterator((Sequence s, Element e) { 				
+		song.seqIterator((Sequence s, Element e) { 				
 				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f)
 					chordsUsed[e.cmd.value & 0x1f] = true;
 			});
@@ -338,7 +352,7 @@ class Purge {
 						int idx = song.chordIndexTable[j];
 						int idx2 = getidx2(idx)+1;
 						
-						replaceCmdColumnvalue(0x80 + j, 0x80 + i);
+						replaceCmdColumnvalue(song, 0x80 + j, 0x80 + i);
 						ubyte[] chord = song.chordTable[idx .. idx2].dup;
 
 						chunks ~= Chunk(chord, idx);
@@ -374,7 +388,7 @@ class Purge {
 	}
 
 	void purgeCmdtable() {
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(e.cmd.value == 0) return;
 				if(e.cmd.value < 0x40)
 					super_used[e.cmd.value] = true;
@@ -395,7 +409,7 @@ class Purge {
 					song.superTable[i] = song.superTable[j];
 					song.superTable[i+64] = song.superTable[j+64];
 					song.superTable[i+128] = song.superTable[j+128];
-					replaceCmdColumnvalue(j, i);
+					replaceCmdColumnvalue(song, j, i);
 					super_used[i] = true;
 					super_used[j] = false;
 					song.superTable[j] = 0;
@@ -408,7 +422,9 @@ class Purge {
 	}
 	
 private:
+	/+
 	void seqIterator(void delegate(Sequence s, Element e) dg) {
+		
 		foreach(i, n; seqUsed) {
 			if(!n) continue;
 			Sequence s = song.seqs[i];
@@ -418,6 +434,7 @@ private:
 			}
 		}
 	}
+	+/
 
 	void trackIterator(void delegate(Track t) dg) {
 		for(int sidx = 0; sidx < 32; sidx++) {
@@ -432,17 +449,17 @@ private:
 
 	void replaceInsvalue(int seek, int repl) {
 		int skipped;
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(!e.instr.hasValue()) return;
 				if(e.instr.value() == seek)
 					e.instr = cast(ubyte)repl;
 			});
 	}
 
-	void replaceCmdColumnvalue(int seek, int repl) {
+	static void replaceCmdColumnvalue(Song song, int seek, int repl) {
 		int skipped;
 
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(e.cmd.value == 0) return;
 				if(e.cmd.value() == seek)
 					e.cmd = cast(ubyte)repl;
