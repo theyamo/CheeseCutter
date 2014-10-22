@@ -330,6 +330,7 @@ protected abstract class VoiceTable : Window {
 		super(a);
 		posTable = pi;
 		activeVoice = voices[0];
+		activate();
 	}
 
 	override void activate() {
@@ -346,6 +347,7 @@ protected abstract class VoiceTable : Window {
 		foreach(v; voices) {
 			v.refresh(); 
 		}
+		input.cursor.refresh();
 	}
 
 	void centralize() {
@@ -920,8 +922,8 @@ protected:
 	}
 
 	override void refresh() {
-	  foreach(b; voiceTables) {
-	    b.refresh();
+	  foreach(vt; voiceTables) {
+		  vt.refresh();
 	  }
 	}
 
