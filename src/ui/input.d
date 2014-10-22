@@ -745,14 +745,16 @@ class InputKeyjam : Newinput {
 		if(value < 0) return;
 		switch(value) {
 		case 0:
-			element.note = 1;
+			element.note = NOTE_KEYOFF;
+			element.note.setTied(false);
+//			element.instr = 0x80;
 			break;
 		case 2:
 		case 0x80:
-			element.note = 2;
+			element.note = NOTE_KEYON;
 			break;
 		default:
-			int note = ((value - 3) & 0x7f) + 12 * octave;// - element.transpose;
+			int note = ((value - 3) & 0x7f) + 12 * octave;
 			if(note > 0x5e) return;
 			element.note = cast(ubyte)note;
 			if(value >= 0x80) {
@@ -772,8 +774,7 @@ class InputKeyjam : Newinput {
 	}
 
 	int keyrelease(Keyinfo key) {
-		setRowValue(0); // noteoff
-		return 0;
+		return OK;
 	}
 }
 
