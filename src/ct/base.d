@@ -955,6 +955,9 @@ class Song {
 		ver = debuf[offset++];
 		if(ver < 6) 
 			throw new UserException("The song is incompatible (too old) for this version of the editor.");
+		if(ver >= 128)
+			throw new UserException("The song appears to be a stereo SID file and doesn't work with this editor.");
+			
 		clock = debuf[offset++];
 		multiplier = debuf[offset++];
 		sidModel = debuf[offset++];
