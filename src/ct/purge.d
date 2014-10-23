@@ -232,30 +232,6 @@ class Purge {
 					seekNMark(song.filterTable, &filter_used[0], e.cmd.value - 0x60);
 				
 			});
-/+ TODO: table optimizer 
-		for(i = 0; i < 63; i++) {
-			if(!pulse_used[i]) {
-				int j = i+1, pos = i+1;
-				do {
-					ubyte[] tmp = song.pulseTable[j * 4 .. $].dup;
-					song.pulseTable[i * 4 .. $ - (j - i) * 4] =
-						tmp;
-					bool[] tmp2 = pulse_used[j .. $].dup;
-					pulse_used[i .. $ - 1] = tmp2;
-					for(int k = i; k < 64; k++) {
-						int wrap = song.pulseTable[k * 4 + 3];
-						if(wrap >= k && wrap < 0x7f) {
-							song.pulseTable[k * 4 + 3]--;
-						}
-					}
-					++pos;
-				} while(pos < 64 && !pulse_used[i]);
-			}
-			if(!filter_used[i])
-				song.filterTable[i * 4 .. i * 4 + 4] = 0;
-
-		}
-		+/
 
 		for(i = 0; i < 64; i++) {
 			if(!pulse_used[i]) 
@@ -264,8 +240,7 @@ class Purge {
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 		}
 
-		// compact filter table
-
+		// compact filter & pulse table. this is EXTREMELY slow.
 		for(i = 0; i < 0x3e; i++) {
 			int seek = i + 1;
 			while(!filter_used[i] && seek < 64) {
