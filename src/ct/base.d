@@ -1419,6 +1419,8 @@ class Song {
 		multiplier = insong.multiplier;
 		sidModel = insong.sidModel;
 		fppres = insong.fppres;
+		songspeeds = insong.songspeeds[];
+		speed = songspeeds[0];
 		// TODO highlight, highlightoffset
 		generateChordIndex();
 	}
