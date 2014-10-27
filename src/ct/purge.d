@@ -260,7 +260,7 @@ class Purge {
 			if(!filter_used[i])
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 		}
-		
+
 	}
 
 	void purgeChordtable() {

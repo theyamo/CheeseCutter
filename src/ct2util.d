@@ -101,7 +101,7 @@ int main(string[] args) {
 	speeds.length = 32;
 	masks.length = 32;
 	void printheader() {
-		writefln("CheeseCutter 2 utilities (BETA)");
+		writefln("CheeseCutter 2 utilities");
 		writefln("\nUsage: \t%s <command> <options> <infile> <-o outfile>",args[0]);
 		writefln("\t%s import <infile> <infile2> <-o outfile>",args[0]);
 		writefln("\t%s init <binaryfile> <-o outfile>",args[0]);
