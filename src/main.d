@@ -13,13 +13,11 @@ import ui.input;
 import audio.player;
 import audio.resid.filter;
 import audio.audio;
-import std.file;
 import std.stdio;
-import std.conv;
 import std.string;
-import std.c.stdlib;
-import std.c.string;
 import std.cstream;
+import std.conv;
+import std.file;
 
 version(linux) {
 	const DIR_SEPARATOR = '/';

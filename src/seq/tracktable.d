@@ -11,7 +11,7 @@ import com.session;
 import ui.ui;
 import ui.input;
 import derelict.sdl.sdl;
-import std.string;
+//import std.string;
 import ct.base;
 
 

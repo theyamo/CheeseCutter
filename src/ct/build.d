@@ -9,7 +9,6 @@ import com.cpu;
 import com.util;
 import std.stdio;
 import std.string;
-import std.file;
 import std.conv;
 import std.c.string;
 import std.c.stdlib;

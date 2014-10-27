@@ -2,12 +2,11 @@
 CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 module ct.base;
-import std.stdio;
+import com.cpu;
+import com.util;
 import std.string;
 import std.file;
 import std.zlib;
-import com.cpu;
-import com.util;
 
 enum Offsets
 {

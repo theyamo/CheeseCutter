@@ -4,10 +4,8 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 
 module com.cpu;
 
-import std.file;
 import std.stdio;
 import std.string;
-import std.c.stdio;
 
 alias ushort address;
 

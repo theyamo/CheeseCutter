@@ -14,8 +14,6 @@ import ui.ui;
 import ui.input;
 import std.string;
 import std.file;
-import std.stdio;
-import std.math;
 import std.utf;
 import std.array;
 

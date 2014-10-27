@@ -15,15 +15,13 @@ import audio.player;
 import ui.tables;
 import ui.dialogs;
 import seq.fplay;
-import std.string;
-import std.file;
-import std.stdio;
-import std.math;
-import std.array;
 import com.fb;
 import com.util;
 import seq.sequencer;
 import audio.audio;
+import std.string;
+import std.file;
+import std.stdio;
 
 enum PAGESTEP = 16;
 enum CONFIRM_TIMEOUT = 90;

@@ -9,9 +9,7 @@ module ct.dump;
 
 import ct.base;
 import com.util;
-import std.file;
 import std.string;
-import std.stdio;
 
 private const string byteOp = "!byte", wordOp = "!word";
 
