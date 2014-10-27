@@ -168,8 +168,8 @@ int main(string[] args) {
 					   command != Command.ExportPRG)
 						throw new UserException("Option available only with exporting commands.");
 					int r = str2Value2(nextArg());
-					if(r > 0xffff)
-						throw new UserException("-r: Address value too big.");
+					if(r < 0x200 || r > 0xf900)
+						throw new UserException("-r: reloc address out of range");
 					relocAddress = cast(ushort)r;
 					break;
 				case "-s":
