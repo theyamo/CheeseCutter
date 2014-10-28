@@ -341,6 +341,7 @@ struct Tracklist {
 	}
 
 	void insertAt(int offset) {
+		if(offset > list.length - 2) return;
 		assert(offset >= 0 && offset < list.length);
 		for(int i = cast(int)(list.length - 2); i >= offset; i--) {
 			list[i+1] = list[i].dup;
