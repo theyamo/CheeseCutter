@@ -10,6 +10,8 @@ reSID engine by Dag Lem & A. Lankila.
 
 Parts of reSID interface (sid.cpp) by Cadaver / CovertBitops.
 
+Includes Acme Assembler 0.91 by Marco Baye
+
 libSDL by the SDL team.
 
 derelict, http://www.dsource.org/projects/derelict
