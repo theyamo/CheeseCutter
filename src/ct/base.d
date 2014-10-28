@@ -505,7 +505,6 @@ class Sequence {
 	}
 	
 	this(ubyte[] d) {
-		// FIX: most of it should only be done on song.open
 		data = ElementArray(d);
 		refresh();
 		if(rows*4+4 < 254)
