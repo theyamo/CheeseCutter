@@ -1,13 +1,13 @@
-LIBS=-ldl -lstdc++
-COMFLAGS=-g
-DLINK=$(COMFLAGS) -Wl,--gc-sections 
+LIBS=-L-ldl -L-lstdc++
+COMFLAGS=
+DLINK=$(COMFLAGS) 
 VERSION=$(shell cat Version)
-DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O1
+DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O
 CFLAGS=$(COMFLAGS) -O1
 CXXFLAGS=-I./src -O3
-COMPILE.d = $(DC) $(DFLAGS) -c -o $@
+COMPILE.d = $(DC) $(DFLAGS) -c -of$@
 OUTPUT_OPTION = 
-DC=gdc
+DC=dmd
 EXE=
 TARGET=ccutter
 OBJCOPY=objcopy
@@ -15,7 +15,7 @@ OBJCOPY=objcopy
 include Makefile.objects.mk
 
 $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
-	$(DC) $(DLINK) -o $(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
+	$(DC) $(DLINK) -of$(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
 
 .cpp.o : $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -26,7 +26,7 @@ $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
 ct: $(C64OBJS) $(CTOBJS)
 
 ct2util: $(C64OBJS) $(UTILOBJS)
-	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS) 
+	$(DC) $(DLINK) -of$@ $(UTILOBJS) $(LIBS) 
 
 c64: $(C64OBJS)
 

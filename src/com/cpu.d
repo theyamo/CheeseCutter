@@ -20,8 +20,8 @@ protected:
 	enum St { C = 1, Z = 2, I = 4, D = 8, B = 16, V = 64, N = 128 };
 	enum Am { IMPLIED, IMMEDIATE, INDIRECT_X, INDIRECT_Y, IND, Z,
 			RELATIVE, ACC, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, ZEROPAGE_X, ZY };
-	const int[] OPSIZE = [ 0, 1, 1, 1, 2, 1, 1,  0, 2, 2, 2, 1, 1 ];
-	const string[] AMSTR = [
+	static immutable int[] OPSIZE = [ 0, 1, 1, 1, 2, 1, 1,  0, 2, 2, 2, 1, 1 ];
+	static string[] AMSTR = [
 		"    \t", "    \t#$", "(,x)\t$", "(),y\t$", "()  \t$", "<z> \t$", "    \t+-", "    \ta", 
 		"    \t$", ",x  \t$", ",y  \t$", ",xZ   \t$", ",yZ   \t$" ];
 	enum Op { BRK = 0, ADC, AND, ASL, EOR, ORA, LSR, JSR, JMP, BIT, ROL, PHP, 
@@ -29,7 +29,7 @@ protected:
 			TXA, BCC, TYA, TXS, LDY, LDA, LDX, TAY, TAX, BCS, CLV, TSX, CPY, CMP, 
 			DEC, INY, DEX, BNE, CLD, CPX, SBC, INC, INX, NOP, BEQ, SED, BPL, BMI, 
 			SEC, CLC };
-	const string[] OPSTR = [
+	static string[] OPSTR = [
 		"BRK", "ADC", "AND", "ASL", "EOR", "ORA", "LSR", "JSR", "JMP", "BIT", "ROL",
 		"PHP", "PLP", "PHA", "RTI", "BVC", "CLI", "RTS", "ROR", "PLA", "BVS", "SEI",
 		"STA", "STY", "STX", "DEY", "TXA", "BCC", "TYA", "TXS", "LDY", "LDA", "LDX",
@@ -41,7 +41,7 @@ protected:
 		Am am;
 		int cyc;
 	}
-	const Opcode[256] OPTAB = [
+	static immutable Opcode[256] OPTAB = [
 		{ Op.BRK, Am.IMPLIED, 8 }, { Op.ORA, Am.INDIRECT_X, 6 },  
 		{ Op.BRK, Am.IMPLIED, 0 }, { Op.BRK, Am.IMPLIED, 0 }, 
 		{ Op.BRK, Am.IMPLIED, 0 },  { Op.ORA, Am.Z  , 3 },  

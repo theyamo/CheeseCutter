@@ -93,7 +93,7 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	outstr(title,PSID_TITLE_OFFSET);
 	outstr(author,PSID_TITLE_OFFSET + 0x20);
 	outstr(release,PSID_TITLE_OFFSET + 0x40); 
-	data[PSID_NUM_SONGS + 1] = cast(ubyte)insong.subtunes.numOf();
+	data[PSID_NUM_SONGS + 1] = cast(ubyte)insong.subtunes.numOf;
 	data[PSID_START_SONG + 1] = cast(ubyte)defaultSubtune;
 	if(insong.multiplier > 1) {
 		data[PSID_SPEED_OFFSET .. PSID_SPEED_OFFSET + 4] = 255;

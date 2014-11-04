@@ -1204,5 +1204,6 @@ final class UI {
 		if(ins < 0) ins = 0;
 		toplevel.instable.seekRow(ins % 48);
 		activeInstrument = ins % 48;
+		toplevel.refresh();
 	}
 }

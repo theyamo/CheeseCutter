@@ -9,6 +9,7 @@ import ui.input;
 import ui.help;
 import com.session;
 import com.util;
+import ct.purge;
 import derelict.sdl.sdl;
 import std.string;
 
@@ -209,6 +210,11 @@ protected:
 			outstr ~= " `01[F12 for more]";
 		UI.statusline.display(format("Byte %d: %s", column + 1, outstr));
 	}
+
+	bool highlightRow(int row) {
+		return false;
+	}
+
 }
 
 class InsValueTable : HexTable {
@@ -547,11 +553,11 @@ class ChordTable : HexTable {
 			screen.fprint(area.x,area.y, "`01Chd (A-D)");
 
 		for(i = 0; i < visibleRows; i++) {
-			int row = (i + viewOffset) & 127;
+			int row = (i + viewOffset) & 0x7f;
 			string col = "`05";
 			if(data[row] >= 0x80) col = "`0d";
 			screen.fprint(area.x, area.y + i + 1,
-						  format("`0c%02X:%s%02X", (i + viewOffset) & 0x7f, col, data[row]));
+						  format("`0c%02X:%s%02X", row, col, data[row]));
 		}
 
 		for(i = 0; i < visibleRows; i++) {
@@ -682,12 +688,12 @@ class WaveTable : HexTable {
 				seekCurWave();
 				return OK;
 			case SDLK_DELETE:
-				song.wavetableRemove(row);
+				ct.purge.waveDeleteRow(song, row);
 				refresh();
 				set();
 				return OK;
 			case SDLK_INSERT:
-				song.wavetableInsert(row);
+				ct.purge.waveInsertRow(song, row);
 				refresh();
 				set();
 				return OK;
@@ -714,7 +720,7 @@ class WaveTable : HexTable {
 			t2 = data[row+256];
 			int col = (t1 == 0x7e || t1 == 0x7f) ?  0x0d : 0x05;
 			screen.fprint(area.x,area.y + i + 1, format("`0c%02X:`%02x%02X %02X", 
-														(i + viewOffset)&255, col, t1, t2));
+														row, col, t1, t2));
 
 		}
 	}
@@ -750,14 +756,39 @@ class SweepTable : HexTable {
 		super(a, d, 4, 64);
 	}
 
+	override int keypress(Keyinfo key) {
+		if(key.mods & KMOD_SHIFT) {
+			switch(key.raw) {
+			case SDLK_DELETE:
+				deleteRow();
+				refresh();
+				set();
+				return OK;
+			case SDLK_INSERT:
+				insertRow();
+				refresh();
+				set();
+				return OK;
+			default: break;
+			}
+		}
+		else if(key.raw == SDLK_DELETE ||
+				key.raw == SDLK_INSERT) return OK;
+		
+		return super.keypress(key);
+	}
+	
 	override void update() {
-		for(int i=0; i < visibleRows; i++) {
-			int p = ((i + viewOffset) & 63) * 4;
-			string col = "`05";
+		for(int i = 0; i < visibleRows; i++) {
+			int curRow = (i + viewOffset) & 63;
+			int p = curRow * 4;
+			string col = "`05", col2 = "`05";
 			if(data[p+3] > 0) col = "`0d";
+			if(data[p+3] > 0x3f && data[p+3] != 0x7f) col = "`0a";
+			if(highlightRow(curRow)) { col2 = col = "`0d"; }
 			screen.fprint(area.x,area.y + i + 1, 
-						  format("`0c%02X:`05%02X %02X %02X %s%02X", 
-								 (i + viewOffset) & 63,
+						  format("`0c%02X:%s%02X %02X %02X %s%02X", 
+								 curRow, col2,
 								 data[p], data[p+1], data[p+2], col, data[p+3]));
 		}
 	}
@@ -783,6 +814,29 @@ class SweepTable : HexTable {
 				}
 			}
 		}
+	}
+
+	protected bool highlightActiveFor(int startFrom, int currentRow) {
+		if(startFrom > 0x3f || startFrom == 0) return false;
+
+		if(startFrom == currentRow)
+			return true;
+		
+		bool[0x40] visited;
+		for(int row = startFrom; row < 0x40;) {
+			if(visited[row]) break;
+			visited[row] = true;
+			if(row == currentRow) return true;
+			int jumpValue = data[row * 4 + 3];
+			if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break
+				break;
+			if(jumpValue == 0x7f)
+				break; // if loops or ends, break
+			else if(jumpValue == 0) 
+				row++;
+			else row = jumpValue;
+		}
+		return false;
 	}
 }
 
@@ -815,7 +869,19 @@ class PulseTable : SweepTable {
 			return genPlayerContextHelp("Pulse table", 
 										song.pulseDescriptions);
 		return ui.help.HELPMAIN;
-	}		
+	}
+
+	override void deleteRow() {
+		ct.purge.pulseDeleteRow(song, row);
+	}
+
+	override void insertRow() {
+		ct.purge.pulseInsertRow(song, row);
+	}
+
+	override bool highlightRow(int row) {
+		return highlightActiveFor(song.instrumentTable[com.session.activeInstrument + 5 * 48], row);
+	}
 }
 
 class FilterTable : SweepTable {
@@ -849,5 +915,18 @@ class FilterTable : SweepTable {
 			super.showByteDescription(song.filterDescriptions[column]);
 		}
 	}
+
+	override void deleteRow() {
+		ct.purge.filterDeleteRow(song, row);
+	}
+
+	override void insertRow() {
+		ct.purge.filterInsertRow(song, row);
+	}
+
+	override bool highlightRow(int row) {
+		return highlightActiveFor(song.instrumentTable[com.session.activeInstrument + 4 * 48], row);
+	}
+	
 }
 

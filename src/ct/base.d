@@ -167,10 +167,6 @@ struct Note {
 	
 	void setTied(bool t) {
 		data[1] = t ? 0x5f : 0xf0;
-		/+
-		if(t) 
-			data[1] = 0x5f;
-		else data[1] = 0xf0;+/
 	}
 
 	bool isTied() {	return data[1] == 0x5f;	}
@@ -832,7 +828,7 @@ class Song {
 			}
 		}
 
-		int numOf() {
+		@property int numOf() {
 			foreach_reverse(idx, ref tune; subtunes) {
 				foreach(ref voice; tune) {
 					if(voice[1 .. 4] != cast(ubyte[])[0x00, 0xf0, 0x00]) {
@@ -1260,14 +1256,38 @@ class Song {
 		}
 	}
 
-	int numOfSeqs() {
-		int upto;
-		foreach(int i, s; seqs) {
-			//if(s != seqs[0]) upto = i;
-			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
+	void trackIterator(void delegate(Track t) dg) {
+		for(int sidx = 0; sidx < 32; sidx++) {
+			Tracklist[] subtune = subtunes[sidx];
+			foreach(voice; subtune) {
+				foreach(track; voice) {
+					dg(track);
+				}
+			}
 		}
+	}
+	
+	@property int numOfSeqs() {
+		// this worked only because the song was always purged just before
+		int numOfSeqs_old() {
+			int upto;
+			foreach(int i, s; seqs) {
+				if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
+			}
+			return upto + 1;
+		}
+		
+		int upto = 0;
+		trackIterator((Track trk) {
+				if(trk.no > upto) upto = trk.no;
+			});
+
+		if((upto + 1) != numOfSeqs_old())
+			throw new Error("failed counting num of used sequences");
 		return upto + 1;
 	}
+
+	
 	
 	@property int speed() {
 		return memspace[offsets[Offsets.SPEED]];
@@ -1283,37 +1303,6 @@ class Song {
 
 	@property int playSpeed() {
 		return memspace[offsets[Offsets.PlaySpeed]];
-	}
-
-	private void arpPointerUpdate(int pos, int val) {
-		foreach(i, flag; features.instrumentFlags) {
-			if(flag != 1) continue;
-			for(int j = 0; j < 48; j++) {
-				ubyte b7 = instrumentTable[j + i * 48];
-				if(b7 > pos) {
-					int v = b7 + val;
-					if(v < 0) v = 0;
-					instrumentTable[j + i * 48] = cast(ubyte)v;
-				}
-			}
-			
-		}
-	}
-
-	void wavetableInsert(int pos) {
-		int i;
-		for(i = 254; i >= pos; i--) {
-			wave1Table[i + 1] = wave1Table[i];
-			wave2Table[i + 1] = wave2Table[i];
-		}
-		for(i=0;i<256;i++) {
-			if(wave1Table[i] == 0x7f &&
-			   wave2Table[i] >= pos)
-				wave2Table[i]++;
-		}
-		wave1Table[pos] = 0;
-		wave2Table[pos] = 0;
-		arpPointerUpdate(pos, 1);
 	}
 
 	void setVoicon(shared int[] m) {
@@ -1339,30 +1328,6 @@ class Song {
 			if(!seqUsed) return seqnum;
 		}
 		return -1;
-	}
-
-	// will some day be moved to tablecode
-	void wavetableRemove(int pos) {
-		wavetableRemove(pos, 1);
-	}
-
-	// will some day be moved to tablecode
-	void wavetableRemove(int pos, int num) {
-		for(int n = 0; n < num; n++) {
-			int i;
-			assert(pos < 255 && pos >= 0);
-			for(i = pos; i < 255; i++) {
-				wave1Table[i] = wave1Table[i + 1];
-				wave2Table[i] = wave2Table[i + 1];
-			}
-			for(i=0;i < 256;i++) {
-				if((wave1Table[i] == 0x7f || wave1Table[i] == 0x7e) &&
-				   wave2Table[i] >= pos) {
-					if(wave2Table[i] > 0) --wave2Table[i];
-				}
-			}
-			arpPointerUpdate(pos, -1);
-		}	
 	}
 
 	void clearSeqs() {

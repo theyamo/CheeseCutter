@@ -12,23 +12,26 @@ import std.string;
 class Purge {
 	Song song;
 	private {
+		// song.seqIterator does not care if seq is in use or not
+		// therefore purgeSeqs must be done always 1st on purgeAll - unused seqs get cleared
 		bool[0x80] seqUsed;
 		bool[0x30] instrUsed;
 		bool[0x40] super_used, pulse_used, filter_used;
 	}
 	bool verbose;
 
-	this(Song sng) {
-		song = sng;
+	this(Song song) {
+		this.song = song;
+		seqUsed[] = true;
 	}
 
-	this(Song sng, bool v) {
+	this(Song song, bool v) {
 		verbose = v;
-		this(sng);
+		this(song);
 	}
 
 	void purgeAll() {
-		// get unused seqs
+		seqUsed[] = false;
 		trackIterator((Track t) {
 				seqUsed[t.no] = true;
 			});
@@ -187,7 +190,7 @@ class Purge {
 		for(int i = cast(int)(chunks.length - 1); i >= 0; i--) {
 			Chunk chunk = chunks[i];
 			if(chunk.used) continue;
-			song.wavetableRemove(chunk.offset, cast(int)chunk.wave1.length);
+			waveDeleteRow(song, chunk.offset, cast(int)chunk.wave1.length);
 			numcleared++;
 		}
 		explain(format("%d wave programs removed.", numcleared));
@@ -222,37 +225,13 @@ class Purge {
 			}
 		}
 
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(e.cmd.value >= 0x40 && e.cmd.value < 0x60)
 					seekNMark(song.pulseTable, &pulse_used[0], e.cmd.value - 0x40);
 				if(e.cmd.value >= 0x60 && e.cmd.value < 0x80)
 					seekNMark(song.filterTable, &filter_used[0], e.cmd.value - 0x60);
 				
 			});
-/+ TODO: table optimizer 
-		for(i = 0; i < 63; i++) {
-			if(!pulse_used[i]) {
-				int j = i+1, pos = i+1;
-				do {
-					ubyte[] tmp = song.pulseTable[j * 4 .. $].dup;
-					song.pulseTable[i * 4 .. $ - (j - i) * 4] =
-						tmp;
-					bool[] tmp2 = pulse_used[j .. $].dup;
-					pulse_used[i .. $ - 1] = tmp2;
-					for(int k = i; k < 64; k++) {
-						int wrap = song.pulseTable[k * 4 + 3];
-						if(wrap >= k && wrap < 0x7f) {
-							song.pulseTable[k * 4 + 3]--;
-						}
-					}
-					++pos;
-				} while(pos < 64 && !pulse_used[i]);
-			}
-			if(!filter_used[i])
-				song.filterTable[i * 4 .. i * 4 + 4] = 0;
-
-		}
-		+/
 
 		for(i = 0; i < 64; i++) {
 			if(!pulse_used[i]) 
@@ -261,13 +240,33 @@ class Purge {
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 		}
 
+		// compact filter & pulse table. this is EXTREMELY slow.
+		for(i = 0; i < 0x3e; i++) {
+			int seek = i + 1;
+			while(!filter_used[i] && seek < 64) {
+				{
+					filterDeleteRow(song, i);
+					filter_used[i .. $-1] = filter_used[i+1 .. $].dup;
+				}
+				seek++;
+			}
+		}
+
+		for(i = 0; i < 0x3e; i++) {
+			int seek = i + 1;
+			while(!pulse_used[i] && seek < 64) {
+				{
+					pulseDeleteRow(song, i);
+					pulse_used[i .. $-1] = pulse_used[i+1 .. $].dup;
+				}
+				seek++;
+			}
+		}
 	}
 
 	void purgeChordtable() {
 		bool chordsUsed[0x20];
-		ubyte[] newtable;
-		newtable.length = 256;
-		seqIterator((Sequence s, Element e) { 				
+		song.seqIterator((Sequence s, Element e) { 				
 				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f)
 					chordsUsed[e.cmd.value & 0x1f] = true;
 			});
@@ -285,7 +284,6 @@ class Purge {
 		}
 
 		song.generateChordIndex();
-		int np;
 		Chunk[] chunks;
 		chunks ~= Chunk(song.chordTable[0 .. song.chordIndexTable[1]].dup, 0);
 		int tablestart = 1;
@@ -306,7 +304,7 @@ class Purge {
 						int idx = song.chordIndexTable[j];
 						int idx2 = getidx2(idx)+1;
 						
-						replaceCmdColumnvalue(0x80 + j, 0x80 + i);
+						replaceCmdColumnvalue(song, 0x80 + j, 0x80 + i);
 						ubyte[] chord = song.chordTable[idx .. idx2].dup;
 
 						chunks ~= Chunk(chord, idx);
@@ -321,6 +319,7 @@ class Purge {
 
 		int counter;
 		int idx;
+		int np;
 
 		foreach(chunk; chunks) {
 			if(chunk.data.length == 0) continue;
@@ -341,7 +340,7 @@ class Purge {
 	}
 
 	void purgeCmdtable() {
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(e.cmd.value == 0) return;
 				if(e.cmd.value < 0x40)
 					super_used[e.cmd.value] = true;
@@ -362,7 +361,7 @@ class Purge {
 					song.superTable[i] = song.superTable[j];
 					song.superTable[i+64] = song.superTable[j+64];
 					song.superTable[i+128] = song.superTable[j+128];
-					replaceCmdColumnvalue(j, i);
+					replaceCmdColumnvalue(song, j, i);
 					super_used[i] = true;
 					super_used[j] = false;
 					song.superTable[j] = 0;
@@ -375,7 +374,9 @@ class Purge {
 	}
 	
 private:
+	/+
 	void seqIterator(void delegate(Sequence s, Element e) dg) {
+		
 		foreach(i, n; seqUsed) {
 			if(!n) continue;
 			Sequence s = song.seqs[i];
@@ -385,6 +386,7 @@ private:
 			}
 		}
 	}
+	+/
 
 	void trackIterator(void delegate(Track t) dg) {
 		for(int sidx = 0; sidx < 32; sidx++) {
@@ -399,20 +401,10 @@ private:
 
 	void replaceInsvalue(int seek, int repl) {
 		int skipped;
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(!e.instr.hasValue()) return;
 				if(e.instr.value() == seek)
 					e.instr = cast(ubyte)repl;
-			});
-	}
-
-	void replaceCmdColumnvalue(int seek, int repl) {
-		int skipped;
-
-		seqIterator((Sequence s, Element e) {
-				if(e.cmd.value == 0) return;
-				if(e.cmd.value() == seek)
-					e.cmd = cast(ubyte)repl;
 			});
 	}
 
@@ -427,3 +419,123 @@ private:
 		if(verbose) writefln(s);
 	}
 }
+
+void filterDeleteRow(Song song, int row) {
+	genericDeleteRow(song, song.filterTable, row);
+
+	song.seqIterator((Sequence s, Element e) {
+			if(row > 0x1f) return;
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() >= (0x60 + (row & 0x1f) + 1) && e.cmd.value() < 0x80)
+				e.cmd = cast(ubyte)(e.cmd.value - 1);
+		});
+			
+	for(int j = 0; j < 48; j++) {
+		int fptr = song.instrumentTable[4 * 48 + j];
+		if(fptr >= row && fptr < 0x40)
+			song.instrumentTable[4 * 48 + j]--;
+	}
+}
+
+void pulseDeleteRow(Song song, int row) {
+	genericDeleteRow(song, song.pulseTable, row);
+
+	song.seqIterator((Sequence s, Element e) {
+			if(row > 0x1f) return;
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() >= (0x40 + (row & 0x1f) + 1) && e.cmd.value() < 0x60)
+				e.cmd = cast(ubyte)(e.cmd.value - 1);
+		});
+
+	for(int j = 0; j < 48; j++) {
+		int pptr = song.instrumentTable[5 * 48 + j];
+		if(pptr >= row && pptr < 0x40)
+			song.instrumentTable[5 * 48 + j]--;
+	}
+}
+
+void filterInsertRow(Song song, int row) {
+	
+}
+
+void pulseInsertRow(Song song, int row) {
+
+}
+
+// will some day be moved to tablecode
+void waveDeleteRow(Song song, int pos) {
+	waveDeleteRow(song, pos, 1);
+}
+
+// will some day be moved to tablecode
+void waveDeleteRow(Song song, int pos, int num) {
+	for(int n = 0; n < num; n++) {
+		int i;
+		assert(pos < 255 && pos >= 0);
+		for(i = pos; i < 255; i++) {
+			song.wave1Table[i] = song.wave1Table[i + 1];
+			song.wave2Table[i] = song.wave2Table[i + 1];
+		}
+		for(i=0;i < 256;i++) {
+			if((song.wave1Table[i] == 0x7f || song.wave1Table[i] == 0x7e) &&
+			   song.wave2Table[i] >= pos) {
+				if(song.wave2Table[i] > 0) --song.wave2Table[i];
+			}
+		}
+		arpPointerUpdate(song, pos, -1);
+	}	
+}
+
+void waveInsertRow(Song song, int pos) {
+	int i;
+	for(i = 254; i >= pos; i--) {
+		song.wave1Table[i + 1] = song.wave1Table[i];
+		song.wave2Table[i + 1] = song.wave2Table[i];
+	}
+	for(i=0;i<256;i++) {
+		if(song.wave1Table[i] == 0x7f &&
+		   song.wave2Table[i] >= pos)
+			song.wave2Table[i]++;
+	}
+	song.wave1Table[pos] = 0;
+	song.wave2Table[pos] = 0;
+	arpPointerUpdate(song, pos, 1);
+}
+
+private void replaceCmdColumnvalue(Song song, int seek, int repl) {
+	int skipped;
+
+	song.seqIterator((Sequence s, Element e) {
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() == seek)
+				e.cmd = cast(ubyte)repl;
+		});
+}
+
+private void arpPointerUpdate(Song song, int pos, int val) {
+	for(int j = 0; j < 48; j++) {
+		ubyte b7 = song.instrumentTable[j + 7 * 48];
+		if(b7 > pos) {
+			int v = b7 + val;
+			if(v < 0) v = 0;
+			song.instrumentTable[j + 7 * 48] = cast(ubyte)v;
+		}
+	}
+}
+
+
+private void genericDeleteRow(Song song, ubyte[] table, int row) {
+	assert(row < 64 && row >= 0);
+		
+	int row4 = row * 4;
+	table[row4 .. $ - 4] =
+		table[row4 + 4 .. $].dup;
+
+	for(int j = 0; j < 64; j++) {
+		int fptr = table[j * 4 + 3];
+		if(fptr > 0 && fptr < 0x40) {
+			if(fptr >= row) table[j * 4 + 3]--;
+		}
+	}
+}
+	

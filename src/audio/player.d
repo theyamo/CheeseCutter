@@ -117,7 +117,7 @@ void stop() {
 
 void toggleVoice(int v) {
 	if(v > 2 || v < 0) return;
-	muted[v] ^= 1;
+	muted[v] = muted[v] ^ 1;
 	setVoicon(muted);
 }
 
