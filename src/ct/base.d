@@ -785,9 +785,8 @@ class Song {
 		}
 
 		Tracklist[] opIndex(int n) {
-			static Tracklist[] tr;
+			static Tracklist[3] tr;
 
-			tr.length = 3;
 			for(int i=0;i<3;i++) { 
 				tr[i].length = TRACK_LIST_LENGTH;
 			}
