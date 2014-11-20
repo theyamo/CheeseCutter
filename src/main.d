@@ -258,8 +258,8 @@ int main(char[][] args) {
 		return -1;
 	}
 	
-	initVideo(fs, display, yuvOverlay, yuvCenter);
 	audio.player.init();
+	initVideo(fs, display, yuvOverlay, yuvCenter);
 	initSession();
 	mainui = new UI();
 	loadFile(filename);

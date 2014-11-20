@@ -828,7 +828,8 @@ final class UI {
 				update();
 			}
 		}
-		video.drawOscilloscope();
+		if(audio.player.isPlaying || audio.player.keyjamEnabled)
+			video.drawOscilloscope(n);
 	}
 
 	void update() {
