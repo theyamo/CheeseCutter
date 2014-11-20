@@ -57,6 +57,9 @@ public:
   // 16-bit output (AUDIO OUT).
   float output();
 
+  // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
+  float* sample;
+
 private:
   static double I0(double x);
   inline int clock_interpolate(cycle_count& delta_t, short* buf, int n,
@@ -86,9 +89,6 @@ private:
   int fir_RES;
   /* for linear interpolation mode */
   float sample_prev;
-
-  // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
-  float* sample;
 
   // FIR_RES filter tables (FIR_N*FIR_RES).
   float* fir;

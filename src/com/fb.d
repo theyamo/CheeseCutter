@@ -50,6 +50,7 @@ abstract class Video {
 		SDL_Surface* surface;
 		int useFullscreen;
 		Screen screen;
+		Oscilloscope osc;
 	}
 	int height = 800, width = 600;
 	float scalex, scaley;
@@ -61,6 +62,7 @@ abstract class Video {
 		displayHeight = vidinfo.current_h;
 		displayWidth = vidinfo.current_w;
 		useFullscreen = fs;
+		osc = new Oscilloscope();
 	}
 
 	~this() {
@@ -68,6 +70,14 @@ abstract class Video {
 			SDL_FreeSurface(surface);
 	}
 
+	void drawOscilloscope() {
+		osc.draw();
+		SDL_BlitSurface(surface,
+						new SDL_Rect(400, 14, cast(short)osc.surface.w, cast(short)osc.surface.h),
+						osc.surface,
+						new SDL_Rect(0, 0, cast(short)osc.surface.w, cast(short)osc.surface.h));
+	}
+	
 	abstract void enableFullscreen(bool fs);
 
 	protected void resize(bool maxres) {
@@ -478,6 +488,34 @@ class Screen {
 			outb[0] |= str[idx] & 255;
 			outb = outb[1 .. $];
 			idx++;
+		}
+	}
+}
+
+class Oscilloscope {
+	private SDL_Surface* _surface;
+	private const float* samples;
+	this() {
+		_surface = SDL_CreateRGBSurface(0, 400, 96, 32, 0, 0, 0, 255);
+		import audio.audio;
+		samples = audio.audio.get_sample_buf();
+	}
+	
+	~this() {
+		SDL_FreeSurface(surface);
+	}
+
+	@property surface() { return _surface; }
+
+	void draw() {
+		Uint32 fgcolor = PALETTE[11].b << surface.format.Bshift | 
+			(PALETTE[11].g << surface.format.Gshift) |
+			(PALETTE[11].r << surface.format.Rshift);
+		SDL_FillRect(_surface, null, 0);
+		for(int i = 0; i < surface.w; i++) {
+			int position = cast(int)samples[i] * _surface.h / 2;
+			Uint32* pos = cast(Uint32 *)_surface.pixels + i + position * _surface.w;
+			*pos = fgcolor;
 		}
 	}
 }

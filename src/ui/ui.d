@@ -824,16 +824,11 @@ final class UI {
 					for(int i = 0; i < 4;i++) {
 						screen.cprint(x+8+21+i*3, 2, 5,0, format("%02X", audio.audio.sidreg[i+0x15]));
 					}
-					/+
-					for(int i = 0; i < 16; i++) {
-						screen.cprint(8+i*3, 3, 5,0, format("%02X", song.memspace[0xdf00+i]));
-					}
-					+/
 				}
 				update();
-			
 			}
 		}
+		video.drawOscilloscope();
 	}
 
 	void update() {
