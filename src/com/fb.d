@@ -62,7 +62,7 @@ abstract class Video {
 		displayHeight = vidinfo.current_h;
 		displayWidth = vidinfo.current_w;
 		useFullscreen = fs;
-		osc = new Oscilloscope();
+		osc = new Oscilloscope(surface, 400, 14);
 	}
 
 	~this() {
@@ -72,13 +72,14 @@ abstract class Video {
 
 	void drawOscilloscope(int n) {
 		osc.draw(n);
-
+		/+
 		SDL_BlitSurface(osc.surface,
 						new SDL_Rect(0, 0, cast(short)osc.surface.w, cast(short)osc.surface.h),
 						surface,
 						new SDL_Rect(400, 14, cast(short)osc.surface.w, cast(short)osc.surface.h)
 						
 			);
+			+/
 	}
 	
 	abstract void enableFullscreen(bool fs);
@@ -495,40 +496,38 @@ class Screen {
 	}
 }
 
-class Oscilloscope {
-	private SDL_Surface* _surface;
+private class Oscilloscope {
+	private SDL_Surface* surface;
 	private float* samples;
-	this() {
-		_surface = SDL_CreateRGBSurface(0, 256, 3*14, 32, 0, 0, 0, 255);
+	private const short xconst, yconst;
+	this(SDL_Surface* surface, short xpos, short ypos) {
+		this,surface = surface;
+		this.xconst = xpos;
+		this.yconst = ypos;
 		import audio.audio;
 		samples = audio.audio.get_sample_buf();
 		assert(samples !is null);
 	}
-	
-	~this() {
-		if(_surface !is null)
-			SDL_FreeSurface(_surface);
-		_surface = null;
-	}
-
-	@property surface() { return _surface; }
 
 	void draw(int frames) {
 		//if(true) return;
 		//float n = frames / 50.0f;
-		//std.stdio.writeln(48000 * n / _surface.w);
+		//std.stdio.writeln(48000 * n / surface.w);
 		float n = frames * 50.0f;
 		int count = cast(int)(48000 / n);
-		std.stdio.writeln(count);
-		Uint32 fgcolor = PALETTE[1].b << _surface.format.Bshift | 
-			(PALETTE[1].g << _surface.format.Gshift) |
-			(PALETTE[1].r << _surface.format.Rshift);
-		SDL_FillRect(_surface, null, 0);
-		for(int i = 0; i < _surface.w; i++) {
-			int sample = cast(int)(samples[i] * _surface.h / 2);
-			int position = _surface.h / 2 + sample;
-			position = com.util.umod(position, 0, _surface.h-1);
-			Uint32* pos = cast(Uint32 *)_surface.pixels + i + position * _surface.w;
+		//std.stdio.writeln(count);
+		Uint32 fgcolor = PALETTE[1].b << surface.format.Bshift | 
+			(PALETTE[1].g << surface.format.Gshift) |
+			(PALETTE[1].r << surface.format.Rshift);
+		SDL_FillRect(surface, new SDL_Rect(xconst, yconst,
+										   cast(ushort)surface.w,
+										   cast(ushort)surface.h),
+					 0);
+		for(int i = 0; i < surface.w; i++) {
+			int sample = cast(int)(samples[i] * surface.h / 2);
+			int position = surface.h / 2 + sample;
+			position = com.util.umod(position, 0, surface.h-1);
+			Uint32* pos = cast(Uint32 *)surface.pixels + i + xconst + (position + yconst) * surface.w;
 			*pos = fgcolor;
 		}
 	}
