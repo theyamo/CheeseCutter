@@ -21,7 +21,7 @@ __gshared int freq = 48000, bufferSize = 2048;
 __gshared private int callbackCounter = 0;
 __gshared private int bufferUsed; // in samples
 __gshared private int callbackInterval;
-__gshared private short* mixbuf = null;
+__gshared short* mixbuf = null;
 
 
 extern(C) {
@@ -69,6 +69,10 @@ extern(C) {
 		mixbuf = cast(short *)malloc(bufferSize * short.sizeof * MIXBUF_MUL);
 		setCallMultiplier(1);
 		return 0;
+	}
+
+	int getbufsize() {
+		return cast(int)(bufferSize * MIXBUF_MUL);
 	}
 
 	void audio_close() {

@@ -62,7 +62,6 @@ abstract class Video {
 		displayHeight = vidinfo.current_h;
 		displayWidth = vidinfo.current_w;
 		useFullscreen = fs;
-		osc = new Oscilloscope(surface, 400, 14);
 	}
 
 	~this() {
@@ -115,6 +114,7 @@ class VideoStandard : Video {
 		}
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
+		osc = new Oscilloscope(surface, 500, 14);
 		screen.refresh();
 	}
 
@@ -498,37 +498,59 @@ class Screen {
 
 private class Oscilloscope {
 	private SDL_Surface* surface;
-	private float* samples;
+	private short* samples;
 	private const short xconst, yconst;
+	enum width = 960/4, height = 3*14;
 	this(SDL_Surface* surface, short xpos, short ypos) {
-		this,surface = surface;
+		this.surface = surface;
 		this.xconst = xpos;
 		this.yconst = ypos;
 		import audio.audio;
-		samples = audio.audio.get_sample_buf();
+		samples = audio.audio.mixbuf;
 		assert(samples !is null);
 	}
 
+	private float smpofs = 0.0;
+	
 	void draw(int frames) {
-		//if(true) return;
-		//float n = frames / 50.0f;
-		//std.stdio.writeln(48000 * n / surface.w);
 		float n = frames * 50.0f;
 		int count = cast(int)(48000 / n);
-		//std.stdio.writeln(count);
-		Uint32 fgcolor = PALETTE[1].b << surface.format.Bshift | 
-			(PALETTE[1].g << surface.format.Gshift) |
-			(PALETTE[1].r << surface.format.Rshift);
+
+		Uint32 colh = PALETTE[13].b << surface.format.Bshift | 
+			(PALETTE[13].g << surface.format.Gshift) |
+			(PALETTE[13].r << surface.format.Rshift);
+		Uint32 coll = PALETTE[5].b << surface.format.Bshift | 
+			(PALETTE[5].g << surface.format.Gshift) |
+			(PALETTE[5].r << surface.format.Rshift);
+		
 		SDL_FillRect(surface, new SDL_Rect(xconst, yconst,
-										   cast(ushort)surface.w,
-										   cast(ushort)surface.h),
-					 0);
-		for(int i = 0; i < surface.w; i++) {
-			int sample = cast(int)(samples[i] * surface.h / 2);
-			int position = surface.h / 2 + sample;
-			position = com.util.umod(position, 0, surface.h-1);
-			Uint32* pos = cast(Uint32 *)surface.pixels + i + xconst + (position + yconst) * surface.w;
-			*pos = fgcolor;
+                                           width, height), 0);
+		smpofs = 0;
+		import audio.audio;
+		int oldposition = height / 2 + samples[cast(int)smpofs]  / 768;
+
+		for(int i = 0; i < width; i++) {
+			int sample = samples[cast(int)smpofs] / 768;
+			int position = height / 2 + sample;
+			position = com.util.umod(position, 0, height-1);
+			int a = oldposition, b = position;
+
+			if(a > b) {
+				int temp = b;
+				b = a;
+				a = temp;
+			}
+			assert(a <= b);
+			Uint32* pos = cast(Uint32 *)surface.pixels + xconst + i + (a + yconst) * surface.w;
+			*pos = (i > 12 && i < width - 12) ? colh : coll;
+			for(int k = a; k < b; k++) {
+				*pos = (i > 12 && i < width - 12) ? colh : coll;
+				pos += surface.w;
+			}
+			smpofs++;
+			if(smpofs >= audio.audio.getbufsize())
+				smpofs -= cast(int)audio.audio.getbufsize();
+			oldposition = position;
 		}
 	}
 }
