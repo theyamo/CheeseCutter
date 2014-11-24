@@ -825,7 +825,7 @@ final class UI {
 						screen.cprint(x+8+21+i*3, 2, 5,0, format("%02X", audio.audio.sidreg[i+0x15]));
 					}
 				}
-				update();
+				update();  // TESTME: just do video.updateFrame()
 			}
 		}
 		if(audio.player.isPlaying || audio.player.keyjamEnabled)

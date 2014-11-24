@@ -173,7 +173,7 @@ public:
 			if(t.trans >= 0xf0) return song.seqs[0];
 			else return song.seqs[t.no];
 		}
-		int getRows() {
+		int numRowsInSeq() {
 			Sequence seq;
 			seq = getSeq(tracks[trkofs2]);
 			int r = seq.rows;
@@ -188,7 +188,7 @@ public:
 		seq = getSeq(s.trk);
 
 		while (seqofs < 0)  {
-			seqofs += getRows();
+			seqofs += numRowsInSeq();
 			if(--trkofs < 0) {
 				trkofs = 0;
 				seqofs = 0;
@@ -200,8 +200,8 @@ public:
 		} 
 		assert(seqofs >= 0);
 
-		while(seqofs >= getRows()) {
-			seqofs -= getRows();
+		while(seqofs >= numRowsInSeq()) {
+			seqofs -= numRowsInSeq();
 			if(trkofs < lasttrk)
 				trkofs++;
 			trkofs2++;
