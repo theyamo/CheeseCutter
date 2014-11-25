@@ -168,7 +168,7 @@ public:
 		static SequenceRowData s;
 		int trkofs2 = trkofs;
 		Sequence seq;
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
 		Sequence getSeq(Track t) {
 			if(t.trans >= 0xf0) return song.seqs[0];
 			else return song.seqs[t.no];
@@ -244,7 +244,7 @@ public:
 			while(seqOffset + pointerOffset < 0) {
 				if(--trkOffset < 0) {
 					if(canWrap) {
-						trkOffset = tracks.trackLength() - 1;
+						trkOffset = tracks.trackLength - 1;
 						rowCounter = getRowCounter();
 					}
 					else trkOffset = 0;
@@ -582,7 +582,7 @@ protected abstract class VoiceTable : Window {
 				v.jump(Jump.ToBeginning);
 			}
 
-			int e = activeVoice.tracks.trackLength() - 1;
+			int e = activeVoice.tracks.trackLength - 1;
 			
 			for(int i = 0; i < e; i++) {
 				activeVoice.refreshPointer(posTable.pointerOffset);

@@ -104,7 +104,7 @@ protected class SeqVoice : Voice {
 		SequenceRowData wseq;
 		int scry = area.y + area.height;
 		int trkofs = pos.trkOffset, seqofs = pos.seqOffset - anchor;
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
 		int hcount = pos.rowCounter - anchor + area.height - 1;
 		int row = area.height;
 		Sequence seq;
@@ -202,7 +202,7 @@ protected class SequenceTable : VoiceTable {
 		foreach(Voice v; voices) {
 			with(v.pos) {
 				SequenceRowData s = v.getRowData(trkOffset);
-				if(trkOffset >= v.tracks.trackLength()) {
+				if(trkOffset >= v.tracks.trackLength) {
 					trkOffset = 0;
 					rowCounter = -pointerOffset;
 				}

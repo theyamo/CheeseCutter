@@ -51,7 +51,7 @@ class TrackVoice : SeqVoice {
 	override void deactivate() {
 		super.deactivate();
 		with(pos) {
-			if(trkOffset >= tracks.trackLength()) {
+			if(trkOffset >= tracks.trackLength) {
 				trkOffset = 0; rowCounter = seqOffset;
 			}
 		}
@@ -64,7 +64,7 @@ class TrackVoice : SeqVoice {
 		int y,i;
 		int trkofs = pos.trkOffset;
 		int rows = 0;
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
  		int counter;
 		int scry = area.y + 1; 
 
@@ -148,13 +148,13 @@ protected:
 		{
 			if(!doDelete) {
 				
-				if(tracks.trackLength() == 1) {
+				if(tracks.trackLength == 1) {
 					tracks[0].setValue(0xa0, 0);
 				}
 				tracks.shrink();
 			}
 			else {
-				if(tracks.trackLength() == 1) {
+				if(tracks.trackLength == 1) {
 					tracks[0].setValue(0xa0, 00);
 				}
 				else {
@@ -162,7 +162,7 @@ protected:
 
 					// TODO: add check that tracklist hasn't been shrunk below trkOffset
 					/+
-					if(pos.trkOffset >= tracks.trackLength()-1) 
+					if(pos.trkOffset >= tracks.trackLength-1) 
 						super.step(-1);+/
 				}
 			}
@@ -210,7 +210,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 					for(int i = 0; i < voices.length; i++) {
 						auto v = cast(TrackVoice)voices[i];
 	
-//					if(v.pos.trkOffset < v.tracks.trackLength()-1)
+//					if(v.pos.trkOffset < v.tracks.trackLength-1)
 							v.trackDelete((key.mods & KMOD_SHIFT) > 0);
 					} 
 				}
@@ -251,7 +251,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 			case SDLK_DELETE:
 				auto v = (cast(TrackVoice)activeVoice);
 				v.trackDelete(true);
-				if(v.pos.trkOffset >= v.tracks.trackLength()-1) 
+				if(v.pos.trkOffset >= v.tracks.trackLength-1) 
 					jump(Jump.ToEnd,true);
 				return OK;
 			default: break;
@@ -387,7 +387,7 @@ protected class TrackTable : BaseTrackTable {
 		case SDLK_UP, SDLK_PAGEUP:
 			activeVoice.trackFlush(posTable.pointerOffset);
 			int t = activeVoice.activeRow.trkOffset;
-			if(t == 0) t = activeVoice.tracks.trackLength();
+			if(t == 0) t = activeVoice.tracks.trackLength;
 			SequenceRowData s = activeVoice.getRowData(t - 1, 0);
 			step(-s.seq.rows, 0, area.height);
 			centerTo(tableBot);

@@ -25,7 +25,7 @@ protected class TrackmapVoice : TrackVoice {
 		int h = area.y + area.h + 1;
 		int y,i;
 		int trkofs = pos.trkOffset;
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
  		int counter;
 		int scry = area.y + 1;
 
@@ -128,7 +128,7 @@ protected class TrackmapTable : BaseTrackTable {
 		}
 		else if(st < 0) {
 			int t = activeVoice.pos.trkOffset-1;
-			if(t < 0) t = activeVoice.tracks.trackLength()-1;
+			if(t < 0) t = activeVoice.tracks.trackLength-1;
 			
 			s = activeVoice.getRowData(t,0);
 			rows = s.seq.rows;
