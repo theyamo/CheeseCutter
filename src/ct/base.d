@@ -378,10 +378,9 @@ struct Tracklist {
 	}
 
 	ubyte[] compact() {
-		ubyte[] arr;
+		static ubyte[] arr = new ubyte[1024];
 		int p, trans = -1, wrapptr = wrapOffset * 2;
 
-		arr.length = 1024;
 		foreach(idx, track; list) {
 			if(track.trans >= 0xf0) {
 				wrapptr |= 0xf000;
@@ -624,7 +623,7 @@ class Sequence {
 	}
 	
 	ubyte[] compact() {
-		ubyte[] outarr = new ubyte[256];
+		static ubyte[] outarr = new ubyte[256];
 		int i, outp, olddel, oldins = -1, 
 			olddelay = -1, delay;
 		for(i = 0; i < rows;) {

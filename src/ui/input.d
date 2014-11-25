@@ -937,7 +937,7 @@ class InputSpecial : InputValue {
 	}
 	
 	override void update() {
-		immutable offsets = [0, 2, 3, 5, 6];
+		static immutable offsets = [0, 2, 3, 5, 6];
         screen.cprint(x, y, 1, -1, format("%01X-%02X %02X",inarray[0],toInt(inarray[1..3]),toInt(inarray[3..5])));
 		cursor.set(pointerX + offsets[nibble], pointerY);
 	}
