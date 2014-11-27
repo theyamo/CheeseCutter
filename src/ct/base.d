@@ -378,7 +378,7 @@ struct Tracklist {
 	}
 
 	ubyte[] compact() {
-		static ubyte[] arr = new ubyte[1024];
+		ubyte[] arr = new ubyte[1024];
 		int p, trans = -1, wrapptr = wrapOffset * 2;
 
 		foreach(idx, track; list) {
