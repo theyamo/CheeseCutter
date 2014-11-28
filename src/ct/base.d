@@ -56,12 +56,12 @@ alias char*[] ByteDescription;
 struct Cmd {
 	private ubyte[] data;
 	static Cmd opCall() {
-		Cmd cmd;
+		static Cmd cmd;
 		return cmd;
 	}
 
 	static Cmd opCall(ubyte[] d) {
-		Cmd cmd;
+		static Cmd cmd;
 		cmd.data = d;
 		return cmd;
 	}
@@ -100,11 +100,11 @@ struct Cmd {
 struct Ins {
 	private ubyte[] data;
 	static Ins opCall() {
-		Ins ins;
+		static Ins ins;
 		return ins;
 	}
 	static Ins opCall(ubyte[] d) {
-		Ins ins;
+		static Ins ins;
 		ins.data = d;
 		return ins;
 	}
@@ -143,7 +143,7 @@ struct Ins {
 struct Note {
 	private ubyte[] data;
 	static Note opCall(ubyte[] d) {
-		Note no;
+		static Note no;
 		no.data = d;
 		return no;
 	}
@@ -377,7 +377,7 @@ struct Tracklist {
 		last() = [(offset & 0xff00) >> 8, offset & 0x00ff];
 	}
 
-	ubyte[] compact() {
+	auto compact() {
 		ubyte[] arr = new ubyte[1024];
 		int p, trans = -1, wrapptr = wrapOffset * 2;
 
@@ -411,7 +411,7 @@ struct Track {
 		return t;
 	}
 
-	void opAssign(ushort s) { 
+	deprecated void opAssign(ushort s) { 
 		data[0] = s & 255;
 		data[1] = s >> 8;
 	}	
