@@ -21,7 +21,7 @@ import derelict.sdl.sdl;
 import std.string;
 
 enum PAGESTEP = 2;
-enum Jump { ToBeginning = 0, ToMark = -1, ToEnd = -2, ToWrapMark = -3 };
+enum Jump { toBeginning = 0, toMark = -1, toEnd = -2, toWrapMark = -3 };
 
 enum playbackBarColor = 6;
 enum wrapBarColor = 4;
@@ -31,7 +31,7 @@ int stepValue = 1;
 int activeVoiceNum;
 private int stepCounter;
 int tableTop = 15, tableBot = -16;
-immutable int anchor = 16;
+enum anchor = 16;
 
 private {
 	bool useRelativeNotes = true;
@@ -292,8 +292,8 @@ protected:
 	void refreshPointer(int y);
 
 	void jump(int jumpto) {
-		if(jumpto == Jump.ToMark) jumpto = pos.mark;
-		else if(jumpto == Jump.ToWrapMark) jumpto = tracks.wrapOffset;
+		if(jumpto == Jump.toMark) jumpto = pos.mark;
+		else if(jumpto == Jump.toWrapMark) jumpto = tracks.wrapOffset;
 		assert(jumpto >= 0);
 		pos.trkOffset = jumpto;
 		pos.seqOffset = 0;
@@ -361,10 +361,10 @@ protected abstract class VoiceTable : Window {
 			switch(key.raw)
 			{
 			case SDLK_HOME:
-				jump(Jump.ToBeginning,true);
+				jump(Jump.toBeginning,true);
 				break;
 			case SDLK_END:
-				jump(Jump.ToEnd,true);
+				jump(Jump.toEnd,true);
 				break;
 			case SDLK_PAGEUP:
 				step(-PAGESTEP * 2 * song.highlight);
@@ -380,7 +380,7 @@ protected abstract class VoiceTable : Window {
 			switch(key.raw)
 			{
 			case SDLK_h, SDLK_HOME:
-				jump(Jump.ToMark,true);
+				jump(Jump.toMark,true);
 				break;
 			case SDLK_l:
 				centralize();
@@ -553,35 +553,35 @@ protected abstract class VoiceTable : Window {
 
 	void jump(int to, bool doCtr) {
 		switch(to) {
-		case Jump.ToBeginning:
+		case Jump.toBeginning:
 			posTable.pointerOffset = 0;
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 			}
 			if(doCtr) centerTo(0);
 			break;
-		case Jump.ToMark:
+		case Jump.toMark:
 			posTable.pointerOffset = 0;
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 				v.jump(v.pos.mark);
 			}
 			if(doCtr) centerTo(0);
 			break;
-		case Jump.ToWrapMark:
+		case Jump.toWrapMark:
 			posTable.pointerOffset = 0;
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 				v.jump(v.tracks.wrapOffset);
 			}
 			if(doCtr) centerTo(0);
 			break;
-		case Jump.ToEnd:
+		case Jump.toEnd:
 			centralize();
 			toSeqStart();
 
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 			}
 
 			int e = activeVoice.tracks.trackLength - 1;
@@ -599,7 +599,7 @@ protected abstract class VoiceTable : Window {
 				to = activeVoice.pos.mark;
 			}
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 			}
 			Voice v = activeVoice;
 			posTable.pointerOffset = 0;
@@ -778,7 +778,7 @@ public:
 			foreach(b; voiceTables) {
 				b.toSeqStart();
 			}
-			sequenceTable.jump(Jump.ToBeginning,true);
+			sequenceTable.jump(Jump.toBeginning,true);
 		}
 		activeView = sequenceTable;
 		activeView.activate();

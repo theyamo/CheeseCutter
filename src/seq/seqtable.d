@@ -314,7 +314,7 @@ protected class SequenceTable : VoiceTable {
 				// bad coding because all the rowcountergetters are flawed one way or another
 				int rowcount = activeVoice.getRowcounter(r.trkOffset) + r.seqOffset;
 				song.splitSequence(r.track.number, r.seqOffset);
-				jump(Jump.ToBeginning,false);
+				jump(Jump.toBeginning,false);
 				step(rowcount);
 				centerTo(0);
 				break;

@@ -41,7 +41,7 @@ protected class FPlayVoice : SeqVoice {
 			trk = tracks[trkofs2];
 			if(trk.trans >= 0xf0) {
 				if(song.ver >= 6)
-					jump(Jump.ToWrapMark);
+					jump(Jump.toWrapMark);
 				else 
 					jump(mode);
 				trkofs2 = pos.trkOffset;
@@ -106,7 +106,7 @@ class Fplay : Window {
 			m3 = fplayPos.pos[2].mark;
 			stop();
 			audio.player.start([m1, m2, m3], [0, 0, 0]);
-			ftable.jump(Jump.ToMark,true);
+			ftable.jump(Jump.toMark,true);
 			break;
 		/+ jump forward/backward disabled for now ...
 		case SDLK_PLUS:
@@ -150,7 +150,7 @@ class Fplay : Window {
 	void startFromCursor() {
 		fplayPos.dup(seqPos);
 		ftable.centerTo(0);
-		mode = Jump.ToBeginning;
+		mode = Jump.toBeginning;
 	}
 
 	void stop() {

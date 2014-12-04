@@ -867,14 +867,14 @@ final class UI {
 			if(key.mods & KMOD_SHIFT) {
 				toplevel.startFp();
 			}
-			toplevel.startPlayback(Jump.ToMark);
+			toplevel.startPlayback(Jump.toMark);
 		}
 		else {
 			audio.player.start();
 			if(key.mods & KMOD_SHIFT) {
-				toplevel.startFp(Jump.ToBeginning);
+				toplevel.startFp(Jump.toBeginning);
 			}
-			toplevel.startPlayback(Jump.ToBeginning);
+			toplevel.startPlayback(Jump.toBeginning);
 		}
 	}
 

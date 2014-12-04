@@ -19,6 +19,7 @@ bool autoinsertInstrument = true;
 bool shortTitles = true;
 bool displayHelp = true;
 bool keyjamStatus = false;
+bool modified = false;
 string filename;
 
 void initSession() {

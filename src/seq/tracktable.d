@@ -202,7 +202,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 				} 
 				else {
 					(cast(TrackVoice)activeVoice).trackInsert(false);
-					jump(Jump.ToEnd,true);
+					jump(Jump.toEnd,true);
 
 				}
 				return OK;
@@ -217,7 +217,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 				}
 				else { 
 					(cast(TrackVoice)activeVoice).trackDelete(false);
-					jump(Jump.ToEnd,true);
+					jump(Jump.toEnd,true);
 				}
 				return OK;
 			case SDLK_q:
@@ -253,7 +253,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 				auto v = (cast(TrackVoice)activeVoice);
 				v.trackDelete(true);
 				if(v.pos.trkOffset >= v.tracks.trackLength-1) 
-					jump(Jump.ToEnd,true);
+					jump(Jump.toEnd,true);
 				return OK;
 			default: break;
 			}
