@@ -506,7 +506,6 @@ abstract class Newinput : Input {
 		return OK;
 	}
 
-
 	override int keypress(Keyinfo key) {
 		return keypress(key, "0123456789abcdef");
 	}
@@ -534,8 +533,8 @@ abstract class Newinput : Input {
 		//not reached
 	}
 
-protected:	
-
+protected:
+	
 	int valuekeyHandler(int value) {
 		if(width == 1) invalue = value;
 		else {
@@ -574,8 +573,6 @@ protected:
 		assert(0);
 	}
 	
-protected:
-
 	static int valueKeyReader(Keyinfo key,  const char[] keytab) {
         foreach(int i, k; keytab) {
 			if(key.raw == k) {

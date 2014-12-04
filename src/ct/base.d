@@ -246,16 +246,16 @@ struct Element {
 }
 
 struct Tracklist {
-	private Track[] list; // rename
-	@property int length() { return cast(int) list.length; }
+	private Track[] trackList; // rename
+	@property int length() { return cast(int) trackList.length; }
 	@property void length(size_t il) {
-		list.length = il;
+		trackList.length = il;
 	}
 
 	Track opIndex(int i) {
 		if(i >= 0x400) i = 0;
 		assert(i >= 0 && i < length);
-		return list[i];
+		return trackList[i];
 	}
 
 	static Tracklist opCall(Tracklist tl) {
@@ -266,26 +266,28 @@ struct Tracklist {
 
 	static Tracklist opCall(Track[] t) {
 		Tracklist tl;
-		tl.list = t;
+		tl.trackList = t;
 		return tl;
 	}
 
-	@property Track last() { return list[trackLength]; }
-
-	void opIndexAssign(Track t, size_t il) {
-		list[il] = t;
+	@property Track lastTrack() {
+		return trackList[trackLength];
 	}
 
-	Track[] opSlice() { return list; }
+	void opIndexAssign(Track t, size_t il) {
+		trackList[il] = t;
+	}
+
+	Track[] opSlice() { return trackList; }
 
 	Tracklist opSlice(size_t x, size_t y) {
-		return Tracklist(list[x..y]);
+		return Tracklist(trackList[x .. y]);
 	}
 
 	int opApply(int delegate(ref Track) dg) {
 		int result;
 		for(int i = 0; i < trackLength; i++) {
-			result = dg(list[i]);
+			result = dg(trackList[i]);
 			if(result) break;
 		}
 		return result;
@@ -293,8 +295,8 @@ struct Tracklist {
 
 	int opApplyReverse(int delegate(ref Track) dg) {
 		int result;
-		for(int i = cast(int)(list.length - 1); i >= 0; i--) {
-			result = dg(list[i]);
+		for(int i = cast(int)(length - 1); i >= 0; i--) {
+			result = dg(trackList[i]);
 			if(result) break;
 		}
 		return result;
@@ -303,7 +305,7 @@ struct Tracklist {
 	@property int trackLength() {
 		int i;
 		for(i = 0; i < length; i++) {
-			Track t = list[i];
+			Track t = trackList[i];
 			if(t.trans >= 0xf0) return i;
 		}
 		assert(0);
@@ -321,38 +323,38 @@ struct Tracklist {
 	ubyte getTransAt(int idx) {
 		if(idx > 0) {
 			do {
-				if(list[idx].trans > 0x80 &&
-				   list[idx].trans < 0xc0)
-					return list[idx].trans;
+				if(trackList[idx].trans > 0x80 &&
+				   trackList[idx].trans < 0xc0)
+					return trackList[idx].trans;
 			} while(idx-- > 0);
 		}
 		else if(idx == 0) {
 			do {
-				if(list[idx].trans > 0x80 &&
-				   list[idx].trans < 0xc0)
-					return list[idx].trans;
+				if(trackList[idx].trans > 0x80 &&
+				   trackList[idx].trans < 0xc0)
+					return trackList[idx].trans;
 			} while(idx++ < trackLength);
 		}
 		return 0xa0;
 	}
 
 	void insertAt(int offset) {
-		if(offset > list.length - 2) return;
-		assert(offset >= 0 && offset < list.length);
-		for(int i = cast(int)(list.length - 2); i >= offset; i--) {
-			list[i+1] = list[i].dup;
+		if(offset > trackList.length - 2) return;
+		assert(offset >= 0 && offset < trackList.length);
+		for(int i = cast(int)(trackList.length - 2); i >= offset; i--) {
+			trackList[i+1] = trackList[i].dup;
 		}
-		list[offset].trans = getTransAt(offset);
-		list[offset].number = 0;
+		trackList[offset].trans = getTransAt(offset);
+		trackList[offset].number = 0;
 		if(wrapOffset() >= offset) {
 			wrapOffset( cast(address)(wrapOffset + 1));
 		}
 	}
 
 	void deleteAt(int offset) {
-		if(list[1].trans >= 0xf0) return;
-		for(int i = offset; i < list.length - 2; i++) {
-			list[i] = list[i+1].dup;
+		if(trackList[1].trans >= 0xf0) return;
+		for(int i = offset; i < trackList.length - 2; i++) {
+			trackList[i] = trackList[i+1].dup;
 		}		
 		if(wrapOffset() >= offset) {
 			wrapOffset( cast(address)(wrapOffset - 1));
@@ -360,28 +362,28 @@ struct Tracklist {
 	}
 
 	void transposeAt(int s, int e, int t) {
-		foreach(trk; list[s..e]) trk.transpose(t);
+		foreach(trk; trackList[s .. e]) trk.transpose(t);
 	}
 
 	@property address wrapOffset() {
-		return (last.smashedValue() / 2) & 0x7ff;
+		return (lastTrack.smashedValue() / 2) & 0x7ff;
 	}
 
 	@property void wrapOffset(address offset) {
-		if((offset & 0xff00) >= 0xfe00) return;
+		if((offset & 0xff00) >= 0xf000) return; 
 		assert(offset >= 0 && offset < 0x400);
 		if(offset >= trackLength)
 			offset = cast(ushort)(trackLength - 1);
 		offset *= 2;
 		offset |= 0xf000;
-		last() = [(offset & 0xff00) >> 8, offset & 0x00ff];
+		lastTrack() = [(offset & 0xff00) >> 8, offset & 0x00ff];
 	}
 
 	auto compact() {
 		ubyte[] arr = new ubyte[1024];
 		int p, trans = -1, wrapptr = wrapOffset * 2;
 
-		foreach(idx, track; list) {
+		foreach(idx, track; trackList) {
 			if(track.trans >= 0xf0) {
 				wrapptr |= 0xf000;
 				arr[p .. p + 2] = [(wrapptr & 0xff00) >> 8, wrapptr & 0x00ff];
@@ -455,8 +457,6 @@ struct Track {
 		data[1] = no;
 	}
 	alias number trackNumber;
-
-
 	
 	string toString() {
 		string s = format("%02X%02X", trans, number);
@@ -469,7 +469,6 @@ struct Track {
 		trans = (cast(ubyte)clamp(t, 0x80, 0xbf));
 	}
 }
-
 
 class Sequence {
 	ElementArray data;
@@ -683,7 +682,6 @@ class Sequence {
 		outarr[outp++] = cast(ubyte)SEQ_END_MARK;
 		return outarr[0..outp];
 	}
-	
 }
 
 struct Table {
@@ -701,7 +699,6 @@ struct Table {
 		return data[x..y];
 	}
 }
-
 
 class Song {
 	enum DatafileOffset {
@@ -992,7 +989,6 @@ class Song {
 
 	protected void initialize(ubyte[] buf) {
 		int i, voi;
-		//int lastused;
 		data[] = buf;
 
 		offsets.length = 0x60;
@@ -1021,8 +1017,6 @@ class Song {
 			int offset = offsets[Offsets.Track1 + voi];
 			b = data[offset .. offset + 0x400];
 			for(i = 0; i < b.length/2; i++) {
-				//int tr = b[i * 2 + 1];
-				//if(tr > lastused) lastused = tr;
 				tracks[voi][i] = Track(memspace[offset + i * 2 .. offset + i * 2 + 2]);
 			}
 		}
