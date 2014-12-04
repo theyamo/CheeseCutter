@@ -172,7 +172,7 @@ public:
 		int lasttrk = tracks.trackLength;
 		Sequence getSeq(Track t) {
 			if(t.trans >= 0xf0) return song.seqs[0];
-			else return song.seqs[t.no];
+			else return song.seqs[t.number];
 		}
 		int numRowsInSeq() {
 			Sequence seq;
@@ -197,7 +197,7 @@ public:
 			}
 			--trkofs2;
 			s.trk = tracks[trkofs];
-			seq = song.seqs[s.trk.no];
+			seq = song.seqs[s.trk.number];
 		} 
 		assert(seqofs >= 0);
 
@@ -511,7 +511,7 @@ protected abstract class VoiceTable : Window {
 			Voice v = voices[i];
 			SequenceRowData c = v.activeRow;
 			screen.cprint(x, area.y, 1, 0,
-				format("+%03X %02X %s", c.trkOffset, c.trk.no,
+				format("+%03X %02X %s", c.trkOffset, c.trk.number,
 					   audio.player.muted[i] ? "Off" : "   ") );
 			x += 13 + com.fb.border;
 		}
@@ -604,7 +604,7 @@ protected abstract class VoiceTable : Window {
 			posTable.pointerOffset = 0;
 			for(int i = 0; i < to; i++) {
 				activeVoice.refreshPointer(0);
-				int trk = v.tracks[i].no;
+				int trk = v.tracks[i].number;
 				Sequence s = song.seqs[trk];
 				step(s.rows);
 			}
@@ -959,7 +959,7 @@ private:
 		clip.length = length;
 		for(int i = 0; i < length; i++) {
 			clip[i].trans = tl[i].trans;
-			clip[i].no = tl[i].no;
+			clip[i].no = tl[i].number;
 		}
 	}
   

@@ -279,7 +279,7 @@ class InputTrack : InputWord {
 	
 	void init(SequenceRowData s) {
 		trk = s.trk;
-		buf[] = valueCheck(trk.trans, trk.no);
+		buf[] = valueCheck(trk.trans, trk.number);
 		super.setOutput(buf);
 	}
 	

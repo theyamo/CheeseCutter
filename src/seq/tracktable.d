@@ -337,8 +337,8 @@ protected abstract class BaseTrackTable : VoiceTable {
 			if(i >= to.length) break;
 			int temptrans, tempno;
 			temptrans = to[i].trans;
-			tempno = to[i].no;
-			to[i].setValue(from[i].trans, from[i].no);
+			tempno = to[i].number;
+			to[i].setValue(from[i].trans, from[i].number);
 			from[i].setValue(temptrans, tempno);
 		}
 		refresh();

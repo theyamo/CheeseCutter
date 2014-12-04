@@ -33,7 +33,7 @@ class Purge {
 	void purgeAll() {
 		seqUsed[] = false;
 		trackIterator((Track t) {
-				seqUsed[t.no] = true;
+				seqUsed[t.number] = true;
 			});
 		purgeSeqs();
 		purgeInstruments();
@@ -410,8 +410,8 @@ private:
 
 	void replaceTrackvalue(int find, int rep) {
 		trackIterator((Track t) {
-				if(t.no == find)
-					t.trackNo = cast(ubyte)rep;
+				if(t.number == find)
+					t.number = cast(ubyte)rep;
 			});
 	}
 

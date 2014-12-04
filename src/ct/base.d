@@ -343,7 +343,7 @@ struct Tracklist {
 			list[i+1] = list[i].dup;
 		}
 		list[offset].trans = getTransAt(offset);
-		list[offset].trackNo = 0;
+		list[offset].number = 0;
 		if(wrapOffset() >= offset) {
 			wrapOffset( cast(address)(wrapOffset + 1));
 		}
@@ -395,7 +395,7 @@ struct Tracklist {
 			else if(idx < wrapOffset) {
 				wrapptr--;
 			}
-			arr[p++] = track.no;
+			arr[p++] = track.number;
 		}
 		return arr[0..p];
 	}
@@ -424,20 +424,16 @@ struct Track {
 		data = tr.data;
 	}
 
-	@property void trackNo(ubyte no) {
-		data[1] = no;
-	}
-
 	@property void trans(ubyte t) {
 		data[0] = t;
 	}
 
 	@property ushort dup() {
-		return trans | (no << 8);
+		return trans | (number << 8);
 	}
 
 	@property ushort smashedValue() { // "real" int value, trans = highbyte
-		return no | (trans << 8);
+		return number | (trans << 8);
 	}
 	
 	void setValue(int tr, int no) {
@@ -452,13 +448,18 @@ struct Track {
 		return data[0];
 	}
 	
-	@property ubyte no() {
+	@property ubyte number() {
 		return data[1];
 	}
-	alias no trackNo;
+	@property void number(ubyte no) {
+		data[1] = no;
+	}
+	alias number trackNumber;
+
+
 	
 	string toString() {
-		string s = format("%02X%02X", trans, no);
+		string s = format("%02X%02X", trans, number);
 		return s;
 	}
 
@@ -1182,14 +1183,14 @@ class Song {
 		append(fn, std.zlib.compress(b));
 	}
 
-	void splitSequence(int seqno, int seqofs) {
-		if(seqno == 0 || seqofs == 0) return;
+	void splitSequence(int seqnumber, int seqofs) {
+		if(seqnumber == 0 || seqofs == 0) return;
 		int suborig = subtune;
-		int newseqno = getFreeSequence(0);
-		Sequence s = seqs[seqno];
+		int newseqnumber = getFreeSequence(0);
+		Sequence s = seqs[seqnumber];
 		if(seqofs == s.rows - 1) return;
 		Sequence copy = new Sequence(s.data.raw.dup);
-		Sequence ns = seqs[newseqno];
+		Sequence ns = seqs[newseqnumber];
 		ns.copyFrom(s);
 		ns.shrink(0, seqofs, true);
 		s.shrink(seqofs, s.rows - seqofs, true);
@@ -1199,11 +1200,11 @@ class Song {
 			foreach(vIdx, voice; tracks) {
 				for(int tIdx = voice.length - 1; tIdx >= 0; tIdx--) {
 					Track t = voice[tIdx];
-					if(t.no == seqno) {
+					if(t.number == seqnumber) {
 						tracks[vIdx].insertAt(tIdx+1);
 						Track t2 = tracks[vIdx][tIdx+1];
 						t2.trans = 0x80;
-						t2.trackNo = (cast(ubyte)newseqno);
+						t2.number = (cast(ubyte)newseqnumber);
 					}
 					
 				}
@@ -1375,7 +1376,7 @@ class Song {
 
 	// hack to help sequencer rowcounting 
 	Sequence sequence(Track t) {
-		return seqs[t.no()];
+		return seqs[t.number];
 	}
 }
 
