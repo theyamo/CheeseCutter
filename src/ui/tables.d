@@ -33,6 +33,7 @@ abstract class Table : Window {
 	}
 
 protected:
+	
 	void adjustView();
 }
 

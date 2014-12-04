@@ -119,6 +119,7 @@ class TrackVoice : SeqVoice {
 	}
 
 protected:
+	
 	void refreshTrack(int po) {
 		refreshPointer(po);
 		trackinput.refresh(activeRow);

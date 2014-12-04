@@ -207,6 +207,7 @@ public:
 	}
 
 protected:
+	
 	/* execute a 6502 instruction
 	 * d indicates that ML monitor output is required
 	 * returns the number of cycles

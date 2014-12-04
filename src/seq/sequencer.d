@@ -284,6 +284,7 @@ public:
 
 
 protected:
+	
 	override void update();
 	void refreshPointer() {
 		refreshPointer(pos.pointerOffset);
@@ -736,6 +737,7 @@ final class Sequencer : Window {
 	}
 	VoiceTable activeView;
 	private Clip[] clip;
+	
 	this(Rectangle a, UI m) {
 		int h = screen.height - 10;
 		super(a,ui.help.HELPSEQUENCER);
@@ -764,6 +766,7 @@ final class Sequencer : Window {
 	}
 
 public:
+	
 	void activateVoice(int n) {
 		activeView.jumpToVoice(n);
 		input = activeView.input;
@@ -911,6 +914,7 @@ public:
 	}
 
 protected:
+	
 	override void update() {
 		activeView.update();
 		input = activeView.input;
@@ -929,6 +933,7 @@ protected:
 	}
 
 private:
+	
 	void insertCallback(int param) {
 		if(param >= MAX_SEQ_NUM) return;
 		SequenceRowData s = activeView.getRowData();

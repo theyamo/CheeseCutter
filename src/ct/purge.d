@@ -374,6 +374,7 @@ class Purge {
 	}
 	
 private:
+	
 	/+
 	void seqIterator(void delegate(Sequence s, Element e) dg) {
 		

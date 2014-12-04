@@ -348,6 +348,7 @@ class InputTrack : InputWord {
 	}
 
 private:
+	
 	ubyte[] valueCheck(int tr, int no) {
 		if(tr < 0x80) tr = 0x80;
 		if(no < 0) no = 0;
