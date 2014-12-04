@@ -97,7 +97,7 @@ public:
         _lib.unload();
     }
 
-    bool isLoaded()
+	@property bool isLoaded()
     {
         return _lib.isLoaded;
     }
@@ -110,7 +110,7 @@ protected:
         return _lib.loadSymbol(name);
     }
 
-    SharedLib lib()
+    @property SharedLib lib()
     {
         return _lib;
     }

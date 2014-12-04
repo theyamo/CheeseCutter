@@ -220,7 +220,7 @@ class Purge {
 				seekNMark(song.filterTable, &filter_used[0], song.getFiltertablePointer(i));
 			}
 			catch(Exception e) {
-				explain(format("Could not purge pulse / filter table: %s", e.toString));
+				explain(format("Could not purge pulse / filter table: %s", e.toString()));
 				return;
 			}
 		}

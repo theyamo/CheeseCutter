@@ -359,7 +359,7 @@ class InsTable : Window {
 		insinput.refresh();
 	}
 
-	int row() {
+	@property int row() {
 		return insinput.row;
 	}
 

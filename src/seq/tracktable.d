@@ -398,7 +398,7 @@ protected class TrackTable : BaseTrackTable {
 		}
 	}
 
-	final void displayTracklist(bool toggleOrDisable) {
+	@property void displayTracklist(bool toggleOrDisable) {
 		foreach(voice; voices) {
 			TrackVoice tv = cast(TrackVoice)voice;
 			if(!toggleOrDisable)

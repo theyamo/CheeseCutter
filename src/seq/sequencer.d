@@ -63,8 +63,8 @@ private struct Clip {
 
 protected class Posinfo {
 	int pointerOffsetValue = 0;
-	int pointerOffset() { return pointerOffsetValue - anchor; }
-	int pointerOffset(int i) { return pointerOffsetValue = i + anchor; }
+	@property int pointerOffset() { return pointerOffsetValue - anchor; }
+	@property int pointerOffset(int i) { return pointerOffsetValue = i + anchor; }
 	int trkOffset = 0;
 	int seqOffset;
 	int mark; 
@@ -78,7 +78,8 @@ protected class Posinfo {
 		}
 		return counter + seqOffset;
 	}
-	int rowOnCursor() {
+	
+	@property int rowOnCursor() {
 		return seqOffset + pointerOffset;
 	}
 }
@@ -92,20 +93,20 @@ protected class PosinfoTable {
 	Posinfo opIndex(int idx) {
 		return pos[idx];
 	}
-	int pointerOffset(int o) { 
+	@property int pointerOffset(int o) { 
 		foreach(ref p; pos) { p.pointerOffset = o; }
 		return 0;
 	}
-	int pointerOffset() { return pos[0].pointerOffset; }
-	int normalPointerOffset() { 
+	@property int pointerOffset() { return pos[0].pointerOffset; }
+	@property int normalPointerOffset() { 
 		int r = tableTop + pos[0].pointerOffset;
 		return r;
 	}
 			
-	int rowCounter() { 
+	@property int rowCounter() { 
 		return pos[0].rowCounter; 
 	}
-	int rowCounter(int o) { 
+	@property int rowCounter(int o) { 
 		foreach(ref p; pos) { p.rowCounter = o; }
 		return 0;
 	}

@@ -123,13 +123,13 @@ class Input {
 	void update() { assert(0); }
 
 	void refresh() { assert(0); }
-
-	int toInt() {
+	
+	@property int toInt() {
 		return toInt(inarray);
 	}
 	alias toInt value;
 	
-	int toInt(ubyte[] ar) {
+	@property int toInt(ubyte[] ar) {
 		int v;
 		for(int i = cast(int)(ar.length-1), sh; i >= 0; i--) {
 			v |= ar[i] << sh;
@@ -138,7 +138,7 @@ class Input {
 		return v;
 	}
 	
-	int toInt(int b, int e) {
+	@property int toInt(int b, int e) {
 		return toInt(inarray[b..e]);
 	}
 

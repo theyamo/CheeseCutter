@@ -98,8 +98,8 @@ protected:
 		}
 	}
 
- 	void contextHelp(ContextHelp h) { help = h; }
-	ContextHelp contextHelp() { return help; }
+	@property void contextHelp(ContextHelp h) { help = h; }
+	@property ContextHelp contextHelp() { return help; }
 }
 
 struct Hotspot {
@@ -778,7 +778,7 @@ final class UI {
 		update();
 	}
 
-	Window activeWindow() {
+	@property Window activeWindow() {
 		if(dialog) return dialog;
 		return toplevel.activeWindow;
 	}
@@ -788,11 +788,11 @@ final class UI {
 	}
 
 	void timerEvent(int n) {
-		Exception e = audio.callback.getException;
+		Exception e = audio.callback.getException();
 		if(e !is null) {
-			writeln("error" ~ e.toString);
+			writeln("error" ~ e.toString());
 			audio.player.stop();
-			statusline.display(e.toString);
+			statusline.display(e.toString());
 		}
 		if((tickcounter3 >= 0) && ++tickcounter3 > 20) {
 			clearcounter = optimizecounter = escapecounter = restartcounter = 0;

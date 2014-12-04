@@ -75,7 +75,7 @@ struct Cmd {
 		data = cmd.data;
 	}
 
-	ubyte value() { return data[3]; }
+	@property ubyte value() { return data[3]; }
 	alias value rawValue;
 
 	string toString() {
@@ -120,11 +120,11 @@ struct Ins {
 	}
 
 
-	ubyte rawValue() { return data[0]; }
-	ubyte value() { return cast(ubyte)(data[0] - 0xc0); }
+	@property ubyte rawValue() { return data[0]; }
+	@property ubyte value() { return cast(ubyte)(data[0] - 0xc0); }
 	private alias value v;
 
-	bool hasValue() { return value() < 0x30; }
+	@property bool hasValue() { return value() < 0x30; }
 	
 	string toString() {
 		if(v >= 0 && v < 0x30) 
@@ -157,20 +157,20 @@ struct Note {
 		data = note.data;
 	}
 
-	ubyte rawValue() {
+	@property ubyte rawValue() {
 		return data[2];
 	}
 	
-	ubyte value() {
+	@property ubyte value() {
 		return data[2] % 0x60;
 	}
+	private alias value v;
 	
 	void setTied(bool t) {
 		data[1] = t ? 0x5f : 0xf0;
 	}
-
-	bool isTied() {	return data[1] == 0x5f;	}
-	private alias value v;
+	
+	@property bool isTied() {	return data[1] == 0x5f;	}
 
 	string toString(int trns) {
 		string col, colh;
@@ -247,8 +247,8 @@ struct Element {
 
 struct Tracklist {
 	private Track[] list; // rename
-	int length() { return cast(int) list.length; }
-	void length(size_t il) {
+	@property int length() { return cast(int) list.length; }
+	@property void length(size_t il) {
 		list.length = il;
 	}
 
@@ -270,7 +270,7 @@ struct Tracklist {
 		return tl;
 	}
 
-	Track last() { return list[trackLength]; }
+	@property Track last() { return list[trackLength]; }
 
 	void opIndexAssign(Track t, size_t il) {
 		list[il] = t;
@@ -411,7 +411,7 @@ struct Track {
 		return t;
 	}
 
-	deprecated void opAssign(ushort s) { 
+	void opAssign(ushort s) { 
 		data[0] = s & 255;
 		data[1] = s >> 8;
 	}	
@@ -432,7 +432,7 @@ struct Track {
 		data[0] = t;
 	}
 
-	ushort dup() {
+	@property ushort dup() {
 		return trans | (no << 8);
 	}
 
@@ -476,7 +476,7 @@ class Sequence {
 
 	static struct ElementArray {
 		ubyte[] raw;
-		int length() { return cast(int)raw.length; }
+		@property int length() { return cast(int)raw.length; }
 
 		Element opIndex(int i) {
 			assert(i < MAX_SEQ_ROWS * 4);
