@@ -56,6 +56,7 @@ abstract class Video {
 	float scalex, scaley;
 	immutable int displayHeight, displayWidth;
 	SDL_Rect rect;
+	
 	this(Screen scr, int fs) {
 		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 		screen = scr;
@@ -188,6 +189,7 @@ class VideoYUV : Video {
 	private SDL_Overlay* overlay;
 	int correctedHeight, correctedWidth;
 	immutable bool yuvCenter;
+	
 	this(Screen scr, int fs, bool yuvCenter) {
 		super(scr, fs);
 		correctedHeight = displayHeight;
@@ -357,6 +359,7 @@ class Screen {
 	immutable int width, height;
 	alias width w;
 	alias height h;
+	
 	this(int xchars, int ychars) {
 		width = xchars;
 		height = ychars;
@@ -395,13 +398,6 @@ class Screen {
 		isDirty = true;
 	}
 
-	deprecated void setfg(int x, int y, int fg) {
-		Uint16* s = &data[x + y * width];
-		*s &= 0xf0ff;
-		*s |= (fg << 8);
-		isDirty = true;
-	}
-
 	void clrtoeol(int y, int bg) {
 		clrtoeol(0, y, bg);
 	}
@@ -411,19 +407,6 @@ class Screen {
 		Uint16* s = &data[x + y * width];
 		Uint16 v = cast(Uint16)(0x20 | (bg << 12));
 		while(x++ < width) *s++ = v;
-		isDirty = true;
-	}
-
-	deprecated void clrbgtoeol(int y, int bg) {
-		mixin(CHECKY);
-		Uint16* s = &data[y * width];
-		Uint16 v = cast(Uint16)(0x20 | (bg << 12));
-		int i;
-		
-		while(i++ < width) {
-			*s &= 0xfff;
-			*s++ |= v;
-		}
 		isDirty = true;
 	}
 
@@ -437,20 +420,6 @@ class Screen {
 		isDirty = true;
 	}
 
-	deprecated void setcoltoeol(int y, int fg, int bg) {
-		mixin(CHECKY);
-	
-		Uint16* s = &data[y * width];
-		Uint16 v = cast(Uint16)((fg << 8) | (bg << 12));
-		int i;
-		
-		while(i++ < width) {
-			*s &= 255;
-			*s |= v;
-			s++;		
-		}
-	}
-	
 	void cprint(int x, int y, int fg, int bg, string txt) {
 		mixin(CHECKS);
 		bool skipbg, skipfg;
@@ -506,6 +475,7 @@ private class Oscilloscope {
 	private short* samples;
 	private const short xconst, yconst;
 	enum width = 960/4, height = 3*14;
+
 	this(SDL_Surface* surface, short xpos, short ypos) {
 		this.surface = surface;
 		this.xconst = xpos;
@@ -520,7 +490,6 @@ private class Oscilloscope {
 		SDL_FillRect(surface, new SDL_Rect(xconst, yconst,
                                            width, height), 0);
 	}
-	
 	
 	void draw(int frames) {
 		float n = frames * 50.0f;

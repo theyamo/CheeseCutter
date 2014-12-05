@@ -63,13 +63,23 @@ private struct Clip {
 
 protected class Posinfo {
 	int pointerOffsetValue = 0;
-	@property int pointerOffset() { return pointerOffsetValue - anchor; }
-	@property int pointerOffset(int i) { return pointerOffsetValue = i + anchor; }
 	int trkOffset = 0;
 	int seqOffset;
 	int mark; 
 	int rowCounter;
 	Tracklist tracks;
+
+	@property int pointerOffset() {
+		return pointerOffsetValue - anchor;
+	}
+	@property int pointerOffset(int i) {
+		return pointerOffsetValue = i + anchor;
+	}
+	
+	@property int rowOnCursor() {
+		return seqOffset + pointerOffset;
+	}
+	
 	int getRowCounter() {
 		int counter;
 		for(int i = 0; i <= trkOffset; i++) {
@@ -79,25 +89,29 @@ protected class Posinfo {
 		return counter + seqOffset;
 	}
 	
-	@property int rowOnCursor() {
-		return seqOffset + pointerOffset;
-	}
 }
 
 protected class PosinfoTable {
 	Posinfo[] pos;
+
+	Posinfo opIndex(int idx) {
+		return pos[idx];
+	}
+
 	this() {
 		pos.length = 3;
 		foreach(ref p; pos) p = new Posinfo;
 	}
-	Posinfo opIndex(int idx) {
-		return pos[idx];
-	}
+	
 	@property int pointerOffset(int o) { 
 		foreach(ref p; pos) { p.pointerOffset = o; }
 		return 0;
 	}
-	@property int pointerOffset() { return pos[0].pointerOffset; }
+	
+	@property int pointerOffset() {
+		return pos[0].pointerOffset;
+	}
+	
 	@property int normalPointerOffset() { 
 		int r = tableTop + pos[0].pointerOffset;
 		return r;
@@ -106,6 +120,7 @@ protected class PosinfoTable {
 	@property int rowCounter() { 
 		return pos[0].rowCounter; 
 	}
+	
 	@property int rowCounter(int o) { 
 		foreach(ref p; pos) { p.rowCounter = o; }
 		return 0;
@@ -142,7 +157,8 @@ abstract protected class Voice : Window {
 public:
 
 	bool atBeg() { 
-		return pos.trkOffset <= 0 && (pos.seqOffset + pos.pointerOffset) <= 0;
+		return pos.trkOffset <= 0
+			&& (pos.seqOffset + pos.pointerOffset) <= 0;
 	}
 
 	bool atEnd() {
@@ -152,6 +168,7 @@ public:
 	}
 	
 	bool pastEnd() { return pastEnd(0); }
+	
 	bool pastEnd(int y) {
 		SequenceRowData s = getRowData(pos.trkOffset,
 									   pos.seqOffset + y);
@@ -228,7 +245,9 @@ public:
 		return getSequenceData(trkofs, seqofs);
 	}
 
-	SequenceRowData getRowData(int tofs) { return getRowData(tofs, 0); }
+	SequenceRowData getRowData(int tofs) {
+		return getRowData(tofs, 0);
+	}
 
 	void scroll(int steps) {
 		scroll(steps, true);
@@ -286,9 +305,11 @@ public:
 protected:
 	
 	override void update();
+	
 	void refreshPointer() {
 		refreshPointer(pos.pointerOffset);
 	}
+	
 	void refreshPointer(int y);
 
 	void jump(int jumpto) {
@@ -462,6 +483,7 @@ protected abstract class VoiceTable : Window {
 	}
 
 	void stepVoice() { stepVoice(1); }
+	
 	void stepVoice(int i) {
 		// safety check - if we're past endmark on all voices,
 		// exit the method -- can happen if all tracklists
@@ -771,7 +793,9 @@ public:
 		activeView.jumpToVoice(n);
 		input = activeView.input;
 	}
+	
 	void reset() { reset(true); }
+	
 	void reset(bool tostart) {
 		activeView.deactivate();
 		if(tostart) {

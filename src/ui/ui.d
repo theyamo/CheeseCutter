@@ -35,12 +35,15 @@ struct Rectangle {
 	int height, width;
 	alias height h;
 	alias width w;
+	
 	string toString() {
 		return format("%d %d %d %d",x, y, h, w);
 	}
+	
 	bool overlaps(int cx, int cy) {
 		return cx >= x && cx < x + width && cy >= y && cy < y + height;
 	}
+	
 	Rectangle relativeTo(int scrx, int scry) {
 		return Rectangle(scrx - x, scry - y);
 	}
@@ -50,6 +53,7 @@ abstract class Window {
 	Rectangle area;
 	Input input;
 	protected ContextHelp help;
+	
 	this(Rectangle a) {
 		this(a, ui.help.HELPMAIN);
 	}
@@ -69,7 +73,11 @@ abstract class Window {
 
 protected:
 
+	@property void contextHelp(ContextHelp h) { help = h; }
+	@property ContextHelp contextHelp() { return help; }
+	
 	final void drawFrame() { drawFrame(area); }
+	
 	static void drawFrame(Rectangle a) {
 		int x,y;
 		for(y=a.y;y<a.y+a.height;y++) {
@@ -98,8 +106,6 @@ protected:
 		}
 	}
 
-	@property void contextHelp(ContextHelp h) { help = h; }
-	@property ContextHelp contextHelp() { return help; }
 }
 
 struct Hotspot {
@@ -112,16 +118,19 @@ class WindowSwitcher : Window {
 	char[] hotkeys;
 	Window activeWindow;
 	int activeWindowNum;
+	
 	this(Rectangle s, Window[] w) {
 		super(s);
 		windows = w;
 		activeWindowNum = 0;
 		activateWindow();
 	}
+	
 	this(Rectangle s, Window[] w, string h) {
 		this(s, w);
 		hotkeys = cast(char[])h;
 	}
+	
 	this(Rectangle s, Window[] w, char[] h) {
 		this(s, w);
 		hotkeys = h;
@@ -135,9 +144,11 @@ class WindowSwitcher : Window {
 	void activateWindow() {
 		activateWindow(activeWindowNum);
 	}
+	
 	void activateWindow(ulong n){
 		activateWindow(cast(int)n);
 	}
+	
 	void activateWindow(int n) {
 		if(activeWindow !is null)
 			activeWindow.deactivate();
@@ -206,6 +217,7 @@ class Infobar : Window {
 		int idx;
 	}
 	InputString inputTitle, inputAuthor, inputReleased;
+	
 	this(Rectangle a) {
 		super(a);
 		x1 = area.x;
@@ -286,6 +298,7 @@ class Infobar : Window {
 class Statusline : Window {
 	int counter;
 	string message;
+	
 	this(Rectangle a) {
 		super(a);
 	}
@@ -1114,6 +1127,7 @@ final class UI {
 	private void loadCallback(string s, bool doImport) {
 		stop();
 		toplevel.reset();
+		
 		if(std.file.exists(s) == 0 || std.file.isDir(s)) {
 			statusline.display("File not found: " ~ s);
 			return;
@@ -1132,13 +1146,14 @@ final class UI {
 			writeln("Error: " ~ e.toString());	
 			return;
 		}
+		
 		refresh();
 		// all voices ON
 		audio.player.setVoicon(0,0,0);
 		
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
-		fn = fn[ind..$];
+		fn = fn[ind .. $];
 		com.session.filename = fn;
 		infobar.refresh();
 		
@@ -1208,8 +1223,8 @@ final class UI {
 	static void activateInstrument(int ins) {
 		if(ins > 47) ins = 47;
 		if(ins < 0) ins = 0;
-		toplevel.instable.seekRow(ins % 48);
-		activeInstrument = ins % 48;
+		toplevel.instable.seekRow(ins);
+		activeInstrument = ins;
 		toplevel.refresh();
 	}
 }

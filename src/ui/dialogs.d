@@ -23,6 +23,7 @@ protected class QueryDialog : Window {
 	alias void delegate(int) Callback;
 	Callback callback;
 	const int maxValue;
+	
 	this(string s,Callback fp, int m) {
 		query = s;
 		callback = fp;
@@ -73,6 +74,7 @@ class HelpDialog : Window {
 	int numpages;
 	int page = 1;
 	int txt_x;
+	
 	this(Rectangle a, ContextHelp ctx) {
 		super(a);
 		pages.length = ctx.text.length;
@@ -119,6 +121,7 @@ class HelpDialog : Window {
 
 class DebugDialog : Window {
 	Sequence seq;
+	
 	this(Sequence s) {
 		super(Rectangle(screen.width / 2 - 24,
 				   screen.height / 2 - 10,
@@ -212,14 +215,17 @@ class FileSelector : Window {
 	struct FileSelPos {
 		int offset, pos;
 	}
+	
 	struct File {
 		string name;
 		int exists, isdir;
 	}
+	
 	FileSelPos fpos;
 	private File[] filelist;
 	string directory;
 	alias area filearea;
+	
 	this(Rectangle a) {
 		super(a);
 		directory = getcwd();
@@ -420,7 +426,9 @@ class DialogString : Window {
 	}
 
 	override string toString() { return toString(false); }
+	
 	string toString(bool p) { return (cast(InputString)input).toString(p); }
+	
 	void setString(string s) {
 		(cast(InputString)input).setOutput(s);
 	}
@@ -443,6 +451,7 @@ class FileSelectorDialog : WindowSwitcher {
 	private int active_window_num;
 	private char[][] filelist;
 	Rectangle filearea;
+	
 	this(Rectangle a, string h, CB cb) {
 		header = h;
 		filearea = Rectangle(a.x + 5, a.y + 2, a.height - 6, a.width - 10);
@@ -549,6 +558,7 @@ class FileSelectorDialog : WindowSwitcher {
 
 class LoadFileDialog : FileSelectorDialog {
 	CB cbimport;
+	
 	this(Rectangle a, CB cbload, CB cbimp) {
 		super(a, "Load Song", cbload);
 		cbimport = cbimp;

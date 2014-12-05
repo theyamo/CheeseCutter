@@ -165,12 +165,12 @@ struct Note {
 		return data[2] % 0x60;
 	}
 	private alias value v;
+
+	@property bool isTied() { return data[1] == 0x5f;	}
 	
 	void setTied(bool t) {
 		data[1] = t ? 0x5f : 0xf0;
 	}
-	
-	@property bool isTied() {	return data[1] == 0x5f;	}
 
 	string toString(int trns) {
 		string col, colh;
@@ -247,10 +247,6 @@ struct Element {
 
 struct Tracklist {
 	private Track[] trackList; // rename
-	@property int length() { return cast(int) trackList.length; }
-	@property void length(size_t il) {
-		trackList.length = il;
-	}
 
 	Track opIndex(int i) {
 		if(i >= 0x400) i = 0;
@@ -268,10 +264,6 @@ struct Tracklist {
 		Tracklist tl;
 		tl.trackList = t;
 		return tl;
-	}
-
-	@property Track lastTrack() {
-		return trackList[trackLength];
 	}
 
 	void opIndexAssign(Track t, size_t il) {
@@ -302,6 +294,16 @@ struct Tracklist {
 		return result;
 	}
 
+	@property int length() { return cast(int) trackList.length; }
+	
+	@property void length(size_t il) {
+		trackList.length = il;
+	}
+
+	@property Track lastTrack() {
+		return trackList[trackLength];
+	}
+	
 	@property int trackLength() {
 		int i;
 		for(i = 0; i < length; i++) {
@@ -309,6 +311,20 @@ struct Tracklist {
 			if(t.trans >= 0xf0) return i;
 		}
 		assert(0);
+	}
+
+	@property address wrapOffset() {
+		return (lastTrack.smashedValue() / 2) & 0x7ff;
+	}
+
+	@property void wrapOffset(address offset) {
+		if((offset & 0xff00) >= 0xf000) return; 
+		assert(offset >= 0 && offset < 0x400);
+		if(offset >= trackLength)
+			offset = cast(ushort)(trackLength - 1);
+		offset *= 2;
+		offset |= 0xf000;
+		lastTrack() = [(offset & 0xff00) >> 8, offset & 0x00ff];
 	}
 
 	void expand() {
@@ -363,20 +379,6 @@ struct Tracklist {
 
 	void transposeAt(int s, int e, int t) {
 		foreach(trk; trackList[s .. e]) trk.transpose(t);
-	}
-
-	@property address wrapOffset() {
-		return (lastTrack.smashedValue() / 2) & 0x7ff;
-	}
-
-	@property void wrapOffset(address offset) {
-		if((offset & 0xff00) >= 0xf000) return; 
-		assert(offset >= 0 && offset < 0x400);
-		if(offset >= trackLength)
-			offset = cast(ushort)(trackLength - 1);
-		offset *= 2;
-		offset |= 0xf000;
-		lastTrack() = [(offset & 0xff00) >> 8, offset & 0x00ff];
 	}
 
 	auto compact() {
@@ -437,15 +439,7 @@ struct Track {
 	@property ushort smashedValue() { // "real" int value, trans = highbyte
 		return number | (trans << 8);
 	}
-	
-	void setValue(int tr, int no) {
-		tr = clamp(tr, 0x80, 0xf3);
-		if(no < 0) no = 0;
-		if(no >= MAX_SEQ_NUM) no = MAX_SEQ_NUM-1;
-		data[0] = tr & 255;
-		data[1] = no & 255;
-	}
-	
+
 	@property ubyte trans() {
 		return data[0];
 	}
@@ -457,6 +451,15 @@ struct Track {
 		data[1] = no;
 	}
 	alias number trackNumber;
+	
+	void setValue(int tr, int no) {
+		tr = clamp(tr, 0x80, 0xf3);
+		if(no < 0) no = 0;
+		if(no >= MAX_SEQ_NUM) no = MAX_SEQ_NUM-1;
+		data[0] = tr & 255;
+		data[1] = no & 255;
+	}
+	
 	
 	string toString() {
 		string s = format("%02X%02X", trans, number);
@@ -476,7 +479,6 @@ class Sequence {
 
 	static struct ElementArray {
 		ubyte[] raw;
-		@property int length() { return cast(int)raw.length; }
 
 		Element opIndex(int i) {
 			assert(i < MAX_SEQ_ROWS * 4);
@@ -497,6 +499,8 @@ class Sequence {
 			}
 			return result;
 		}
+		
+		@property int length() { return cast(int)raw.length; }
 	}
 	
 	this(ubyte[] d) {
@@ -702,8 +706,11 @@ struct Table {
 
 class Song {
 	enum DatafileOffset {
-		Binary, Header = 65536, 
-		Title = Header + 256 + 5, Author = Title + 32, Release = Author + 32,
+		Binary,
+		Header = 65536, 
+		Title = Header + 256 + 5,
+		Author = Title + 32,
+		Release = Author + 32,
 		Insnames = Title + 40 * 4,
 		Subtunes = Insnames + 1024 * 2
 	}
@@ -719,6 +726,7 @@ class Song {
 	class Subtunes {
 		ubyte[1024][3][32] subtunes;
 		private int active;
+		
 		this() {
 			initArray();
 		}
@@ -729,6 +737,19 @@ class Song {
 			subts = cast(ubyte[])(&subtunes)[0..1];
 			subts[] = arr;
 		}
+
+		@property int numOf() {
+			foreach_reverse(idx, ref tune; subtunes) {
+				foreach(ref voice; tune) {
+					if(voice[1 .. 4] != cast(ubyte[])[0x00, 0xf0, 0x00]) {
+						return cast(int)(idx + 1);
+					}
+				}
+			}
+			return 0;
+		}
+
+		
 
 		private void initArray() {
 			foreach(ref tune; subtunes) {
@@ -822,17 +843,6 @@ class Song {
 				subtunes[active][i][0..0x400] =
 					buffer[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400];
 			}
-		}
-
-		@property int numOf() {
-			foreach_reverse(idx, ref tune; subtunes) {
-				foreach(ref voice; tune) {
-					if(voice[1 .. 4] != cast(ubyte[])[0x00, 0xf0, 0x00]) {
-						return cast(int)(idx + 1);
-					}
-				}
-			}
-			return 0;
 		}
 
 		// highly dubious coding here (actually, like in most of this class..)
@@ -935,6 +945,30 @@ class Song {
 		sidbuf = memspace[0xd400 .. 0xd419];
 	}
 
+	@property int numOfSeqs() {
+		int upto;
+		foreach(int i, s; seqs) {
+			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
+		}
+		return upto + 1;
+	}
+	
+	@property int speed() {
+		return memspace[offsets[Offsets.SPEED]];
+	}
+
+	@property void speed(int spd) {
+		memspace[offsets[Offsets.Songsets] + 6] = cast(ubyte)spd;
+		memspace[offsets[Offsets.SPEED]] = cast(ubyte)spd;
+		songspeeds[subtune] = cast(ubyte)spd;
+		if(ver >= 5 && spd >= 2)
+			memspace[offsets[Offsets.PlaySpeed]] = cast(ubyte)spd;
+	}
+
+	@property int playSpeed() {
+		return memspace[offsets[Offsets.PlaySpeed]];
+	}
+	
 	void open(string fn) {
 		ubyte[] inbuf = cast(ubyte[])read(fn);
 		if(inbuf[0..3] != cast(ubyte[])"CC2"[0..3]) {
@@ -988,17 +1022,17 @@ class Song {
 	}
 
 	protected void initialize(ubyte[] buf) {
-		int i, voi;
+		int voi, ofs;
 		data[] = buf;
 
 		offsets.length = 0x60;
 		seqs.length = MAX_SEQ_NUM;
 		tracks.length = 3;
-		for(i=0;i<3;i++) { 
+		for(int i = 0; i < 3; i++) { 
 			tracks[i].length = TRACK_LIST_LENGTH;
 		}
 
-		for(i = 0;i < OFFSETTAB_LENGTH; i++) {
+		for(int i = 0; i < OFFSETTAB_LENGTH; i++) {
 			offsets[i] = data[0xfa0+i*2] | (data[0xfa1+i*2] << 8);
 		}
 
@@ -1016,85 +1050,84 @@ class Song {
 			int t;
 			int offset = offsets[Offsets.Track1 + voi];
 			b = data[offset .. offset + 0x400];
-			for(i = 0; i < b.length/2; i++) {
+			for(int i = 0; i < b.length/2; i++) {
 				tracks[voi][i] = Track(memspace[offset + i * 2 .. offset + i * 2 + 2]);
 			}
 		}
+		
+		ofs = offsets[Offsets.Songsets];
+		songsets = data[ofs .. ofs + 256];
+		tSongsets = Table(songsets, ofs);
 
-		i = offsets[Offsets.Songsets];
-		songsets = data[i .. i + 256];
-		tSongsets = Table(songsets, i);
+		ofs = offsets[Offsets.Arp1];
+		wave1Table = data[ofs .. ofs + 256];
+		wave2Table = data[ofs + 256 .. ofs + 512];
+		waveTable = data[ofs .. ofs + 512];
+		tWave1 = Table(wave1Table, ofs);
+		tWave2 = Table(wave2Table, ofs + 256);
+		tWave = Table(waveTable, ofs);
 
-		i = offsets[Offsets.Arp1];
-		wave1Table = data[i .. i + 256];
-		wave2Table = data[i + 256 .. i + 512];
-		waveTable = data[i .. i + 512];
-		tWave1 = Table(wave1Table, i);
-		tWave2 = Table(wave2Table, i + 256);
-		tWave = Table(waveTable, i);
+		ofs = offsets[Offsets.Inst];
+		instrumentTable = data[ofs .. ofs + 512];
+		tInstr = Table(instrumentTable, ofs);
 
-		i = offsets[Offsets.Inst];
-		instrumentTable = data[i .. i + 512];
-		tInstr = Table(instrumentTable, i);
+		ofs = offsets[Offsets.CMD1];
+		superTable = data[ofs .. ofs + 256];
+		tSuper = Table(superTable, ofs);
 
-		i = offsets[Offsets.CMD1];
-		superTable = data[i .. i + 256];
-		tSuper = Table(superTable, i);
+		ofs = offsets[Offsets.PULSTAB];
+		pulseTable = data[ofs .. ofs + 256];
+		tPulse = Table(pulseTable, ofs);
 
-		i = offsets[Offsets.PULSTAB];
-		pulseTable = data[i .. i + 256];
-		tPulse = Table(pulseTable, i);
+		ofs = offsets[Offsets.FILTTAB];
+		filterTable = data[ofs .. ofs + 256];
+		tFilter = Table(filterTable, ofs);
 
-		i = offsets[Offsets.FILTTAB];
-		filterTable = data[i .. i + 256];
-		tFilter = Table(filterTable, i);
+		ofs = offsets[Offsets.SeqLO];
+		seqlo = data[ofs .. ofs + 256];
+		tSeqlo = Table(seqlo, ofs);
 
-		i = offsets[Offsets.SeqLO];
-		seqlo = data[i .. i + 256];
-		tSeqlo = Table(seqlo, i);
+		ofs = offsets[Offsets.SeqHI];
+		seqhi = data[ofs ..ofs + 256];
+		tSeqhi = Table(seqlo, ofs);
 
-		i = offsets[Offsets.SeqHI];
-		seqhi = data[i ..i + 256];
-		tSeqhi = Table(seqlo, i);
+		ofs = offsets[Offsets.ChordTable];
+		chordTable = data[ofs .. ofs + 128];
+		tChord = Table(chordTable, ofs);
 
-
-		i = offsets[Offsets.ChordTable];
-		chordTable = data[i .. i + 128];
-		tChord = Table(chordTable, i);
-
-		i = offsets[Offsets.ChordIndexTable];
-		chordIndexTable = data[i .. i + 32];
-		tChordIndex = Table(chordIndexTable, i);
+		ofs = offsets[Offsets.ChordIndexTable];
+		chordIndexTable = data[ofs .. ofs + 32];
+		tChordIndex = Table(chordIndexTable, ofs);
 
 		generateChordIndex();
 
-		i = offsets[Offsets.Track1];
-		tTrack1 = Table(data[i .. i + 0x400], i);
-		i = offsets[Offsets.Track2];
-		tTrack2 = Table(data[i .. i + 0x400], i);
-		i = offsets[Offsets.Track3];
-		tTrack3 = Table(data[i .. i + 0x400], i);
+		ofs = offsets[Offsets.Track1];
+		tTrack1 = Table(data[ofs .. ofs + 0x400], ofs);
+		ofs = offsets[Offsets.Track2];
+		tTrack2 = Table(data[ofs .. ofs + 0x400], ofs);
+		ofs = offsets[Offsets.Track3];
+		tTrack3 = Table(data[ofs .. ofs + 0x400], ofs);
 		
 		playerID = cast(char[])data[0xfee .. 0xff5];
    		subtune = 0;
 
-		i = offsets[Offsets.Features];
-		ubyte[] b = memspace[i .. i + 64];
+		ofs = offsets[Offsets.Features];
+		ubyte[] b = memspace[ofs .. ofs + 64];
 		features.requestedTables = b[0];
 		features.instrumentFlags[] = b[1..9];
 
 		/*
 		ubyte* b = cast(ubyte*)&features;
-		b[0..features.sizeof] = memspace[i .. i + features.sizeof];
+		b[0..features.sizeof] = memspace[ofs .. ofs + features.sizeof];
 		*/
 
 		if(ver > 7) {
 			instrumentByteDescriptions.length = 8;
-			i = offsets[Offsets.InstrumentDescriptionsHeader];
+			ofs = offsets[Offsets.InstrumentDescriptionsHeader];
 			for(int j = 0; j < 8; j++) {
-				int ioffset = memspace[i] | (memspace[i+1] << 8);
-				instrumentByteDescriptions[j] = cast(char*)&memspace[ioffset];
-				i += 2;
+				int iofs = memspace[ofs] | (memspace[ofs+1] << 8);
+				instrumentByteDescriptions[j] = cast(char*)&memspace[iofs];
+				ofs += 2;
 			}
 		}
 
@@ -1229,17 +1262,6 @@ class Song {
 		return getTablepointer(instrumentTable, features.instrumentFlags, 4, insno);
 	}
 
-	deprecated void saveDump(string fn) {
-		subtunes.sync();
-		int upto = numOfSeqs() - 1;
-	
-		int lobyt = offsets[Offsets.SeqLO] + upto, hibyt = offsets[Offsets.SeqHI] + upto;
-		int lastaddr = memspace[lobyt] | (memspace[hibyt] << 8) + 256;
-
-		// w(format("saving up to $%X ($%04X)", upto, lastaddr));
-		std.file.write(fn, cast(ubyte[])[0x00, 0x10] ~ memspace[0x1000 .. lastaddr]);
-	}
-
 	void seqIterator(void delegate(Sequence s, Element e) dg) {
 		foreach(i, s; seqs) {
 			for(int j = 0; j < s.rows; j++) {
@@ -1258,30 +1280,6 @@ class Song {
 				}
 			}
 		}
-	}
-
-	@property int numOfSeqs() {
-		int upto;
-		foreach(int i, s; seqs) {
-			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
-		}
-		return upto + 1;
-	}
-	
-	@property int speed() {
-		return memspace[offsets[Offsets.SPEED]];
-	}
-
-	@property void speed(int spd) {
-		memspace[offsets[Offsets.Songsets] + 6] = cast(ubyte)spd;
-		memspace[offsets[Offsets.SPEED]] = cast(ubyte)spd;
-		songspeeds[subtune] = cast(ubyte)spd;
-		if(ver >= 5 && spd >= 2)
-			memspace[offsets[Offsets.PlaySpeed]] = cast(ubyte)spd;
-	}
-
-	@property int playSpeed() {
-		return memspace[offsets[Offsets.PlaySpeed]];
 	}
 
 	void setVoicon(shared int[] m) {

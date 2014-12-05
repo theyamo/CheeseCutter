@@ -19,6 +19,7 @@ abstract class Table : Window {
 		ubyte[] data;
 		int column, row, cursorOffset, viewOffset;
 	}
+	
 	this(Rectangle a, ubyte[] tbl, int c, int r) {
 		super(a);
 		columns = c;
@@ -339,6 +340,7 @@ class InsTable : Window {
 		InsValueTable insinput;
 	}
 	Window active;
+	
 	this(Rectangle a) {
 		super(a);
 		insdesc = new DialogString(a, com.fb.mode ? 32 : 16);
@@ -433,6 +435,7 @@ class InsTable : Window {
 
 class CmdTable : HexTable {
 	alias row position;
+	
 	this(Rectangle a) {
 		super(a, song.superTable, 1, 64);
 		input = new InputSpecial(song.superTable);
