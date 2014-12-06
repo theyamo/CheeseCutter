@@ -359,7 +359,7 @@ class InsTable : Window {
 		insinput.refresh();
 	}
 
-	int row() {
+	@property int row() {
 		return insinput.row;
 	}
 
@@ -485,8 +485,8 @@ class CmdTable : HexTable {
 		}
 		int r = input.keypress(key);
 		song.superTable[position] = input.inarray[0];
-		song.superTable[position+64] = cast(ubyte)input.toInt(1, 3);
-		song.superTable[position+128] = cast(ubyte)input.toInt(3, 5);
+		song.superTable[position+64] = cast(ubyte)input.toIntRange(1, 3);
+		song.superTable[position+128] = cast(ubyte)input.toIntRange(3, 5);
 		if(r == WRAP) {
 			stepRow(1);
 		} 

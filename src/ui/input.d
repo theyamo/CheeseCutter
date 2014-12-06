@@ -123,11 +123,14 @@ class Input {
 	void update() { assert(0); }
 
 	void refresh() { assert(0); }
-
+	
 	int toInt() {
 		return toInt(inarray);
 	}
-	alias toInt value;
+
+	@property int value() {
+		return toInt(inarray);
+	}
 	
 	int toInt(ubyte[] ar) {
 		int v;
@@ -138,7 +141,7 @@ class Input {
 		return v;
 	}
 	
-	int toInt(int b, int e) {
+	int toIntRange(int b, int e) {
 		return toInt(inarray[b..e]);
 	}
 
@@ -276,7 +279,7 @@ class InputTrack : InputWord {
 	
 	void init(SequenceRowData s) {
 		trk = s.trk;
-		buf[] = valueCheck(trk.trans, trk.no);
+		buf[] = valueCheck(trk.trans, trk.number);
 		super.setOutput(buf);
 	}
 	
@@ -937,7 +940,7 @@ class InputSpecial : InputValue {
 	}
 	
 	override void update() {
-		immutable offsets = [0, 2, 3, 5, 6];
+		static immutable offsets = [0, 2, 3, 5, 6];
         screen.cprint(x, y, 1, -1, format("%01X-%02X %02X",inarray[0],toInt(inarray[1..3]),toInt(inarray[3..5])));
 		cursor.set(pointerX + offsets[nibble], pointerY);
 	}

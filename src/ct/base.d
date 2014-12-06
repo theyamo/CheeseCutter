@@ -56,12 +56,12 @@ alias char*[] ByteDescription;
 struct Cmd {
 	private ubyte[] data;
 	static Cmd opCall() {
-		Cmd cmd;
+		static Cmd cmd;
 		return cmd;
 	}
 
 	static Cmd opCall(ubyte[] d) {
-		Cmd cmd;
+		static Cmd cmd;
 		cmd.data = d;
 		return cmd;
 	}
@@ -75,7 +75,7 @@ struct Cmd {
 		data = cmd.data;
 	}
 
-	ubyte value() { return data[3]; }
+	@property ubyte value() { return data[3]; }
 	alias value rawValue;
 
 	string toString() {
@@ -100,11 +100,11 @@ struct Cmd {
 struct Ins {
 	private ubyte[] data;
 	static Ins opCall() {
-		Ins ins;
+		static Ins ins;
 		return ins;
 	}
 	static Ins opCall(ubyte[] d) {
-		Ins ins;
+		static Ins ins;
 		ins.data = d;
 		return ins;
 	}
@@ -120,11 +120,11 @@ struct Ins {
 	}
 
 
-	ubyte rawValue() { return data[0]; }
-	ubyte value() { return cast(ubyte)(data[0] - 0xc0); }
+	@property ubyte rawValue() { return data[0]; }
+	@property ubyte value() { return cast(ubyte)(data[0] - 0xc0); }
 	private alias value v;
 
-	bool hasValue() { return value() < 0x30; }
+	@property bool hasValue() { return value() < 0x30; }
 	
 	string toString() {
 		if(v >= 0 && v < 0x30) 
@@ -143,7 +143,7 @@ struct Ins {
 struct Note {
 	private ubyte[] data;
 	static Note opCall(ubyte[] d) {
-		Note no;
+		static Note no;
 		no.data = d;
 		return no;
 	}
@@ -157,20 +157,20 @@ struct Note {
 		data = note.data;
 	}
 
-	ubyte rawValue() {
+	@property ubyte rawValue() {
 		return data[2];
 	}
 	
-	ubyte value() {
+	@property ubyte value() {
 		return data[2] % 0x60;
 	}
+	private alias value v;
 	
 	void setTied(bool t) {
 		data[1] = t ? 0x5f : 0xf0;
 	}
-
-	bool isTied() {	return data[1] == 0x5f;	}
-	private alias value v;
+	
+	@property bool isTied() {	return data[1] == 0x5f;	}
 
 	string toString(int trns) {
 		string col, colh;
@@ -247,8 +247,8 @@ struct Element {
 
 struct Tracklist {
 	private Track[] list; // rename
-	int length() { return cast(int) list.length; }
-	void length(size_t il) {
+	@property int length() { return cast(int) list.length; }
+	@property void length(size_t il) {
 		list.length = il;
 	}
 
@@ -270,7 +270,7 @@ struct Tracklist {
 		return tl;
 	}
 
-	Track last() { return list[trackLength()]; }
+	@property Track last() { return list[trackLength]; }
 
 	void opIndexAssign(Track t, size_t il) {
 		list[il] = t;
@@ -284,7 +284,7 @@ struct Tracklist {
 
 	int opApply(int delegate(ref Track) dg) {
 		int result;
-		for(int i = 0; i < trackLength(); i++) {
+		for(int i = 0; i < trackLength; i++) {
 			result = dg(list[i]);
 			if(result) break;
 		}
@@ -300,7 +300,7 @@ struct Tracklist {
 		return result;
 	}
 
-	int trackLength() {
+	@property int trackLength() {
 		int i;
 		for(i = 0; i < length; i++) {
 			Track t = list[i];
@@ -310,11 +310,11 @@ struct Tracklist {
 	}
 
 	void expand() {
-		insertAt(trackLength());
+		insertAt(trackLength);
 	}
 
 	void shrink() {
-		deleteAt(trackLength()-1);
+		deleteAt(trackLength-1);
 	}
 
 	// returns transpose value other than 0x80 above idx OR below(if idx == 0)
@@ -331,7 +331,7 @@ struct Tracklist {
 				if(list[idx].trans > 0x80 &&
 				   list[idx].trans < 0xc0)
 					return list[idx].trans;
-			} while(idx++ < trackLength());
+			} while(idx++ < trackLength);
 		}
 		return 0xa0;
 	}
@@ -343,7 +343,7 @@ struct Tracklist {
 			list[i+1] = list[i].dup;
 		}
 		list[offset].trans = getTransAt(offset);
-		list[offset].trackNo = 0;
+		list[offset].number = 0;
 		if(wrapOffset() >= offset) {
 			wrapOffset( cast(address)(wrapOffset + 1));
 		}
@@ -370,18 +370,17 @@ struct Tracklist {
 	@property void wrapOffset(address offset) {
 		if((offset & 0xff00) >= 0xfe00) return;
 		assert(offset >= 0 && offset < 0x400);
-		if(offset >= trackLength())
-			offset = cast(ushort)(trackLength() - 1);
+		if(offset >= trackLength)
+			offset = cast(ushort)(trackLength - 1);
 		offset *= 2;
 		offset |= 0xf000;
 		last() = [(offset & 0xff00) >> 8, offset & 0x00ff];
 	}
 
-	ubyte[] compact() {
-		ubyte[] arr;
+	auto compact() {
+		ubyte[] arr = new ubyte[1024];
 		int p, trans = -1, wrapptr = wrapOffset * 2;
 
-		arr.length = 1024;
 		foreach(idx, track; list) {
 			if(track.trans >= 0xf0) {
 				wrapptr |= 0xf000;
@@ -396,7 +395,7 @@ struct Tracklist {
 			else if(idx < wrapOffset) {
 				wrapptr--;
 			}
-			arr[p++] = track.no;
+			arr[p++] = track.number;
 		}
 		return arr[0..p];
 	}
@@ -425,20 +424,16 @@ struct Track {
 		data = tr.data;
 	}
 
-	@property void trackNo(ubyte no) {
-		data[1] = no;
-	}
-
 	@property void trans(ubyte t) {
 		data[0] = t;
 	}
 
-	ushort dup() {
-		return trans | (no << 8);
+	@property ushort dup() {
+		return trans | (number << 8);
 	}
 
 	@property ushort smashedValue() { // "real" int value, trans = highbyte
-		return no | (trans << 8);
+		return number | (trans << 8);
 	}
 	
 	void setValue(int tr, int no) {
@@ -453,13 +448,18 @@ struct Track {
 		return data[0];
 	}
 	
-	@property ubyte no() {
+	@property ubyte number() {
 		return data[1];
 	}
-	alias no trackNo;
+	@property void number(ubyte no) {
+		data[1] = no;
+	}
+	alias number trackNumber;
+
+
 	
 	string toString() {
-		string s = format("%02X%02X", trans, no);
+		string s = format("%02X%02X", trans, number);
 		return s;
 	}
 
@@ -477,7 +477,7 @@ class Sequence {
 
 	static struct ElementArray {
 		ubyte[] raw;
-		int length() { return cast(int)raw.length; }
+		@property int length() { return cast(int)raw.length; }
 
 		Element opIndex(int i) {
 			assert(i < MAX_SEQ_ROWS * 4);
@@ -1183,14 +1183,14 @@ class Song {
 		append(fn, std.zlib.compress(b));
 	}
 
-	void splitSequence(int seqno, int seqofs) {
-		if(seqno == 0 || seqofs == 0) return;
+	void splitSequence(int seqnumber, int seqofs) {
+		if(seqnumber == 0 || seqofs == 0) return;
 		int suborig = subtune;
-		int newseqno = getFreeSequence(0);
-		Sequence s = seqs[seqno];
+		int newseqnumber = getFreeSequence(0);
+		Sequence s = seqs[seqnumber];
 		if(seqofs == s.rows - 1) return;
 		Sequence copy = new Sequence(s.data.raw.dup);
-		Sequence ns = seqs[newseqno];
+		Sequence ns = seqs[newseqnumber];
 		ns.copyFrom(s);
 		ns.shrink(0, seqofs, true);
 		s.shrink(seqofs, s.rows - seqofs, true);
@@ -1200,11 +1200,11 @@ class Song {
 			foreach(vIdx, voice; tracks) {
 				for(int tIdx = voice.length - 1; tIdx >= 0; tIdx--) {
 					Track t = voice[tIdx];
-					if(t.no == seqno) {
+					if(t.number == seqnumber) {
 						tracks[vIdx].insertAt(tIdx+1);
 						Track t2 = tracks[vIdx][tIdx+1];
 						t2.trans = 0x80;
-						t2.trackNo = (cast(ubyte)newseqno);
+						t2.number = (cast(ubyte)newseqnumber);
 					}
 					
 				}
@@ -1376,7 +1376,7 @@ class Song {
 
 	// hack to help sequencer rowcounting 
 	Sequence sequence(Track t) {
-		return seqs[t.no()];
+		return seqs[t.number];
 	}
 }
 

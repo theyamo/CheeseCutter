@@ -20,13 +20,13 @@ protected class FPlayVoice : SeqVoice {
 	}
 
 	override protected void scroll(int steps) {
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
 		int seqofs = pos.seqOffset + steps;
 		int trkofs2 = pos.trkOffset;
 		Sequence seq;
 		Track trk;
 		int getRows() {
-			Sequence seq = song.seqs[tracks[trkofs2].no];
+			Sequence seq = song.seqs[tracks[trkofs2].number];
 			int r = seq.rows;
 			if(tracks[trkofs2].trans >= 0xf0)
 				r = 1;
@@ -48,7 +48,7 @@ protected class FPlayVoice : SeqVoice {
 				trk = tracks[trkofs2];
 				assert(trk.trans < 0xf0);
 			}
-			seq = song.seqs[trk.no];
+			seq = song.seqs[trk.number];
 			assert(seqofs >= 0);
 
 		}

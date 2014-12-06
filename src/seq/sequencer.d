@@ -63,8 +63,8 @@ private struct Clip {
 
 protected class Posinfo {
 	int pointerOffsetValue = 0;
-	int pointerOffset() { return pointerOffsetValue - anchor; }
-	int pointerOffset(int i) { return pointerOffsetValue = i + anchor; }
+	@property int pointerOffset() { return pointerOffsetValue - anchor; }
+	@property int pointerOffset(int i) { return pointerOffsetValue = i + anchor; }
 	int trkOffset = 0;
 	int seqOffset;
 	int mark; 
@@ -78,7 +78,8 @@ protected class Posinfo {
 		}
 		return counter + seqOffset;
 	}
-	int rowOnCursor() {
+	
+	@property int rowOnCursor() {
 		return seqOffset + pointerOffset;
 	}
 }
@@ -92,20 +93,20 @@ protected class PosinfoTable {
 	Posinfo opIndex(int idx) {
 		return pos[idx];
 	}
-	int pointerOffset(int o) { 
+	@property int pointerOffset(int o) { 
 		foreach(ref p; pos) { p.pointerOffset = o; }
 		return 0;
 	}
-	int pointerOffset() { return pos[0].pointerOffset; }
-	int normalPointerOffset() { 
+	@property int pointerOffset() { return pos[0].pointerOffset; }
+	@property int normalPointerOffset() { 
 		int r = tableTop + pos[0].pointerOffset;
 		return r;
 	}
 			
-	int rowCounter() { 
+	@property int rowCounter() { 
 		return pos[0].rowCounter; 
 	}
-	int rowCounter(int o) { 
+	@property int rowCounter(int o) { 
 		foreach(ref p; pos) { p.rowCounter = o; }
 		return 0;
 	}
@@ -168,12 +169,12 @@ public:
 		static SequenceRowData s;
 		int trkofs2 = trkofs;
 		Sequence seq;
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
 		Sequence getSeq(Track t) {
 			if(t.trans >= 0xf0) return song.seqs[0];
-			else return song.seqs[t.no];
+			else return song.seqs[t.number];
 		}
-		int getRows() {
+		int numRowsInSeq() {
 			Sequence seq;
 			seq = getSeq(tracks[trkofs2]);
 			int r = seq.rows;
@@ -188,7 +189,7 @@ public:
 		seq = getSeq(s.trk);
 
 		while (seqofs < 0)  {
-			seqofs += getRows();
+			seqofs += numRowsInSeq();
 			if(--trkofs < 0) {
 				trkofs = 0;
 				seqofs = 0;
@@ -196,12 +197,12 @@ public:
 			}
 			--trkofs2;
 			s.trk = tracks[trkofs];
-			seq = song.seqs[s.trk.no];
+			seq = song.seqs[s.trk.number];
 		} 
 		assert(seqofs >= 0);
 
-		while(seqofs >= getRows()) {
-			seqofs -= getRows();
+		while(seqofs >= numRowsInSeq()) {
+			seqofs -= numRowsInSeq();
 			if(trkofs < lasttrk)
 				trkofs++;
 			trkofs2++;
@@ -244,7 +245,7 @@ public:
 			while(seqOffset + pointerOffset < 0) {
 				if(--trkOffset < 0) {
 					if(canWrap) {
-						trkOffset = tracks.trackLength() - 1;
+						trkOffset = tracks.trackLength - 1;
 						rowCounter = getRowCounter();
 					}
 					else trkOffset = 0;
@@ -510,7 +511,7 @@ protected abstract class VoiceTable : Window {
 			Voice v = voices[i];
 			SequenceRowData c = v.activeRow;
 			screen.cprint(x, area.y, 1, 0,
-				format("+%03X %02X %s", c.trkOffset, c.trk.no,
+				format("+%03X %02X %s", c.trkOffset, c.trk.number,
 					   audio.player.muted[i] ? "Off" : "   ") );
 			x += 13 + com.fb.border;
 		}
@@ -582,7 +583,7 @@ protected abstract class VoiceTable : Window {
 				v.jump(Jump.ToBeginning);
 			}
 
-			int e = activeVoice.tracks.trackLength() - 1;
+			int e = activeVoice.tracks.trackLength - 1;
 			
 			for(int i = 0; i < e; i++) {
 				activeVoice.refreshPointer(posTable.pointerOffset);
@@ -603,7 +604,7 @@ protected abstract class VoiceTable : Window {
 			posTable.pointerOffset = 0;
 			for(int i = 0; i < to; i++) {
 				activeVoice.refreshPointer(0);
-				int trk = v.tracks[i].no;
+				int trk = v.tracks[i].number;
 				Sequence s = song.seqs[trk];
 				step(s.rows);
 			}
@@ -958,7 +959,7 @@ private:
 		clip.length = length;
 		for(int i = 0; i < length; i++) {
 			clip[i].trans = tl[i].trans;
-			clip[i].no = tl[i].no;
+			clip[i].no = tl[i].number;
 		}
 	}
   

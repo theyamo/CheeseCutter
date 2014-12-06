@@ -18,54 +18,6 @@ const string[] exts = [ "", "prg", "sid", "s", "ct", "ct" ];
 bool verbose = true;
 bool noPurge;
 
-int str2Value2(string s) {
-	int idx;
-	bool hexUsed;
-	if(s[0] == 'x' || s[0] == '$') {
-		hexUsed = true; idx = 1;
-	}
-	else if(s[0..2] == "0x") {
-		hexUsed = true; idx = 2;
-	}
-	if(hexUsed) {
-		int val, i;
-		foreach_reverse(char c; toUpper(s[idx..$])) {
-			if("0123456789ABCDEF".indexOf(c) < 0)
-				throw new UserException("Illegal hexadecimal value in argument.");
-			val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
-		}
-		return val;
-	}
-	foreach(char c; s) {
-		if("0123456789".indexOf(c) < 0)
-			throw new UserException("Illegal value in argument.");
-	}
-	return to!int(s);
-}
-
-void parseList(ref int[] array, string arg) {
-	int index;
-	string[] list = std.string.split(arg, ",");
-	foreach(valueset; list) {
-		string[] values = std.string.split(valueset, ":");
-		if(values.length == 0) { // length == 0, just skip
-			index++;
-		}
-		else if(values.length == 1) { // the sole value is the speed
-			array[index] = to!int(values[0]);
-		}
-		else {
-			index = to!int(values[0]);
-			if(index > 31)
-				throw new UserException("Value list index out of bounds.");
-			array[index] = to!int(values[1]);
-		}
-		index++;
-		if(index > 31)
-			throw new UserException("Value list too long.");
-	}
-}
-
 void explain(string str) {
 	if(verbose)
 		writefln(str);

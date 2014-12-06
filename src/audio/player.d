@@ -26,11 +26,11 @@ int getPlaystatus() {
 	return playstatus;
 }
 
-bool isPlaying() { 
+@property bool isPlaying() { 
 	return playstatus == Status.Play || playstatus == Status.Keyjam;
 }
 
-bool keyjamEnabled() {
+@property bool keyjamEnabled() {
 	return playstatus == Status.Keyjam;
 }
 

@@ -22,7 +22,7 @@ protected class QueryDialog : Window {
 	static ubyte[1] byt;
 	alias void delegate(int) Callback;
 	Callback callback;
-	const int _maxValue;
+	const int maxValue;
 	this(string s,Callback fp, int m) {
 		query = s;
 		callback = fp;
@@ -31,7 +31,7 @@ protected class QueryDialog : Window {
 	}
 
 	this(Rectangle a, int m) {
-		_maxValue = m;
+		maxValue = m;
 		super(a);
     }
 	
@@ -39,8 +39,8 @@ protected class QueryDialog : Window {
 		if(key.mods & KMOD_ALT) return OK;
 		int r = input.keypress(key);
 		if(r == WRAP &&
-		   (cast(InputBoundedByte)input).value >= _maxValue) {
-			input.setOutput(cast(ubyte[])[_maxValue-1]);
+		   (cast(InputBoundedByte)input).value >= maxValue) {
+			input.setOutput(cast(ubyte[])[maxValue - 1]);
 			return OK;
 		}
 		else if(r == RETURN) {
@@ -50,8 +50,8 @@ protected class QueryDialog : Window {
 		else if(r == CANCEL) { // no callback
 		}
 		else r = OK;
-		if(input.value >= _maxValue)
-			input.setOutput(cast(ubyte[])[_maxValue-1]);
+		if(input.value >= maxValue)
+			input.setOutput(cast(ubyte[])[maxValue - 1]);
 		return r;
 	}
 
@@ -394,12 +394,12 @@ class FileSelector : Window {
 			cursorEnd();
 	}
 
-	string selected() { return filelist[num].name; }
+	@property string selected() { return filelist[num].name; }
 	alias selected getSelected;
   
 private:
 
-	int num() { return fpos.offset + fpos.pos; }
+	@property int num() { return fpos.offset + fpos.pos; }
 	string fstr(string fs) {
 		if(fs.length > (area.width))
 			fs.length = area.width;
