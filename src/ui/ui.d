@@ -736,7 +736,9 @@ final class UI {
 	private {
 		Window dialog = null;
 		int fullscreen;
-		bool printSIDDump = false;
+		//bool printSIDDump = false;
+		enum VisMode { None, Regs, Oscilloscope }
+		int vismode;
 		AboutDialog aboutdialog;
 		FileSelectorDialog loaddialog, savedialog;
 	}
@@ -808,7 +810,7 @@ final class UI {
 			toplevel.timerEvent();
 
 			if(audio.player.isPlaying || audio.player.keyjamEnabled) {
-				if(printSIDDump) {
+				if(vismode == VisMode.Regs) {
 					int x = screen.width - 42;
 					screen.cprint(x, 1, 15, 0, "V1:");
 					screen.cprint(x, 2, 15, 0, "V2:");
@@ -828,8 +830,9 @@ final class UI {
 				update();  // TESTME: just do video.updateFrame()
 			}
 		}
-		if(audio.player.isPlaying || audio.player.keyjamEnabled)
-			video.drawOscilloscope(n);
+		if(vismode == VisMode.Oscilloscope &&
+		   audio.player.isPlaying || audio.player.keyjamEnabled)
+			video.drawVisualizer(n);
 	}
 
 	void update() {
@@ -959,12 +962,19 @@ final class UI {
 				key.mods & KMOD_SHIFT ? audio.player.prevFP() : audio.player.nextFP();
 				break;
 			case SDLK_F9:
+				/+
 				if(printSIDDump) {
 					screen.clrtoeol(55, 1, 0);
 					screen.clrtoeol(55, 2, 0);
 					screen.clrtoeol(55, 3, 0);
 				}
 				printSIDDump = !printSIDDump;
+				+/
+				vismode = umod(vismode + 1, 0, VisMode.max);
+				screen.clrtoeol(55, 1, 0);
+				screen.clrtoeol(55, 2, 0);
+				screen.clrtoeol(55, 3, 0);
+				video.clearVisualizer();
 				break;
 			case SDLK_SPACE:
 				if(song.ver < 7) break;

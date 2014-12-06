@@ -69,7 +69,7 @@ abstract class Video {
 			SDL_FreeSurface(surface);
 	}
 
-	void drawOscilloscope(int n) {
+	void drawVisualizer(int n) {
 		osc.draw(n);
 		/+
 		SDL_BlitSurface(osc.surface,
@@ -79,6 +79,10 @@ abstract class Video {
 						
 			);
 			+/
+	}
+
+	void clearVisualizer() {
+		osc.clear();
 	}
 	
 	abstract void enableFullscreen(bool fs);
@@ -229,6 +233,7 @@ class VideoYUV : Video {
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
 		}
+		osc = new Oscilloscope(surface, 500, 14);
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
 		makeOverlay([width, height]);
@@ -511,6 +516,11 @@ private class Oscilloscope {
 	}
 
 	private float smpofs = 0.0;
+	void clear() {
+		SDL_FillRect(surface, new SDL_Rect(xconst, yconst,
+                                           width, height), 0);
+	}
+	
 	
 	void draw(int frames) {
 		float n = frames * 50.0f;
@@ -522,9 +532,9 @@ private class Oscilloscope {
 		Uint32 coll = PALETTE[5].b << surface.format.Bshift | 
 			(PALETTE[5].g << surface.format.Gshift) |
 			(PALETTE[5].r << surface.format.Rshift);
+
+		clear();
 		
-		SDL_FillRect(surface, new SDL_Rect(xconst, yconst,
-                                           width, height), 0);
 		smpofs = 0;
 		import audio.audio;
 		int oldposition = height / 2 + samples[cast(int)smpofs]  / 768;
