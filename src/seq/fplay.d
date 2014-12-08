@@ -27,10 +27,9 @@ protected class FPlayVoice : SeqVoice {
 		Track trk;
 		int getRows() {
 			Sequence seq = song.seqs[tracks[trkofs2].number];
-			int r = seq.rows;
 			if(tracks[trkofs2].trans >= 0xf0)
-				r = 1;
-			return r;
+				return 1;
+			return seq.rows;
 		}
 		// FIX: will not work when step > 1 && track wraps
 		pos.rowCounter = pos.rowCounter + steps;
