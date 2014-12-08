@@ -8,19 +8,22 @@ import com.fb;
 import ui.ui;
 import seq.sequencer;
 
+struct EditorState {
+	int octave = 3;
+	int activeInstrument;
+	bool autoinsertInstrument = true;
+	bool shortTitles = true;
+	bool displayHelp = true;
+	bool keyjamStatus = false;
+	string filename;
+}
+
 __gshared Song song;
 UI mainui;
 Video video;
 Screen screen;
 PosinfoTable fplayPos, seqPos;
-int octave = 3;
-int activeInstrument;
-bool autoinsertInstrument = true;
-bool shortTitles = true;
-bool displayHelp = true;
-bool keyjamStatus = false;
-bool modified = false;
-string filename;
+EditorState state;
 
 void initSession() {
 	song = new Song();

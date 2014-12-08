@@ -225,7 +225,7 @@ class Infobar : Window {
 	}
 
 	override void update() {
-		int headerColor = keyjamStatus ? 14 : 12;
+		int headerColor = state.keyjamStatus ? 14 : 12;
 		if(escapecounter) headerColor = 7;
 	  
 		screen.clrtoeol(0, headerColor);
@@ -239,13 +239,13 @@ class Infobar : Window {
 		
 		screen.fprint(x1 + 19,area.y,
 				   format("`05Oct: `0d%d  `05Spd: `0d%X  `05St: `0d%d ",
-						  octave, song.speed, seq.sequencer.stepValue));
+						  state.octave, song.speed, seq.sequencer.stepValue));
 		screen.fprint(x2+3, area.y+1,
 				   format("`05Rate: `0d%-1d*%dhz  `05SID: `0d%s%s    ",
 						  song.multiplier, audio.player.ntsc ? 60 : 50,
 						  audio.player.usefp ? audio.player.curfp.id : audio.player.sidtype ? "8580" : "6581",
 						  audio.player.badline ? "&0fb" : " "));
-		screen.fprint(x1,area.y+1,format("`05Filename: `0d%s", com.session.filename.leftJustify(38)));
+		screen.fprint(x1,area.y+1,format("`05Filename: `0d%s", state.filename.leftJustify(38)));
 		//screen.fprint(x2,area.y,format("`05  `b1T`01itle: `0d%-32s", std.string.toString(cast(char *)song.title))); 
 		screen.fprint(x2,area.y,
 					  format("`05%s `0d%-32s", (["  `b1T`01itle:", " `01Author:", "`01Release:" ])[idx],
@@ -525,8 +525,8 @@ final private class Toplevel : WindowSwitcher {
 				}
 				break;
 			case SDLK_h:
-				displayHelp ^= 1;
-				UI.statusline.display("Help texts " ~ (displayHelp ? "enabled." : "disabled."));
+				state.displayHelp ^= 1;
+				UI.statusline.display("Help texts " ~ (state.displayHelp ? "enabled." : "disabled."));
 				break;
 			default:
 				break;
@@ -558,22 +558,22 @@ final private class Toplevel : WindowSwitcher {
 			switch(key.raw)
 			 {
 			 case SDLK_KP_DIVIDE:
-				 if(octave > 0)
-					 octave--;
+				 if(state.octave > 0)
+					 state.octave--;
 				 break;
 			 case SDLK_KP_MULTIPLY:
-				 if(octave < 6)
-					 octave++;
+				 if(state.octave < 6)
+					 state.octave++;
 				 break;
 			case SDLK_PLUS:
 			case SDLK_KP_PLUS:
 				instable.stepRow(1);
-				activeInstrument = instable.row;
+				state.activeInstrument = instable.row;
 				break;
 			case SDLK_MINUS:
 			case SDLK_KP_MINUS:
 				instable.stepRow(-1);
-				activeInstrument = instable.row;
+				state.activeInstrument = instable.row;
 				break;
 			 default:
 				 break;
@@ -587,7 +587,7 @@ final private class Toplevel : WindowSwitcher {
 				}
 			}
 		}
-		if(keyjamStatus == true) {
+		if(state.keyjamStatus == true) {
 			inputKeyjam.keypress(key);
 		}
 		else {
@@ -600,7 +600,7 @@ final private class Toplevel : WindowSwitcher {
 	}	
 
 	override int keyrelease(Keyinfo key) {
-		if(keyjamStatus == true) {
+		if(state.keyjamStatus == true) {
 			inputKeyjam.keyrelease(key);
 		}
 		return activeWindow.keyrelease(key);
@@ -722,7 +722,7 @@ final private class Toplevel : WindowSwitcher {
 			refresh();
 			clearcounter = 0;
 			//savedialog.setFilename("");
-			com.session.filename = "";
+			state.filename = "";
 			UI.statusline.display("Editor restarted.");
 		}
 		else {
@@ -787,7 +787,7 @@ final class UI {
 		audio.player.setMultiplier(song.multiplier);
 
 		if(com.fb.mode > 0)
-			com.session.shortTitles = false;
+			state.shortTitles = false;
 		toplevel.activate();
 		activateDialog(aboutdialog);
 		update();
@@ -991,9 +991,10 @@ final class UI {
 				break;
 			case SDLK_SPACE:
 				if(song.ver < 7) break;
-				keyjamStatus ^= 1;
-				enableKeyjamMode(keyjamStatus);
-				statusline.display("Keyjam " ~ (keyjamStatus ? "enabled." : "disabled.") ~ " Press Ctrl-Space to toggle.");
+				state.keyjamStatus ^= 1;
+				enableKeyjamMode(state.keyjamStatus);
+				statusline.display("Keyjam " ~ (state.keyjamStatus ? "enabled." : "disabled.")
+								   ~ " Press Ctrl-Space to toggle.");
 				break;
 			default:
 				break;
@@ -1113,7 +1114,7 @@ final class UI {
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
 		fn = fn[ind..$];
-		com.session.filename = fn;
+		state.filename = fn;
 	}
 
 	void importCallback(string s) {
@@ -1154,7 +1155,7 @@ final class UI {
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
 		fn = fn[ind .. $];
-		com.session.filename = fn;
+		state.filename = fn;
 		infobar.refresh();
 		
 		// sync save filesel to load filesel in case dir was changed
@@ -1193,7 +1194,7 @@ final class UI {
 		if(audio.player.isPlaying) return;
 		doEnable ? com.fb.disableKeyRepeat() :
 			com.fb.enableKeyRepeat();
-		keyjamStatus = doEnable;
+		state.keyjamStatus = doEnable;
 	}
 
 	void activateInstrumentTable(int ins) {
@@ -1225,7 +1226,7 @@ final class UI {
 		if(ins > 47) ins = 47;
 		if(ins < 0) ins = 0;
 		toplevel.instable.seekRow(ins);
-		activeInstrument = ins;
+		state.activeInstrument = ins;
 		toplevel.refresh();
 	}
 }

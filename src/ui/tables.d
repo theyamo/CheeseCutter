@@ -205,7 +205,7 @@ protected:
 	}
 	
 	void showByteDescription(PetString pet) {
-		if(song.ver < 9 || !displayHelp) return;
+		if(song.ver < 9 || !state.displayHelp) return;
 		string[] s = com.util.petscii2D(pet).splitLines();
 		string outstr = s[0];
 		if(s.length > 1)
@@ -298,7 +298,7 @@ class InsValueTable : HexTable {
 			if(p > 47) p -= 48;
 			assert(p >= 0 && p < 48);
 			
-			int c = (com.session.activeInstrument >= 0 && row == p) ? 15 : 12;
+			int c = (state.activeInstrument >= 0 && row == p) ? 15 : 12;
 			screen.cprint(area.x,area.y + i + 1, c, 0, format("%02X:", p));
 			for(j=0; j<8; j++) {
 				ofs = p + j * 48;
@@ -443,7 +443,7 @@ class CmdTable : HexTable {
 
 	override void update() {
 		int i;
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x,area.y, "`01Co`b1m`01mand");
 		else
 			screen.fprint(area.x,area.y, "`01Cmd (Alt-S)");
@@ -551,7 +551,7 @@ class ChordTable : HexTable {
 
 	override void update() {
 		int i;
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x,area.y, "`01Chor`b1d`01");
 		else
 			screen.fprint(area.x,area.y, "`01Chd (A-D)");
@@ -661,7 +661,7 @@ class WaveTable : HexTable {
 	}
 
 	void seekCurWave() {
-		seekRow(song.instrumentTable[com.session.activeInstrument + 7 * 48]);
+		seekRow(song.instrumentTable[state.activeInstrument + 7 * 48]);
 	}
 
 	override int keypress(Keyinfo key) {
@@ -714,7 +714,7 @@ class WaveTable : HexTable {
 	override void update() {
 		int i;
 		int t1, t2;
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x,area.y, "`b1W`01ave");
 		else
 			screen.fprint(area.x,area.y, "`01Wave (A-W)");
@@ -855,7 +855,7 @@ class PulseTable : SweepTable {
 	}
 
 	override void update() {
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x, area.y, "`b1P`01ulse");
 		else
 			screen.fprint(area.x, area.y, "`01Pulse (Alt-P)");
@@ -884,7 +884,7 @@ class PulseTable : SweepTable {
 	}
 
 	override bool highlightRow(int row) {
-		return highlightActiveFor(song.instrumentTable[com.session.activeInstrument + 5 * 48], row);
+		return highlightActiveFor(song.instrumentTable[state.activeInstrument + 5 * 48], row);
 	}
 }
 
@@ -900,7 +900,7 @@ class FilterTable : SweepTable {
 	}
 
 	override void update() {
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x, area.y, "`b1F`01ilter");
 		else 
 			screen.fprint(area.x, area.y, "`01Filter (Alt-F)");
@@ -929,7 +929,7 @@ class FilterTable : SweepTable {
 	}
 
 	override bool highlightRow(int row) {
-		return highlightActiveFor(song.instrumentTable[com.session.activeInstrument + 4 * 48], row);
+		return highlightActiveFor(song.instrumentTable[state.activeInstrument + 4 * 48], row);
 	}
 	
 }

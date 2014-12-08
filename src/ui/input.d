@@ -726,12 +726,12 @@ class InputNote : Newinput {
 			element.instr = 0x80;
 			break;
 		default:
-			int note = ((value - 3) & 0x7f) + 12 * octave - element.transpose;
+			int note = ((value - 3) & 0x7f) + 12 * state.octave - element.transpose;
 			if(note > 0x5e) break;
 			element.note = cast(ubyte)note;
-			if(autoinsertInstrument && value < 0x80) {
-				if(com.session.activeInstrument >= 0)
-					element.instr = cast(ubyte)(com.session.activeInstrument);
+			if(state.autoinsertInstrument && value < 0x80) {
+				if(state.activeInstrument >= 0)
+					element.instr = cast(ubyte)(state.activeInstrument);
 				else element.instr = 0x80;
 			}
 			if(value >= 0x80) {
@@ -768,7 +768,7 @@ class InputKeyjam : Newinput {
 			element.note = NOTE_KEYON;
 			break;
 		default:
-			int note = ((value - 3) & 0x7f) + 12 * octave;
+			int note = ((value - 3) & 0x7f) + 12 * state.octave;
 			if(note > 0x5e) return;
 			element.note = cast(ubyte)note;
 			if(value >= 0x80) {
@@ -778,8 +778,8 @@ class InputKeyjam : Newinput {
 
 			break;
 		}
-		if(com.session.activeInstrument >= 0)
-			element.instr = cast(ubyte)(com.session.activeInstrument);
+		if(state.activeInstrument >= 0)
+			element.instr = cast(ubyte)(state.activeInstrument);
 		audio.player.playNote(element);
 	}
 	
@@ -832,15 +832,15 @@ final class InputSeq : Newinput {
 	override int keypress(Keyinfo key) {
 		switch(key.unicode) {
 		case SDLK_SEMICOLON:
-			autoinsertInstrument ^= 1;
+			state.autoinsertInstrument ^= 1;
 			UI.statusline.display(format("Instrument autoinsert mode %s",
-										  autoinsertInstrument ? "enabled." : "disabled."));
+										  state.autoinsertInstrument ? "enabled." : "disabled."));
 			return OK;
 		case SDLK_LESS:
-			octave = clamp(--octave, 0, 6);
+			state.octave = clamp(--state.octave, 0, 6);
 			break;
 		case SDLK_GREATER:
-			octave = clamp(++octave, 0, 6);
+			state.octave = clamp(++state.octave, 0, 6);
 			break;
 		default:
 			break;
