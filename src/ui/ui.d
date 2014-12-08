@@ -587,7 +587,7 @@ final private class Toplevel : WindowSwitcher {
 				}
 			}
 		}
-		if(keyjamStatus == true || key.mods & KMOD_CAPS) {
+		if(keyjamStatus == true) {
 			inputKeyjam.keypress(key);
 		}
 		else {
