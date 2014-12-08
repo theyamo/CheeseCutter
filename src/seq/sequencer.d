@@ -192,12 +192,9 @@ public:
 			else return song.seqs[t.number];
 		}
 		int numRowsInSeq() {
-			Sequence seq;
-			seq = getSeq(tracks[trkofs2]);
-			int r = seq.rows;
 			if(tracks[trkofs2].trans >= 0xf0)
-				r = 1;
-			return r;
+				return 1;
+			return getSeq(tracks[trkofs2]).rows;
 		}
 
 		if(trkofs > lasttrk) trkofs = lasttrk;
