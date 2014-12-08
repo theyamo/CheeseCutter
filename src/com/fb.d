@@ -50,7 +50,7 @@ abstract class Video {
 		SDL_Surface* surface;
 		int useFullscreen;
 		Screen screen;
-		Oscilloscope osc;
+		Visualizer vis;
 	}
 	int height = 800, width = 600;
 	float scalex, scaley;
@@ -71,19 +71,11 @@ abstract class Video {
 	}
 
 	void drawVisualizer(int n) {
-		osc.draw(n);
-		/+
-		SDL_BlitSurface(osc.surface,
-						new SDL_Rect(0, 0, cast(short)osc.surface.w, cast(short)osc.surface.h),
-						surface,
-						new SDL_Rect(400, 14, cast(short)osc.surface.w, cast(short)osc.surface.h)
-						
-			);
-			+/
+		vis.draw(n);
 	}
 
 	void clearVisualizer() {
-		osc.clear();
+		vis.clear();
 	}
 	
 	abstract void enableFullscreen(bool fs);
@@ -119,7 +111,7 @@ class VideoStandard : Video {
 		}
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
-		osc = new Oscilloscope(surface, 500, 14);
+		vis = new Oscilloscope(surface, 500, 14);
 		screen.refresh();
 	}
 
@@ -235,7 +227,7 @@ class VideoYUV : Video {
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
 		}
-		osc = new Oscilloscope(surface, 500, 14);
+		vis = new Oscilloscope(surface, 500, 14);
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
 		makeOverlay([width, height]);
@@ -470,7 +462,12 @@ class Screen {
 	}
 }
 
-private class Oscilloscope {
+interface Visualizer {
+	void clear();
+	void draw(int);
+}
+
+private class Oscilloscope : Visualizer {
 	private SDL_Surface* surface;
 	private short* samples;
 	private const short xconst, yconst;
@@ -485,13 +482,13 @@ private class Oscilloscope {
 		assert(samples !is null);
 	}
 
-	private float smpofs = 0.0;
 	void clear() {
 		SDL_FillRect(surface, new SDL_Rect(xconst, yconst,
                                            width, height), 0);
 	}
 	
 	void draw(int frames) {
+		float smpofs;
 		float n = frames * 50.0f;
 		int count = cast(int)(48000 / n);
 
@@ -504,7 +501,7 @@ private class Oscilloscope {
 
 		clear();
 		
-		smpofs = 0;
+		smpofs = 0.0f;
 		import audio.audio;
 		int oldposition = height / 2 + samples[cast(int)smpofs]  / 768;
 
