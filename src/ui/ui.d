@@ -1190,6 +1190,7 @@ final class UI {
 	}
 
 	void enableKeyjamMode(bool doEnable) {
+		if(audio.player.isPlaying) return;
 		doEnable ? com.fb.disableKeyRepeat() :
 			com.fb.enableKeyRepeat();
 		keyjamStatus = doEnable;
