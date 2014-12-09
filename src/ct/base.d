@@ -363,7 +363,7 @@ struct Tracklist {
 		trackList[offset].trans = getTransAt(offset);
 		trackList[offset].number = 0;
 		if(wrapOffset() >= offset) {
-			wrapOffset( cast(address)(wrapOffset + 1));
+			wrapOffset = cast(address)(wrapOffset + 1);
 		}
 	}
 
@@ -373,7 +373,7 @@ struct Tracklist {
 			trackList[i] = trackList[i+1].dup;
 		}		
 		if(wrapOffset() >= offset) {
-			wrapOffset( cast(address)(wrapOffset - 1));
+			wrapOffset = cast(address)(wrapOffset - 1);
 		}
 	}
 
