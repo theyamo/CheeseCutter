@@ -37,7 +37,7 @@ private {
 	bool useRelativeNotes = true;
 }
 
-struct SequenceRowData {
+struct RowData {
 	Track trk; 
 	alias trk track;
 	// offset in tracklist, checked against endmark
@@ -54,14 +54,14 @@ struct SequenceRowData {
 struct VoiceInitParams {
 	Tracklist t;
 	Rectangle a;
-	Posinfo p;
+	PosData p;
 }
 
 private struct Clip {
 	int trans, no;
 }
 
-protected class Posinfo {
+protected class PosData {
 	int pointerOffsetValue = 0;
 	int trkOffset = 0;
 	int seqOffset;
@@ -91,16 +91,16 @@ protected class Posinfo {
 	
 }
 
-protected class PosinfoTable {
-	Posinfo[] pos;
+protected class PosDataTable {
+	PosData[] pos;
 
-	Posinfo opIndex(int idx) {
+	PosData opIndex(int idx) {
 		return pos[idx];
 	}
 
 	this() {
 		pos.length = 3;
-		foreach(ref p; pos) p = new Posinfo;
+		foreach(ref p; pos) p = new PosData;
 	}
 	
 	@property int pointerOffset(int o) { 
@@ -126,10 +126,10 @@ protected class PosinfoTable {
 		return 0;
 	}
 
-	void dup(PosinfoTable pt) {
+	void dup(PosDataTable pt) {
 		for(int i = 0 ; i < 3; i++) {
-			Posinfo p = pos[i];
-			Posinfo t = pt[i];
+			PosData p = pos[i];
+			PosData t = pt[i];
 			p.pointerOffset = t.pointerOffset;
 			p.seqOffset = t.seqOffset;
 			p.trkOffset = t.trkOffset;
@@ -143,8 +143,8 @@ protected class PosinfoTable {
 
 abstract protected class Voice : Window {
 	Tracklist tracks;
-	Posinfo pos;
-	SequenceRowData activeRow;
+	PosData pos;
+	RowData activeRow;
 	Input input;
 	alias input activeInput;
 	
@@ -162,7 +162,7 @@ public:
 	}
 
 	bool atEnd() {
-		SequenceRowData s = getRowData(pos.trkOffset, 
+		RowData s = getRowData(pos.trkOffset, 
 									   pos.seqOffset + pos.pointerOffset);
 		return (s.trk.trans >= 0xf0);
 	}
@@ -170,8 +170,8 @@ public:
 	bool pastEnd() { return pastEnd(0); }
 	
 	bool pastEnd(int y) {
-		SequenceRowData s = getRowData(pos.trkOffset,
-									   pos.seqOffset + y);
+		RowData s = getRowData(pos.trkOffset,
+							   pos.seqOffset + y);
 		int t = s.trkOffset2 - 1;
 		if(t < 0) return false;
 		Track trk = tracks[t];
@@ -182,8 +182,8 @@ public:
 
 	override void refresh() { refreshPointer(0); }
 
-	SequenceRowData getSequenceData(int trkofs, int seqofs) {
-		static SequenceRowData s;
+	RowData getRowData(int trkofs, int seqofs) {
+		static RowData s;
 		int trkofs2 = trkofs;
 		Sequence seq;
 		int lasttrk = tracks.trackLength;
@@ -238,11 +238,7 @@ public:
 		return s;
 	}
 	
-	SequenceRowData getRowData(int trkofs, int seqofs) {
-		return getSequenceData(trkofs, seqofs);
-	}
-
-	SequenceRowData getRowData(int tofs) {
+	RowData getRowData(int tofs) {
 		return getRowData(tofs, 0);
 	}
 
@@ -252,7 +248,7 @@ public:
 
  	void scroll(int steps, bool canWrap) {
 		int oldRowcounter;
-		SequenceRowData s = getRowData(pos.trkOffset);
+		RowData s = getRowData(pos.trkOffset);
 		assert(s.seq.rows == s.clippedRows);
 		with(pos) {
 			seqOffset = seqOffset + steps;
@@ -344,9 +340,9 @@ protected abstract class VoiceTable : Window {
 	Voice[3] voices;
 	Voice active;
 	alias active activeVoice;
-	PosinfoTable posTable;
+	PosDataTable posTable;
 	
-	this(Rectangle a, PosinfoTable pi) {
+	this(Rectangle a, PosDataTable pi) {
 		super(a);
 		posTable = pi;
 		activeVoice = voices[0];
@@ -529,7 +525,7 @@ protected abstract class VoiceTable : Window {
 		screen.cprint(area.x + 1, area.y, 1, 0, format("#%02X",song.subtune));
 		for(int i = 0, x = area.x + 5 + com.fb.border; i < 3; i++) {
 			Voice v = voices[i];
-			SequenceRowData c = v.activeRow;
+			RowData c = v.activeRow;
 			screen.cprint(x, area.y, 1, 0,
 				format("+%03X %02X %s", c.trkOffset, c.trk.number,
 					   audio.player.muted[i] ? "Off" : "   ") );
@@ -607,7 +603,7 @@ protected abstract class VoiceTable : Window {
 			
 			for(int i = 0; i < e; i++) {
 				activeVoice.refreshPointer(posTable.pointerOffset);
-				SequenceRowData s = activeVoice.getRowData(i);
+				RowData s = activeVoice.getRowData(i);
 				step(s.seq.rows);
 			}
 			activeVoice.refreshPointer(posTable.pointerOffset);
@@ -724,7 +720,7 @@ protected abstract class VoiceTable : Window {
 	}
 
 	// for seq copy/insert/etc 
-	SequenceRowData getRowData() {
+	RowData getRowData() {
 		return activeVoice.activeRow;
 	}
 
@@ -957,7 +953,7 @@ private:
 	
 	void insertCallback(int param) {
 		if(param >= MAX_SEQ_NUM) return;
-		SequenceRowData s = activeView.getRowData();
+		RowData s = activeView.getRowData();
 		Sequence fr = song.seqs[param];
 		Sequence to = s.seq;
 		to.insertFrom(fr, s.seqOffset);
@@ -966,7 +962,7 @@ private:
 
 	void copyCallback(int param) {
 		if(param >= MAX_SEQ_NUM) return;
-		SequenceRowData s = activeView.getRowData();
+		RowData s = activeView.getRowData();
 		Sequence fr = song.seqs[param];
 		Sequence to = s.seq; 
 		to.copyFrom(fr);

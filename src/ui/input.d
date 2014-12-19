@@ -271,13 +271,13 @@ class InputWord : InputValue {
 class InputTrack : InputWord {
 	Track trk;
 	ubyte[2] buf;
-	this(SequenceRowData s) {
+	this(RowData s) {
 		super(buf);
 		init(s);
 		flush();
 	}
 	
-	void init(SequenceRowData s) {
+	void init(RowData s) {
 		trk = s.trk;
 		buf[] = valueCheck(trk.trans, trk.number);
 		super.setOutput(buf);

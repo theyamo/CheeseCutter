@@ -21,7 +21,7 @@ protected class TrackmapVoice : TrackVoice {
 	}
 
 	override void update() {
-		SequenceRowData wseq, cseq;
+		RowData wseq, cseq;
 		int h = area.y + area.h + 1;
 		int y,i;
 		int trkofs = pos.trkOffset;
@@ -96,7 +96,7 @@ protected class TrackmapVoice : TrackVoice {
 }
 
 protected class TrackmapTable : BaseTrackTable {
-	this(Rectangle a, PosinfoTable pi) {
+	this(Rectangle a, PosDataTable pi) {
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0;v<3;v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
@@ -117,7 +117,7 @@ protected class TrackmapTable : BaseTrackTable {
 	override void step(int st) { step(st,0); }
 	override void step(int st, int extra) {
 		int steps, rows;
-		SequenceRowData s;
+		RowData s;
 		activeVoice.trackFlush(posTable.pointerOffset);
 		if(st > 0) {
 			if(activeVoice.atEnd()) return;

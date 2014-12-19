@@ -59,7 +59,7 @@ class TrackVoice : SeqVoice {
 
 	override void update() {
 		super.update();
-		SequenceRowData wseq, cseq;
+		RowData wseq, cseq;
 		int h = area.y + area.h + 1;
 		int y,i;
 		int trkofs = pos.trkOffset;
@@ -187,7 +187,7 @@ protected:
 }
 
 protected abstract class BaseTrackTable : VoiceTable {
-	this(Rectangle a, PosinfoTable pi) { super(a, pi); }
+	this(Rectangle a, PosDataTable pi) { super(a, pi); }
 
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL) {
@@ -348,7 +348,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 
 
 protected class TrackTable : BaseTrackTable {
-	this(Rectangle a, PosinfoTable pi) {
+	this(Rectangle a, PosDataTable pi) {
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0;v<3;v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
@@ -389,7 +389,7 @@ protected class TrackTable : BaseTrackTable {
 			activeVoice.trackFlush(posTable.pointerOffset);
 			int t = activeVoice.activeRow.trkOffset;
 			if(t == 0) t = activeVoice.tracks.trackLength;
-			SequenceRowData s = activeVoice.getRowData(t - 1, 0);
+			RowData s = activeVoice.getRowData(t - 1, 0);
 			step(-s.seq.rows, 0, area.height);
 			centerTo(tableBot);
 			refresh();

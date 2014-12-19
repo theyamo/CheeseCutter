@@ -19,7 +19,7 @@ protected class SeqVoice : Voice {
 
 	this(VoiceInitParams v) {		
 		super(v);
-		activeRow = getSequenceData(0, 0);
+		activeRow = getRowData(0, 0);
 		seqinput = new InputSeq();
 		(cast(InputSeq)seqinput).setElement(activeRow.element);
 		seqinput.setCoord(area.x + 4, 0);
@@ -95,13 +95,13 @@ protected class SeqVoice : Voice {
 	override void refreshPointer(int y) {
 		assert(seqinput !is null);
 		assert(pos !is null);
-		activeRow = getSequenceData(pos.trkOffset, pos.seqOffset + y);
+		activeRow = getRowData(pos.trkOffset, pos.seqOffset + y);
 		activeInput.setCoord(0, 1 + area.y + y + anchor);
 		(cast(InputSeq)seqinput).setElement(activeRow.element);
 	}
 
 	override void update() {
-		SequenceRowData wseq;
+		RowData wseq;
 		int scry = area.y + area.height;
 		int trkofs = pos.trkOffset, seqofs = pos.seqOffset - anchor;
 		int lasttrk = tracks.trackLength;
@@ -184,7 +184,7 @@ protected class SeqVoice : Voice {
 }
 
 protected class SequenceTable : VoiceTable {
-	this(Rectangle a, PosinfoTable pi) { 
+	this(Rectangle a, PosDataTable pi) { 
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0;v<3;v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
@@ -201,7 +201,7 @@ protected class SequenceTable : VoiceTable {
 		int steps = 0;
 		foreach(Voice v; voices) {
 			with(v.pos) {
-				SequenceRowData s = v.getRowData(trkOffset);
+				RowData s = v.getRowData(trkOffset);
 				if(trkOffset >= v.tracks.trackLength) {
 					trkOffset = 0;
 					rowCounter = -pointerOffset;
@@ -217,8 +217,8 @@ protected class SequenceTable : VoiceTable {
 		if(!audio.player.isPlaying || audio.player.keyjamEnabled) return;
 		// trackbar
 		for(int i = 0 ; i < 3; i++) {
-			Posinfo fp = fplayPos[i];
-			Posinfo vp = posTable[i];
+			PosData fp = fplayPos[i];
+			PosData vp = posTable[i];
 			int tp = fp.rowCounter - vp.rowCounter + anchor;
 			if(tp >= 0 && tp < area.height) {
 				for(int x = voices[i].area.x;
@@ -310,7 +310,7 @@ protected class SequenceTable : VoiceTable {
 		else if(key.mods & KMOD_CTRL) {
 			switch(key.raw) {
 			case SDLK_p:
-				SequenceRowData r = activeVoice.activeRow;
+				RowData r = activeVoice.activeRow;
 				// bad coding because all the rowcountergetters are flawed one way or another
 				int rowcount = activeVoice.getRowcounter(r.trkOffset) + r.seqOffset;
 				song.splitSequence(r.track.number, r.seqOffset);

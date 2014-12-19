@@ -22,13 +22,13 @@ __gshared Song song;
 UI mainui;
 Video video;
 Screen screen;
-PosinfoTable fplayPos, seqPos;
+PosDataTable fplayPos, seqPos;
 EditorState state;
 
 void initSession() {
 	song = new Song();
-	seqPos = new PosinfoTable();
-	fplayPos = new PosinfoTable();
+	seqPos = new PosDataTable();
+	fplayPos = new PosDataTable();
 	for(int i = 0; i < 3; i++) {
 		seqPos[i].tracks = song.tracks[i];
 		fplayPos[i].tracks = song.tracks[i];
