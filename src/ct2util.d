@@ -277,7 +277,10 @@ int main(string[] args) {
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
-			std.file.write(outfn, dumpData(insong, infn));
+			string dumped = dumpOptimized(insong, 0x1000, true,
+										  verbose);
+			string header = format(";;; ACME dump for %s\n\n", infn);
+			std.file.write(outfn, header ~ dumped);
 			break;
 		case Command.Init:
 			insong = new Song(cast(ubyte[])std.file.read(infn));
