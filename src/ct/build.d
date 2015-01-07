@@ -112,6 +112,22 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 
 ubyte[] doBuild(Song song, int address, bool genPSID,
 				int defaultSubtune, bool verbose) {
+	string input = dumpOptimized(song, address, genPSID, verbose);
+
+	if(verbose)
+		writeln("Assembling...");
+
+	ubyte[] assembled = cast(ubyte[])assemble(input);
+	
+	if(verbose)
+		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length - 2,
+					   address, address + assembled.length - 2));
+
+	return genPSID ? generatePSIDHeader(song, assembled, address, address + 3,
+										defaultSubtune) : assembled;
+}
+
+string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
 	string input = playerSource;
 	input ~= dumpData(song, "");
 	int maxInsno;
@@ -219,15 +235,5 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 	}
 	setArgVal("BASEADDRESS", format("$%04x", address), );
 
-	if(verbose)
-		writeln("Assembling...");
-
-	ubyte[] assembled = cast(ubyte[])assemble(input);
-	
-	if(verbose)
-		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length - 2,
-					   address, address + assembled.length - 2));
-
-	return genPSID ? generatePSIDHeader(song, assembled, address, address + 3,
-										defaultSubtune) : assembled;
+	return input;
 }
