@@ -495,10 +495,14 @@ abstract class FileSelectorDialog : WindowSwitcher {
 		sdir.setString(cast(string)s.dup);
 	}
 
-	string getFilename() {
+	deprecated string getFilename() {
 		return sfile.toString();
 	}
 
+	@property string fullname() {
+		return getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
+	}
+	
 	override void activate() {
 		refresh();
 		fsel.refresh();
@@ -564,8 +568,8 @@ abstract class FileSelectorDialog : WindowSwitcher {
 			return r;
 		}
 		else if(active == sfile) { // pressed RETURN in file dialog
-			string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
-			cb(filename);
+			//string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
+			cb(fullname);
 			return RETURN;
 		}
 		else {
@@ -603,13 +607,12 @@ class SaveFileDialog : FileSelectorDialog {
 		if(active != fsel && active != sfile)
 			return super.returnPressed(cb);
 
-		// TODO: check here if file actually exists, otherwise just call super
-
-		mainui.activateDialog(new ConfirmationDialog("Overwrite destination file (y/N)? ",
-													 &confirmCallback));
-
-		return OK;
-		
+		if(std.file.exists(fullname)) {
+			mainui.activateDialog(new ConfirmationDialog("Overwrite destination file (y/N)? ",
+														 &confirmCallback));
+			return OK;
+		}
+		else return super.returnPressed(cb);
 	}
 
 	private void confirmCallback(int param) {
