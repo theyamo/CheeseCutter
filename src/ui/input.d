@@ -15,7 +15,7 @@ import main;
 import std.string;
 import std.utf;
 
-enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT }
+enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT, IllegalValue }
 
 struct Keyinfo {
 	int key, mods, unicode;
@@ -261,6 +261,45 @@ class InputBoundedByte : InputValue {
 	}
 	
 }
+
+class InputSingleChar : InputValue {
+	string keys;
+	int defaultKey;
+	this(ubyte[] p, string keys, int defaultKey) {
+		super(p, 2);
+		this.keys = keys;
+		setValue(0);
+		this.defaultKey = defaultKey;
+	}
+
+	override int keypress(Keyinfo key) {
+		auto v = keys.indexOf(key.unicode);
+		if(key.mods & KMOD_CTRL) return 0;
+		else if(key.raw == SDLK_ESCAPE) {
+			return CANCEL;
+		}
+		else if(key.raw == SDLK_RETURN) {
+			setValue(cast(ubyte)defaultKey);
+			return RETURN;
+		}
+		else if(v >= 0) {
+			setValue(cast(ubyte)(v));
+			return RETURN;
+		}
+		return IllegalValue;
+	}
+	
+	override int step(int st) {
+		return OK;
+	}
+
+	override void update() {
+		//screen.cprint(x, y, 1, -1, format("%02X ", toInt()));
+		screen.cprint(x + nibble, y, 1, -1, std.conv.to!string(keys[defaultKey]));
+		cursor.set(x + nibble, y);
+	}
+}
+
 
 class InputWord : InputValue {
 	this(ubyte[] p) {
