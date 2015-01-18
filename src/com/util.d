@@ -25,6 +25,16 @@ int paddedStringLength(string s, char padchar) {
 	return 0;
 }
 
+string unpad(string padded) {
+	size_t i;
+	for(i = padded.length - 1; i > 0; i--) {
+		if(padded[i] != ' ')
+			break;
+	}
+	string s = padded[0 .. i+1];
+	return s;
+}
+
 void hexdump(ubyte[] buf, int rowlen) {
 	hexdump(buf, rowlen, false);
 }
@@ -106,16 +116,20 @@ ubyte[] table2Array(string table) {
 
 int str2Value(string s) {
 	if(s[0] == 'x' || s[0] == '$') {
-		int val, i;
-		foreach_reverse(c; toUpper(s[1..$])) {
-			if(c == 'x' || c == '$') break;
-			if("0123456789ABCDEF".indexOf(c) < 0)
-				throw new Error("Illegal hexadecimal value in string.");
-			val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
-		}
-		return val;
+		return convertHex(s[1 .. $]);
 	}
 	return to!int(s);
+}
+
+int convertHex(string s) {
+	int val, i;
+	foreach_reverse(c; toUpper(s)) {
+		if(c == 'x' || c == '$') break;
+		if("0123456789ABCDEF".indexOf(c) < 0)
+			throw new Error("Illegal hexadecimal value in string.");
+		val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
+	}
+	return val;
 }
 
 void parseList(ref int[] array, string arg) {
@@ -164,6 +178,14 @@ int str2Value2(string s) {
 			throw new UserException("Illegal value in argument.");
 	}
 	return to!int(s);
+}
+
+string arr2str(ubyte[] arr) {
+	char[] c = new string(arr.length * 2);
+	foreach(idx, ubyte byt; arr) {
+		c[idx * 2 .. idx * 2 + 2] = std.string.format("%02x", byt);
+	}
+	return to!string(c);
 }
 
 int clamp(int n, int l, int h) { return n > h ? h : n < l ? l : n; }
