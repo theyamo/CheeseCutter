@@ -495,7 +495,7 @@ abstract class FileSelectorDialog : WindowSwitcher {
 		sdir.setString(cast(string)s.dup);
 	}
 
-	deprecated string getFilename() {
+	@property string filename() {
 		return sfile.toString();
 	}
 

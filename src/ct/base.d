@@ -1248,20 +1248,20 @@ class Song {
 		throw new UserException(std.string.format("Missing tablepointer %d", requestedFlag));
 	}
 	
-	int getWavetablePointer(int insno) {
+	int wavetablePointer(int insno) {
 		return getTablepointer(instrumentTable, features.instrumentFlags, 1, insno);
 	}
 
-	int getPulsetablePointer(int insno) {
+	int pulsetablePointer(int insno) {
 		int ptr = getTablepointer(instrumentTable, features.instrumentFlags, 3, insno);
 		if(ptr >= 0x80) return 0;
 		return ptr;
 	}
-
-	int getFiltertablePointer(int insno) {
+	
+	int filtertablePointer(int insno) {
 		return getTablepointer(instrumentTable, features.instrumentFlags, 4, insno);
 	}
-
+	
 	void seqIterator(void delegate(Sequence s, Element e) dg) {
 		foreach(i, s; seqs) {
 			for(int j = 0; j < s.rows; j++) {

@@ -194,7 +194,7 @@ string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
 		if(song.songspeeds[i] < 2) swingUsed = true;
 	}
 	for(int i = 0; i < 48; i++) {
-		if(song.getFiltertablePointer(i) > 0)
+		if(song.filtertablePointer(i) > 0)
 			filterUsed = true;
 	}
 

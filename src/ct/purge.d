@@ -179,7 +179,7 @@ class Purge {
 	
 		for(int i = 0; i < 48; i++) {
 			if(!instrUsed[i]) continue;
-			int ptr = song.getWavetablePointer(i);
+			int ptr = song.wavetablePointer(i);
 			int cell = whichCell(ptr);
 			if(cell < 0) continue;
 			markCells(cell);
@@ -216,8 +216,8 @@ class Purge {
 		for(i = 0; i < 48; i++) {
 			if(!instrUsed[i]) continue;
 			try {
-				seekNMark(song.pulseTable, &pulse_used[0], song.getPulsetablePointer(i));
-				seekNMark(song.filterTable, &filter_used[0], song.getFiltertablePointer(i));
+				seekNMark(song.pulseTable, &pulse_used[0], song.pulsetablePointer(i));
+				seekNMark(song.filterTable, &filter_used[0], song.filtertablePointer(i));
 			}
 			catch(Exception e) {
 				explain(format("Could not purge pulse / filter table: %s", e.toString()));

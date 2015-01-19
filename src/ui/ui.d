@@ -947,7 +947,7 @@ final class UI {
 				audio.player.toggleVoice(2);
 				break;
 			case SDLK_F11:
-				string s = savedialog.getFilename();
+				string s = savedialog.filename;
 				if(s == "")
 					statusline.display("Cannot Quicksave; give filename first by doing a regular save.");
 				else {
