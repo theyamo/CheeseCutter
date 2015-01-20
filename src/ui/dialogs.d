@@ -465,11 +465,9 @@ abstract class FileSelectorDialog : WindowSwitcher {
 	alias void delegate(string) CB;
 	const CB callback;
 	alias callback processFileCallback;
-	alias activeWindow active;
 	private DialogString sfile, sdir;
 	FileSelector fsel;
-	private const string header;
-	private int active_window_num;
+	private string header;
 	private char[][] filelist;
 	Rectangle filearea;
 	
@@ -529,13 +527,13 @@ abstract class FileSelectorDialog : WindowSwitcher {
 		int ind = cast(int) (1+f.lastIndexOf(DIR_SEPARATOR));
 		screen.fprint(x,area.y+area.height-2,format("`0f Filename: `0d%s",f[ind..$]));
 		
-		active.update();
-		if(active == fsel) {
+		activeWindow.update();
+		if(activeWindow == fsel) {
 			fsel.blink();
 		} else {
 			fsel.update();
 		}
-		input = active.input;
+		input = activeWindow.input;
 	}
 
 	override int keypress(Keyinfo key) {
@@ -549,7 +547,7 @@ abstract class FileSelectorDialog : WindowSwitcher {
 		case SDLK_RETURN:
 			return returnPressed(callback);
 		default:
-			int r = active.keypress(key);
+			int r = activeWindow.keypress(key);
 			if(r == WRAP){
 				int ind = cast(int) (1 + fsel.getSelected().lastIndexOf(DIR_SEPARATOR)); 
 				sfile.setString(cast(string)(fsel.getSelected()[ind..$]));
@@ -560,14 +558,14 @@ abstract class FileSelectorDialog : WindowSwitcher {
 	}
 
 	protected int returnPressed(CB cb) {
-		if(active == fsel) {
+		if(activeWindow == fsel) {
 			int r = fsel.fileHandler();
 			if(r == RETURN)
 				cb(cast(string)(fsel.selected));
 			sdir.setString(getcwd());
 			return r;
 		}
-		else if(active == sfile) { // pressed RETURN in file dialog
+		else if(activeWindow == sfile) { // pressed RETURN in file dialog
 			//string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
 			cb(fullname);
 			return RETURN;
@@ -604,7 +602,7 @@ class SaveFileDialog : FileSelectorDialog {
 	}
 
 	override protected int returnPressed(CB cb) {
-		if(active != fsel && active != sfile)
+		if(activeWindow != fsel && activeWindow != sfile)
 			return super.returnPressed(cb);
 
 		if(std.file.exists(fullname)) {
@@ -621,13 +619,13 @@ class SaveFileDialog : FileSelectorDialog {
 		// copypasted from super.returnPressed, ugh...
 		// need to implement getSelectedFilename to cut repetition
 
-		if(active == fsel) {
+		if(activeWindow == fsel) {
 			int r = fsel.fileHandler();
 			if(r == RETURN)
 				processFileCallback(cast(string)(fsel.selected));
 			sdir.setString(getcwd());
 		}
-		else if(active == sfile) { // pressed RETURN in file dialog
+		else if(activeWindow == sfile) { // pressed RETURN in file dialog
 			string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
 			std.stdio.writeln("saving ", filename);
 			processFileCallback(filename);
