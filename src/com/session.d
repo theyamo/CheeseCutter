@@ -9,6 +9,8 @@ import ui.ui;
 import seq.sequencer;
 
 struct EditorState {
+	__gshared Song song;
+	PosDataTable fplayPos, seqPos;
 	int octave = 3;
 	int activeInstrument;
 	bool autoinsertInstrument = true;
@@ -18,19 +20,29 @@ struct EditorState {
 	string filename;
 }
 
-__gshared Song song;
+@property song() {
+	return state.song;
+}
+
+@property seqPos() {
+	return state.seqPos;
+}
+
+@property fplayPos() {
+	return state.fplayPos;
+}
+
 UI mainui;
 Video video;
 Screen screen;
-PosDataTable fplayPos, seqPos;
 EditorState state;
 
 void initSession() {
-	song = new Song();
-	seqPos = new PosDataTable();
-	fplayPos = new PosDataTable();
+	state.song = new Song();
+	state.seqPos = new PosDataTable();
+	state.fplayPos = new PosDataTable();
 	for(int i = 0; i < 3; i++) {
-		seqPos[i].tracks = song.tracks[i];
-		fplayPos[i].tracks = song.tracks[i];
+		state.seqPos[i].tracks = song.tracks[i];
+		state.fplayPos[i].tracks = song.tracks[i];
 	}
 }
