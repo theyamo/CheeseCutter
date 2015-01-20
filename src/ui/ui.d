@@ -798,7 +798,7 @@ final class UI {
 		return toplevel.activeWindow;
 	}
 
-	Input activeInput() {
+	@property Input activeInput() {
 		return activeWindow.input;
 	}
 

@@ -65,8 +65,8 @@ void mainloop() {
 				quit = true;
 				break;
 			case SDL_KEYDOWN:
-				if(mainui.activeInput() !is null) {
-					Cursor cursor = mainui.activeInput().cursor;
+				if(mainui.activeInput !is null) {
+					Cursor cursor = mainui.activeInput.cursor;
 					if(cursor !is null) cursor.reset();
 				}
 				mods = evt.key.keysym.mod;
@@ -130,9 +130,9 @@ void mainloop() {
 				break;
 			}
 		}
-		if(mainui.activeInput() !is null) {
-			mainui.activeInput().update();
-			Cursor cursor = mainui.activeInput().cursor;
+		if(mainui.activeInput !is null) {
+			mainui.activeInput.update();
+			Cursor cursor = mainui.activeInput.cursor;
 			if(cursor !is null) cursor.blink();
 		}
 		SDL_Delay(40);
