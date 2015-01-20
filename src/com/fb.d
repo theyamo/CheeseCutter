@@ -139,12 +139,8 @@ class VideoStandard : Video {
 					bp = &font[a * 16];
 					ufg = (*bptr >> 8) & 15;
 					ubg = (*bptr >> 12);
-					int fgcolor = PALETTE[ufg].b << surface.format.Bshift | 
-						(PALETTE[ufg].g << surface.format.Gshift) |
-						(PALETTE[ufg].r << surface.format.Rshift);
-					int bgcolor = PALETTE[ubg].b << surface.format.Bshift | 
-						(PALETTE[ubg].g << surface.format.Gshift) |
-						(PALETTE[ubg].r << surface.format.Rshift);
+					auto fgcolor = getColor(surface, ufg),
+						bgcolor = getColor(surface, ubg);
 					for(c = 4; c < 18; c++, bp++) {
 						b = *bp;
 						if(b & 0x80) *(sp++) = fgcolor;
@@ -268,12 +264,8 @@ class VideoYUV : Video {
 					bp = &font[a * 16];
 					ufg = (*bptr >> 8) & 15;
 					ubg = (*bptr >> 12);
-					int fgcolor = PALETTE[ufg].b << surface.format.Bshift | 
-						(PALETTE[ufg].g << surface.format.Gshift) |
-						(PALETTE[ufg].r << surface.format.Rshift);
-					int bgcolor = PALETTE[ubg].b << surface.format.Bshift | 
-						(PALETTE[ubg].g << surface.format.Gshift) |
-						(PALETTE[ubg].r << surface.format.Rshift);
+					auto fgcolor = getColor(surface, ufg),
+						bgcolor = getColor(surface, ubg);
 					for(c = 4; c < 18; c++, bp++) {
 						sp = &pixbuf[0];
 						b = *bp;
@@ -492,12 +484,8 @@ private class Oscilloscope : Visualizer {
 		float n = frames * 50.0f;
 		int count = cast(int)(48000 / n);
 
-		Uint32 colh = PALETTE[13].b << surface.format.Bshift | 
-			(PALETTE[13].g << surface.format.Gshift) |
-			(PALETTE[13].r << surface.format.Rshift);
-		Uint32 coll = PALETTE[5].b << surface.format.Bshift | 
-			(PALETTE[5].g << surface.format.Gshift) |
-			(PALETTE[5].r << surface.format.Rshift);
+		auto colh = getColor(surface, 13),
+			coll = getColor(surface, 5);
 
 		clear();
 		
@@ -566,4 +554,8 @@ Uint16 readkey() {
 	return evt.key.keysym.unicode;
 }
 
-
+private int getColor(SDL_Surface* s, int c) {
+	return PALETTE[c].b << s.format.Bshift | 
+		(PALETTE[c].g << s.format.Gshift) |
+		(PALETTE[c].r << s.format.Rshift);
+}
