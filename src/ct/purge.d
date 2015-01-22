@@ -54,10 +54,10 @@ final class Purge {
 		// ugly hack to not clear defined but unused instruments
 		for(int i = 47; i >= 0; i--) {
 			if(instrUsed[i] == false)
-				instrUsed[i] = instrIsEmpty(i);
+				instrUsed[i] = !instrIsEmpty(i);
 		}
 		instrUsed[insno] = false;
-		
+
 		purgeWavetable();
 		purgePulseFilter();
 

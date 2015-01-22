@@ -1699,7 +1699,7 @@ class Song {
 		auto recs = csvReader!Rec(patch,'`');
 		foreach(rec; recs) {
 			auto p = new Purge(this);
-			//p.deleteInstrument(insno);
+			p.deleteInstrument(insno);
 			insertInstrument(Patch(rec.name, conv(rec.def), conv(rec.wave1),
 									 conv(rec.wave2), conv(rec.filt),
 									 conv(rec.pulse)), insno);
