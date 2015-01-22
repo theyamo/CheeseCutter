@@ -50,16 +50,33 @@ final class Purge {
 		int waveptr = song.wavetablePointer(insno);
 		int pulseptr = song.pulsetablePointer(insno);
 		int filtptr = song.filtertablePointer(insno);
+
+		// ugly hack to not clear defined but unused instruments
+		for(int i = 47; i >= 0; i--) {
+			if(instrUsed[i] == false)
+				instrUsed[i] = instrIsEmpty(i);
+		}
+		instrUsed[insno] = false;
+		
+		purgeWavetable();
+		purgePulseFilter();
+
 		for(int i = 0; i < 8; i++) {
 			song.instrumentTable[i * 48 + insno] = 0;
 		}
-		purgeWavetable();
-		purgePulseFilter();
+		song.insLabels[insno][] = ' ';
 		initialized = false;
 	}
 
 private:
-
+	bool instrIsEmpty(int insno) {
+		for(int i = 0; i < 8; i++) {
+			if(song.instrumentTable[i * 48 + insno] != 0)
+				return false;
+		}
+		return true;
+	}
+	
 	// marking unused seqs optional in case you only want to optimize some tables
 	void initialize(bool markUnusedSeqs) {
 		if(initialized) return;
