@@ -749,38 +749,26 @@ class TWaveTable : Table {
 	}
 
 	Chunk[] getChunks() {
-		ubyte[] wavetab = data;
-		/+ static +/ Chunk[] chunks = new Chunk[256];
-		int counter;
-		for(int i = 0, b; i < 256; i++) {
-			if(wavetab[i] == 0x7f || wavetab[i] == 0x7e) {
-				chunks[counter] = Chunk(b, wavetab[b .. i + 1], wavetab[b + 256 .. i + 256 + 1]);
-				b = i + 1;
-				counter++;
-			}
-		}
-		return chunks[0 .. counter];
+		return getChunks(data);
 	}
-	
-	Chunk[] getChunksDup() {
-		ubyte[] wavetab = data.dup;
-		/+ static +/ Chunk[] chunks = new Chunk[256];
-		int counter;
-		for(int i = 0, b; i < 256; i++) {
-			if(wavetab[i] == 0x7f || wavetab[i] == 0x7e) {
-				chunks[counter] = Chunk(b, wavetab[b .. i + 1], wavetab[b + 256 .. i + 256 + 1]);
-				b = i + 1;
-				counter++;
-			}
-		}
-		return chunks[0 .. counter];
-	}
-	
 
+	Chunk[] getChunks(ubyte[] wavetab) {
+		/+ static +/ Chunk[] chunks = new Chunk[256];
+		int counter;
+		for(int i = 0, b; i < 256; i++) {
+			if(wavetab[i] == 0x7f || wavetab[i] == 0x7e) {
+				chunks[counter] = Chunk(b, wavetab[b .. i + 1], wavetab[b + 256 .. i + 256 + 1]);
+				b = i + 1;
+				counter++;
+			}
+		}
+		return chunks[0 .. counter];
+	}
+	
 	// get program starting at waveOffset
 	// mostly copied from purgeWave
 	WaveProgram getProgram(int waveOffset) {
-		auto chunks = getChunksDup(); // NB might need to implement .dup
+		auto chunks = getChunks(data.dup); 
 		int topRow = 255;
 		
 		int cell = whichCell(chunks, waveOffset);
