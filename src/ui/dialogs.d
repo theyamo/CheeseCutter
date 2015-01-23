@@ -22,24 +22,24 @@ abstract class QueryDialogBase(T) : Window {
 	static ubyte[1] byt;
 	alias void delegate(T) Callback;
 	Callback callback;
+	protected int frameWidth;
 	this(string s, Callback fp) {
 		super(Rectangle(0, 0, 1));
 		query = s;
 		callback = fp;
+		frameWidth = cast(int)query.length;
 	}
 
 	override void update() {
-		int x = cast(int)(screen.width / 2 - (query.length + 6 )/2);
+		int x = cast(int)(screen.width / 2 - (frameWidth + 6)/2);
 		int y = cast(int)(screen.height / 2 - 11);
-		drawFrame(Rectangle(x, y, 5, frameWidth));
+		drawFrame(Rectangle(x, y, 5, frameWidth + 9));
 		screen.cprint(x + 4, y + 2, 15, 0, query);
 		input.setCoord(cast(int)(x + 4 + query.length), cast(int)( y + 2));
 	}
 
-	override void activate() { return; }
-
-	protected int frameWidth() {
-		return cast(int)query.length + 9;
+	override void activate() {
+		return;
 	}
 }
 
@@ -97,6 +97,7 @@ class StringDialog : QueryDialogBase!string {
 		super(query, fp);
 		input = new InputString(inp, length);
 		this.inputLength = length;
+		frameWidth = cast(int)query.length + inputLength;
 	}
 
 	override int keypress(Keyinfo key) {
@@ -111,11 +112,6 @@ class StringDialog : QueryDialogBase!string {
 		}
 		return OK;
 	}
-
-	override protected int frameWidth() {
-		return cast(int)query.length + inputLength;
-	}
-	
 }
 
 class HelpDialog : Window {
