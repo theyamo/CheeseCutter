@@ -28,16 +28,6 @@ int paddedStringLength(string s, char padchar) {
 	return 0;
 }
 
-string unpad(string padded) {
-	size_t i;
-	for(i = padded.length - 1; i > 0; i--) {
-		if(padded[i] != ' ')
-			break;
-	}
-	string s = padded[0 .. i+1];
-	return s;
-}
-
 void hexdump(ubyte[] buf, int rowlen) {
 	hexdump(buf, rowlen, false);
 }

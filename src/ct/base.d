@@ -1647,7 +1647,8 @@ class Song {
 	}
 
 	void savePatch(string filename, int no) {
-		string insname = com.util.unpad(std.conv.to!string(insLabels[no]));
+		string insname = std.string.stripRight
+			(std.conv.to!string(insLabels[no]));
 		int waveptr = wavetablePointer(no);
 		int pulseptr = pulsetablePointer(no);
 		int filtptr = filtertablePointer(no);
