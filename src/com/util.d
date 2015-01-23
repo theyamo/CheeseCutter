@@ -6,8 +6,11 @@ module com.util;
 import std.stdio;
 import std.string;
 import std.conv;
+import std.regex;
 
 alias char* PetString;
+
+private auto regexFn = regex("[^a-zA-Z0-9\\.]");
 
 class UserException : Exception {
 	this(string msg) {
@@ -186,6 +189,14 @@ string arr2str(ubyte[] arr) {
 		c[idx * 2 .. idx * 2 + 2] = std.string.format("%02x", byt);
 	}
 	return to!string(c);
+}
+
+string fnClean(string fn) {
+	return replaceAll(fn,regexFn,"_");
+}
+
+bool fnIsSane(string fn) {
+	return matchAll(fn,regexFn).empty;
 }
 
 int clamp(int n, int l, int h) { return n > h ? h : n < l ? l : n; }

@@ -261,13 +261,16 @@ class InsValueTable : HexTable {
 				void delegate(string) dg = (string fn) {
 					if(fn == "")
 						return;
+					if(!fnIsSane(fn))
+						throw new UserException("Illegal characters in filename!");
 					com.session.song.savePatch(fn, state.activeInstrument);
 					std.stdio.writeln(fn);
 					UI.statusline.display(format("Saved instrument %d", state.activeInstrument));
 				};
+				string fn = fnClean(unpad(std.conv.to!string(song.insLabels[row])));
 				mainui.activateDialog(new StringDialog("Enter filename: ",
 													   dg,
-													   com.util.unpad(std.conv.to!string(song.insLabels[row])) ~ ".cti",
+													   fn ~ ".cti",
 													   32));
 
 				break;

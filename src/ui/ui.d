@@ -1106,7 +1106,6 @@ final class UI {
 		}
 		catch(FileException e) {
 			statusline.display("Could not save file! Check your filename.");
-			//statusline.display(e.toString());
 			return;
 		}
 		// sync load filesel to save filesel
