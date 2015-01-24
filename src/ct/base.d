@@ -1681,7 +1681,6 @@ class Song {
 			filename = insname ~ ".cti";
 		}
 		std.file.write(filename, csv);
-		std.stdio.writeln(csv);
 	}
 
 	void insertPatch(string filename, int insno) {
@@ -1739,46 +1738,54 @@ class Song {
 				}
 			}
 		}
-		
-		int pulseptr = tPulse.seekTableEnd() * 4;
-		if(patch.pulse.length + pulseptr > tPulse.data.length - 4)
-			throw new Exception("Not enough free rows in pulsetable");
 
-		ubyte[] pulse = tPulse.data[pulseptr .. $];
-		fixSweepOffsets(pulse, pulseptr + patch.def[5]);
-		
-		tPulse.data[pulseptr .. pulseptr + patch.pulse.length] =
-			patch.pulse[];
-		
-		int filterptr = tFilter.seekTableEnd() * 4;
-		if(patch.filt.length + filterptr > tFilter.data.length - 4)
-			throw new Exception("Not enough free rows in filter table");
+		// insert pulse program if defined
+		if(patch.def[5] > 0) {
+			int pulseptr = tPulse.seekTableEnd() * 4;
+			if(patch.pulse.length + pulseptr > tPulse.data.length - 4)
+				throw new Exception("Not enough free rows in pulsetable");
+			
+			ubyte[] pulse = tPulse.data[pulseptr .. $];
+			fixSweepOffsets(pulse, pulseptr + patch.def[5]);
+			
+			tPulse.data[pulseptr .. pulseptr + patch.pulse.length] =
+				patch.pulse[];
 
-		ubyte[] filt = tFilter.data[filterptr .. $];
-		fixSweepOffsets(filt, filterptr + patch.def[4]);
-		
-		tFilter.data[filterptr .. filterptr + patch.filt.length] =
-			patch.filt[];
+			for(int i = 0; i < pulse.length - 4; i += 4) {
+				if(pulse[i + 3] > 0 && pulse[i + 3] < 0x40) {
+					pulse[i + 3] += pulseptr / 4 - 1;
+				}
+			}
+			patch.def[5] += pulseptr / 4 - 1;
+		}
 
+		// insert filter if defined
+		if(patch.def[4] > 0) {
+			int filterptr = tFilter.seekTableEnd() * 4;
+			if(patch.filt.length + filterptr > tFilter.data.length - 4)
+				throw new Exception("Not enough free rows in filter table");
+			
+			ubyte[] filt = tFilter.data[filterptr .. $];
+			fixSweepOffsets(filt, filterptr + patch.def[4]);
+			
+			tFilter.data[filterptr .. filterptr + patch.filt.length] =
+				patch.filt[];
+
+			for(int i = 0; i < filt.length; i += 4) {
+				if(filt[i + 3] > 0 && filt[i + 3] < 0x40) {
+					filt[i + 3] += filterptr / 4 - 1;
+				}
+			}
+			patch.def[4] += filterptr / 4 - 1;
+		}
+		
 		// recalc wrap points for inserted data
 		for(int i = 0; i < wave1.length; i++) {
 			if(wave1[i] == 0x7f)
 				wave2[i] += waveptr;
 		}
-		for(int i = 0; i < pulse.length - 4; i += 4) {
-			if(pulse[i + 3] > 0 && pulse[i + 3] < 0x40) {
-				pulse[i + 3] += pulseptr / 4 - 1;
-			}
-		}
-		for(int i = 0; i < filt.length; i += 4) {
-			if(filt[i + 3] > 0 && filt[i + 3] < 0x40) {
-				filt[i + 3] += filterptr / 4 - 1;
-			}
-		}
 
 		patch.def[7] += waveptr;
-		patch.def[5] += pulseptr / 4 - 1;
-		patch.def[4] += filterptr / 4 - 1;
 		
 		for(int i = 0; i < 8; i++) {
 			instrumentTable[i * 48 + insno] = patch.def[i];
