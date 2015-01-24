@@ -1678,7 +1678,7 @@ class Song {
 				   com.util.arr2str(fp.data) : "");
 
 		if(filename is null) {
-			filename = insname ~ ".cti";
+			filename = com.util.fnClean(insname ~ ".cti");
 		}
 		std.file.write(filename, csv);
 	}
