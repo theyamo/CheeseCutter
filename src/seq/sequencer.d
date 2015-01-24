@@ -748,15 +748,13 @@ final class Sequencer : Window {
 		SequenceTable sequenceTable;
 		TrackTable trackTable;
 		QueryDialog queryCopy, queryClip, queryAppend;
-		UI mainUI;
 	}
 	VoiceTable activeView;
 	private Clip[] clip;
 	
-	this(Rectangle a, UI m) {
+	this(Rectangle a) {
 		int h = screen.height - 10;
 		super(a,ui.help.HELPSEQUENCER);
-		mainUI = m;
 		trackmapTable = new TrackmapTable(a, seqPos);
 		sequenceTable = new SequenceTable(a, seqPos);
 		trackTable = new TrackTable(a, seqPos);
@@ -819,20 +817,20 @@ public:
 		if(key.mods & KMOD_ALT) {
 			switch(key.raw) {
 			case SDLK_a:
-				mainUI.activateDialog(queryAppend);
+				mainui.activateDialog(queryAppend);
 				break;
 			case SDLK_c:
-				mainUI.activateDialog(queryCopy);
+				mainui.activateDialog(queryCopy);
 				break;
 			case SDLK_z:
-				mainUI.activateDialog(queryClip);
+				mainui.activateDialog(queryClip);
 				break;
 			case SDLK_b:
 				pasteCallback();
 				break;
 			case SDLK_RIGHT:
 				refresh();
-				mainUI.stop();
+				mainui.stop();
 				activeView.jump(0,false);
 				resetMark();
 				song.incSubtune();
@@ -840,7 +838,7 @@ public:
 				break;
 			case SDLK_LEFT:
 				refresh();
-				mainUI.stop();
+				mainui.stop();
 				activeView.jump(0,false);
 				resetMark();
 				song.decSubtune();
@@ -853,7 +851,7 @@ public:
 		else if(key.mods & KMOD_CTRL) {
 			switch(key.raw) {
 			case SDLK_F12:
-				mainUI.activateDialog(
+				mainui.activateDialog(
 					new DebugDialog(activeView.activeVoice.activeRow.seq));
 				break;
 			default:

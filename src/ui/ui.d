@@ -354,7 +354,7 @@ final private class Toplevel : WindowSwitcher {
 		int zone2h = screen.height - zone2y - 5;
 
 		inputKeyjam = new InputKeyjam();
-		sequencer = new Sequencer(Rectangle(zone1x, zone1y, screen.height - 10, zone2x - zone1x), ui);
+		sequencer = new Sequencer(Rectangle(zone1x, zone1y, screen.height - 10, zone2x - zone1x));
 		fplay = new Fplay(Rectangle(zone1x, zone1y, screen.height - 10, zone2x - zone1x));
 		instable = new InsTable(Rectangle(zone2x, zone1y, zone1h, 3 + 8 * 3 + 12));
 
