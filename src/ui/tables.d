@@ -220,13 +220,19 @@ protected:
 }
 
 class InsValueTable : HexTable {
-	static ubyte[8] instrBuffer;
-	static char[32] instrName;
-	int mark = -1;
-	int width;
+	private {
+		static ubyte[8] instrBuffer;
+		static char[32] instrName;
+		int mark = -1;
+		int width;
+		FileSelectorDialog loadDialog;
+	}
 	this(Rectangle a) {
 		width = com.fb.mode ? 32 : 16;
 		super(a, song.instrumentTable, 8, 48);
+		loadDialog = new FileSelectorDialog(Rectangle(),
+											"Load Instrument",
+											&loadCallback);
 	}
 
 	override void refresh() {
@@ -251,11 +257,37 @@ class InsValueTable : HexTable {
 				song.insLabels[row][] = instrName[];
 				initializeInput();
 				break;
-				/+
-			case SDLK_SPACE:
-				mark = row;
+			case SDLK_s:
+				void delegate(string) dg = (string fn) {
+					if(fn == "")
+						return;
+					if(!fnIsSane(fn))
+						throw new UserException("Illegal characters in filename!");
+					com.session.song.savePatch(fn, state.activeInstrument);
+					std.stdio.writeln(fn);
+					UI.statusline.display(format("Saved instrument %d", state.activeInstrument));
+				};
+				string fn = fnClean(std.string.stripRight
+									(std.conv.to!string(song.insLabels[row])));
+				mainui.activateDialog(new StringDialog("Enter filename: ",
+													   dg,
+													   fn ~ ".cti",
+													   32));
+
 				break;
-				+/
+			case SDLK_l:
+				mainui.activateDialog(loadDialog);
+				break;
+			case SDLK_d:
+				void delegate(int) dg = (int param) {
+					if(param != 0) return;
+					new Purge(song).deleteInstrument(state.activeInstrument);
+				};
+				
+				mainui.activateDialog(new ConfirmationDialog("Delete current instrument (y/n)? ",
+															 dg));
+				
+				break;
 			case SDLK_x:
 				break;
 			default: break;
@@ -268,6 +300,14 @@ class InsValueTable : HexTable {
 		return OK;
 	}
 
+	private void loadCallback(string fn) {
+		if(!std.file.exists(fn))
+			throw new UserException("File does not exist!");
+		if(fn.indexOf(".cti") == -1)
+			throw new UserException("Not loading; possibly not an instrument def file.");
+		song.insertPatch(fn, state.activeInstrument);
+	}
+	
 	string insName(int row) {
 		assert(row >= 0 && row < 48);
 		return format(song.insLabels[row % 48][0..32]);
@@ -692,12 +732,12 @@ class WaveTable : HexTable {
 				seekCurWave();
 				return OK;
 			case SDLK_DELETE:
-				ct.purge.waveDeleteRow(song, row);
+				song.tWave.deleteRow(song, row);
 				refresh();
 				set();
 				return OK;
 			case SDLK_INSERT:
-				ct.purge.waveInsertRow(song, row);
+				song.tWave.insertRow(song, row);
 				refresh();
 				set();
 				return OK;

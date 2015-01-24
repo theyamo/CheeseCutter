@@ -17,29 +17,33 @@ import std.file;
 import std.utf;
 import std.array;
 
-abstract class QueryDialogBase : Window {
+abstract class QueryDialogBase(T) : Window {
 	string query;
 	static ubyte[1] byt;
-	alias void delegate(int) Callback;
+	alias void delegate(T) Callback;
 	Callback callback;
+	protected int frameWidth;
 	this(string s, Callback fp) {
 		super(Rectangle(0, 0, 1));
 		query = s;
 		callback = fp;
+		frameWidth = cast(int)query.length;
 	}
 
 	override void update() {
-		int x = cast(int)(screen.width / 2 - (query.length + 6 )/2);
+		int x = cast(int)(screen.width / 2 - (frameWidth + 6)/2);
 		int y = cast(int)(screen.height / 2 - 11);
-		drawFrame(Rectangle(x, y, 5, cast(int)(query.length + 9)));
+		drawFrame(Rectangle(x, y, 5, frameWidth + 9));
 		screen.cprint(x + 4, y + 2, 15, 0, query);
 		input.setCoord(cast(int)(x + 4 + query.length), cast(int)( y + 2));
 	}
 
-	override void activate() { return; }
+	override void activate() {
+		return;
+	}
 }
 
-class QueryDialog : QueryDialogBase {
+class QueryDialog : QueryDialogBase!int {
 	const int maxValue;
 	this(string s,Callback fp, int m) {
 		super(s, fp);
@@ -68,7 +72,7 @@ class QueryDialog : QueryDialogBase {
 	}
 }
 
-class ConfirmationDialog : QueryDialogBase {
+class ConfirmationDialog : QueryDialogBase!int {
 	this(string s, Callback fp) {
 		super(s, fp);
 		input = new InputSingleChar(byt, "yn", 1);
@@ -81,6 +85,29 @@ class ConfirmationDialog : QueryDialogBase {
 			return CANCEL; // just close dialog
 		if(r == RETURN) { // received legal key
 			callback(input.toInt());
+			return RETURN;
+		}
+		return OK;
+	}
+}
+
+class StringDialog : QueryDialogBase!string {
+	int inputLength;
+	this(string query,Callback fp, string inp, int length) {
+		super(query, fp);
+		input = new InputString(inp, length);
+		this.inputLength = length;
+		frameWidth = cast(int)query.length + inputLength;
+	}
+
+	override int keypress(Keyinfo key) {
+		if(key.mods & KMOD_ALT) return OK;
+		int r = input.keypress(key);
+		if(r == CANCEL)
+			return CANCEL; // just close dialog
+		if(r == RETURN) {
+			input.nibble = 0;
+			callback((cast(InputString)input).toString(false));
 			return RETURN;
 		}
 		return OK;
@@ -461,7 +488,7 @@ class DialogString : Window {
 	override int keypress(Keyinfo key) { input.keypress(key); return OK; }
 }
 		
-abstract class FileSelectorDialog : WindowSwitcher {
+class FileSelectorDialog : WindowSwitcher {
 	alias void delegate(string) CB;
 	const CB callback;
 	alias callback processFileCallback;
@@ -473,6 +500,13 @@ abstract class FileSelectorDialog : WindowSwitcher {
 	
 	this(Rectangle a, string h, CB cb) {
 		header = h;
+		if(a == Rectangle.init) {
+			int dialog_width = screen.width - 32;
+			int dialog_height = screen.height - 10;
+			int dialog_x = screen.width / 2 - dialog_width / 2;
+			int dialog_y = screen.height / 2 - dialog_height / 2;
+			a = Rectangle(dialog_x, dialog_y, dialog_height, dialog_width);
+		}
 		filearea = Rectangle(a.x + 5, a.y + 2, a.height - 6, a.width - 10);
 		fsel = new FileSelector(Rectangle(a.x + 5, a.y + 2, a.height - 6, 
 								a.width - 18));

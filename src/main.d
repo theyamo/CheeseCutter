@@ -263,7 +263,6 @@ int main(char[][] args) {
 	initSession();
 	mainui = new UI();
 	loadFile(filename);
-	
 	video.updateFrame();
 		
 	SDL_PauseAudio(0);
