@@ -119,7 +119,7 @@ int convertHex(string s) {
 	foreach_reverse(c; toUpper(s)) {
 		if(c == 'x' || c == '$') break;
 		if("0123456789ABCDEF".indexOf(c) < 0)
-			throw new Error("Illegal hexadecimal value in string.");
+			throw new Exception("Illegal hexadecimal value in string.");
 		val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
 	}
 	return val;

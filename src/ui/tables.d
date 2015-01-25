@@ -261,8 +261,10 @@ class InsValueTable : HexTable {
 				void delegate(string) dg = (string fn) {
 					if(fn == "")
 						return;
-					if(!fnIsSane(fn))
-						throw new UserException("Illegal characters in filename!");
+					if(!fnIsSane(fn)) {
+						UI.statusline.display("Illegal characters in filename!");
+						return;
+					}
 					com.session.song.savePatch(fn, state.activeInstrument);
 					std.stdio.writeln(fn);
 					UI.statusline.display(format("Saved instrument %d", state.activeInstrument));
@@ -301,11 +303,20 @@ class InsValueTable : HexTable {
 	}
 
 	private void loadCallback(string fn) {
-		if(!std.file.exists(fn))
-			throw new UserException("File does not exist!");
-		if(fn.indexOf(".cti") == -1)
-			throw new UserException("Not loading; possibly not an instrument def file.");
-		song.insertPatch(fn, state.activeInstrument);
+		if(!std.file.exists(fn)) {
+			UI.statusline.display("File does not exist!");
+			return;
+		}
+		if(fn.indexOf(".cti") == -1) {
+			UI.statusline.display("Not loading; possibly not an instrument def file.");
+			return;
+		}
+		try {
+			song.insertPatch(fn, state.activeInstrument);
+		}
+		catch(Exception e) {
+			UI.statusline.display("Error in parsing instrument data!");
+		}
 	}
 	
 	string insName(int row) {
