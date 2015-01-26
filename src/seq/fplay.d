@@ -31,7 +31,7 @@ protected class FPlayVoice : SeqVoice {
 				return 1;
 			return seq.rows;
 		}
-		// FIX: will not work when step > 1 && track wraps
+
 		pos.rowCounter = pos.rowCounter + steps;
 
 		while(seqofs >= getRows()) {

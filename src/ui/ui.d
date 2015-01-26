@@ -1129,7 +1129,7 @@ final class UI {
 		toplevel.reset();
 		
 		if(std.file.exists(s) == 0 || std.file.isDir(s)) {
-			statusline.display("File not found: " ~ s);
+			statusline.display("File not found or not accessible: " ~ s);
 			return;
 		}
 		try {

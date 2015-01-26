@@ -4,7 +4,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 
 module com.fb;
 import derelict.sdl.sdl;
-import std.string;
+import std.string : indexOf;
 
 immutable SDL_Color[] PALETTE = [
 	{ 0,0,0 },       

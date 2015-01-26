@@ -11,7 +11,7 @@ import seq.sequencer;
 import seq.tracktable;
 import ui.input;
 import derelict.sdl.sdl;
-import std.string;
+import std.string : format;
 import ct.base;
 
 

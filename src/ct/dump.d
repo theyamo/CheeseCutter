@@ -13,7 +13,7 @@ import std.string;
 
 private const string byteOp = "!byte", wordOp = "!word";
 
-string dumpData(Song sng, string title) {
+string dumpData(Song sng) {
 	string output;
 
 	int getHighestUsed(ubyte[] array) {

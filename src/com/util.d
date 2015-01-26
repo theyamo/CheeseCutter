@@ -10,7 +10,7 @@ import std.regex;
 
 alias char* PetString;
 
-private auto regexFn = regex("[^a-zA-Z0-9\\.]");
+private auto regexFn = regex("[^a-zA-Z0-9_\\-\\.]");
 
 class UserException : Exception {
 	this(string msg) {

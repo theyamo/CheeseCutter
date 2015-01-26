@@ -721,13 +721,7 @@ class TWaveTable : Table {
 		string toString() { return format("%x", offset); }
 		// TODO implement .dup which copies arrasys as well
 		Chunk dup() {
-			static Chunk cnk;
-			cnk.offset = offset;
-			cnk.wave1 = wave1.dup;
-			cnk.wave2 = wave2.dup;
-			cnk.used = used;
 			assert(0);
-			return cnk;
 		}
 	}
 
@@ -892,7 +886,6 @@ class TWaveTable : Table {
 			}
 		}
 	}
-	
 }
 
 class InstrumentTable : Table {
@@ -1743,7 +1736,7 @@ class Song {
 		if(patch.def[5] > 0) {
 			int pulseptr = tPulse.seekTableEnd() * 4;
 			if(patch.pulse.length + pulseptr > tPulse.data.length - 4)
-				throw new Exception("Not enough free rows in pulsetable");
+				throw new Exception("Not enough free rows in pulse table");
 			
 			ubyte[] pulse = tPulse.data[pulseptr .. $];
 			fixSweepOffsets(pulse, pulseptr + patch.def[5]);

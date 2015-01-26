@@ -304,7 +304,7 @@ class InsValueTable : HexTable {
 
 	private void loadCallback(string fn) {
 		if(!std.file.exists(fn)) {
-			UI.statusline.display("File does not exist!");
+			UI.statusline.display("File does not exist or is not accessible!");
 			return;
 		}
 		if(fn.indexOf(".cti") == -1) {

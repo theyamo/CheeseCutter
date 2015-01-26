@@ -10,7 +10,6 @@ OUTPUT_OPTION =
 DC=gdc
 EXE=
 TARGET=ccutter
-OBJCOPY=objcopy
 
 include Makefile.objects.mk
 
@@ -44,7 +43,7 @@ clean:
 		$(C64OBJS) $(OBJS) $(CTOBJS) $(CXX_OBJS) $(UTILOBJS) $(C_OBJS)
 
 dclean: clean
-	rm cheesecutter-$(VERSION)-linux-x86.tar.gz
+	rm -f cheesecutter-$(VERSION)-linux-x86.tar.gz
 
 tar:
 	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-src.tar.bz2

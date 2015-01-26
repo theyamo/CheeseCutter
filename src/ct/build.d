@@ -77,7 +77,7 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 								   int playAddress, int defaultSubtune) {
 	/+ SID default tune indicatior starts from value 1... +/
 	if(defaultSubtune > insong.subtunes.numOf)
-		throw new UserException(format("This song only has %d subtunes", insong.subtunes.numOf));
+		throw new UserException(format("This song has only %d subtunes", insong.subtunes.numOf));
 	data = SIDHEADER ~ data;
 	void outstr(char[] s, int offset) {
 		data[offset .. offset + s.length] = cast(ubyte[])s;
@@ -129,7 +129,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 
 string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
 	string input = playerSource;
-	input ~= dumpData(song, "");
+	input ~= dumpData(song);
 	int maxInsno;
 	song.seqIterator((Sequence s, Element e) { 
 			int insval = e.instr.value;

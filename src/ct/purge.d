@@ -82,7 +82,7 @@ private:
 		if(initialized) return;
 		if(markUnusedSeqs) {
 			seqUsed[] = false;
-			trackIterator((Track t) {
+			song.trackIterator((Track t) {
 					seqUsed[t.number] = true;
 				});
 		}
@@ -386,18 +386,6 @@ private:
 		}
 	}
 
-	// ----------------------------------------------------------------------
-	void trackIterator(void delegate(Track t) dg) {
-		for(int sidx = 0; sidx < 32; sidx++) {
-			Tracklist[] subtune = song.subtunes[sidx];
-			foreach(voice; subtune) {
-				foreach(track; voice) {
-					dg(track);
-				}
-			}
-		}
-	}
-
 	void replaceInsvalue(int seek, int repl) {
 		int skipped;
 		song.seqIterator((Sequence s, Element e) {
@@ -408,7 +396,7 @@ private:
 	}
 
 	void replaceTrackvalue(int find, int rep) {
-		trackIterator((Track t) {
+		song.trackIterator((Track t) {
 				if(t.number == find)
 					t.number = cast(ubyte)rep;
 			});
