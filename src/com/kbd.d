@@ -4,7 +4,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 
 module com.kbd;
 import derelict.sdl.sdl;
-import ui.input;
+import ui.input : Keyinfo;
 
 void translate(ref Keyinfo key) {
 	switch(key.key) {

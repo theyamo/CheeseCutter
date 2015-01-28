@@ -21,7 +21,7 @@ __gshared int freq = 48000, bufferSize = 2048, stereo = 1;
 __gshared private int callbackCounter = 0;
 __gshared private int bufferUsed; // in samples
 __gshared private int callbackInterval;
-__gshared private short* mixbuf = null, mixbuf2 = null;
+__gshared short* mixbuf = null, mixbuf2 = null;
 
 extern(C) {
 	extern __gshared ubyte[0x19][2] sidreg;
@@ -30,6 +30,7 @@ extern(C) {
 	extern __gshared int sid_fillbuffer(short *, int, int);
 	extern __gshared int sid_fillbuffer_stereo(short *, short*, int, int);
 	extern __gshared int sid_close();
+	extern float* get_sample_buf();
 	__gshared void function() callback;
 
 
@@ -69,6 +70,10 @@ extern(C) {
 		mixbuf2 = cast(short *)malloc(bufferSize * short.sizeof * MIXBUF_MUL);
 		setCallMultiplier(1);
 		return 0;
+	}
+
+	int getbufsize() {
+		return cast(int)(bufferSize * MIXBUF_MUL);
 	}
 
 	void audio_close() {

@@ -15,15 +15,13 @@ import audio.player;
 import ui.tables;
 import ui.dialogs;
 import seq.fplay;
-import std.string;
-import std.file;
-import std.stdio;
-import std.math;
-import std.array;
 import com.fb;
 import com.util;
 import seq.sequencer;
 import audio.audio;
+import std.string;
+import std.file;
+import std.stdio;
 
 enum PAGESTEP = 16;
 enum CONFIRM_TIMEOUT = 90;
@@ -37,12 +35,15 @@ struct Rectangle {
 	int height, width;
 	alias height h;
 	alias width w;
+	
 	string toString() {
 		return format("%d %d %d %d",x, y, h, w);
 	}
+	
 	bool overlaps(int cx, int cy) {
 		return cx >= x && cx < x + width && cy >= y && cy < y + height;
 	}
+	
 	Rectangle relativeTo(int scrx, int scry) {
 		return Rectangle(scrx - x, scry - y);
 	}
@@ -52,6 +53,7 @@ abstract class Window {
 	Rectangle area;
 	Input input;
 	protected ContextHelp help;
+	
 	this(Rectangle a) {
 		this(a, ui.help.HELPMAIN);
 	}
@@ -72,7 +74,11 @@ abstract class Window {
 
 protected:
 
+	@property void contextHelp(ContextHelp h) { help = h; }
+	@property ContextHelp contextHelp() { return help; }
+	
 	final void drawFrame() { drawFrame(area); }
+	
 	static void drawFrame(Rectangle a) {
 		int x,y;
 		for(y=a.y;y<a.y+a.height;y++) {
@@ -101,8 +107,6 @@ protected:
 		}
 	}
 
- 	void contextHelp(ContextHelp h) { help = h; }
-	ContextHelp contextHelp() { return help; }
 }
 
 struct Hotspot {
@@ -115,16 +119,19 @@ class WindowSwitcher : Window {
 	char[] hotkeys;
 	Window activeWindow;
 	int activeWindowNum;
+	
 	this(Rectangle s, Window[] w) {
 		super(s);
 		windows = w;
 		activeWindowNum = 0;
 		activateWindow();
 	}
+	
 	this(Rectangle s, Window[] w, string h) {
 		this(s, w);
 		hotkeys = cast(char[])h;
 	}
+	
 	this(Rectangle s, Window[] w, char[] h) {
 		this(s, w);
 		hotkeys = h;
@@ -138,9 +145,11 @@ class WindowSwitcher : Window {
 	void activateWindow() {
 		activateWindow(activeWindowNum);
 	}
+	
 	void activateWindow(ulong n){
 		activateWindow(cast(int)n);
 	}
+	
 	void activateWindow(int n) {
 		if(activeWindow !is null)
 			activeWindow.deactivate();
@@ -209,6 +218,7 @@ class Infobar : Window {
 		int idx;
 	}
 	InputString inputTitle, inputAuthor, inputReleased;
+	
 	this(Rectangle a) {
 		super(a);
 		x1 = area.x;
@@ -216,7 +226,7 @@ class Infobar : Window {
 	}
 
 	override void update() {
-		int headerColor = keyjamStatus ? 14 : 12;
+		int headerColor = state.keyjamStatus ? 14 : 12;
 		if(escapecounter) headerColor = 7;
 	  
 		screen.clrtoeol(0, headerColor);
@@ -230,13 +240,13 @@ class Infobar : Window {
 		
 		screen.fprint(x1 + 19,area.y,
 				   format("`05Oct: `0d%d  `05Spd: `0d%X  `05St: `0d%d ",
-						  octave, song.speed, seq.sequencer.stepValue));
+						  state.octave, song.speed, seq.sequencer.stepValue));
 		screen.fprint(x2+3, area.y+1,
 				   format("`05Rate: `0d%-1d*%dhz  `05SID: `0d%s%s    ",
 						  song.multiplier, audio.player.ntsc ? 60 : 50,
 						  audio.player.usefp ? audio.player.curfp.id : audio.player.sidtype ? "8580" : "6581",
 						  audio.player.badline ? "&0fb" : " "));
-		screen.fprint(x1,area.y+1,format("`05Filename: `0d%s", com.session.filename.leftJustify(38)));
+		screen.fprint(x1,area.y+1,format("`05Filename: `0d%s", state.filename.leftJustify(38)));
 		//screen.fprint(x2,area.y,format("`05  `b1T`01itle: `0d%-32s", std.string.toString(cast(char *)song.title))); 
 		screen.fprint(x2,area.y,
 					  format("`05%s `0d%-32s", (["  `b1T`01itle:", " `01Author:", "`01Release:" ])[idx],
@@ -289,6 +299,7 @@ class Infobar : Window {
 class Statusline : Window {
 	int counter;
 	string message;
+	
 	this(Rectangle a) {
 		super(a);
 	}
@@ -344,7 +355,7 @@ final private class Toplevel : WindowSwitcher {
 		int zone2h = screen.height - zone2y - 5;
 
 		inputKeyjam = new InputKeyjam();
-		sequencer = new Sequencer(Rectangle(zone1x, zone1y, screen.height - 10, zone2x - zone1x), ui);
+		sequencer = new Sequencer(Rectangle(zone1x, zone1y, screen.height - 10, zone2x - zone1x));
 		fplay = new Fplay(Rectangle(zone1x, zone1y, screen.height - 10, zone2x - zone1x));
 		instable = new InsTable(Rectangle(zone2x, zone1y, zone1h, 3 + 8 * 3 + 12));
 
@@ -519,8 +530,8 @@ final private class Toplevel : WindowSwitcher {
 				}
 				break;
 			case SDLK_h:
-				displayHelp ^= 1;
-				UI.statusline.display("Help texts " ~ (displayHelp ? "enabled." : "disabled."));
+				state.displayHelp ^= 1;
+				UI.statusline.display("Help texts " ~ (state.displayHelp ? "enabled." : "disabled."));
 				break;
 			default:
 				break;
@@ -552,22 +563,22 @@ final private class Toplevel : WindowSwitcher {
 			switch(key.raw)
 			 {
 			 case SDLK_KP_DIVIDE:
-				 if(octave > 0)
-					 octave--;
+				 if(state.octave > 0)
+					 state.octave--;
 				 break;
 			 case SDLK_KP_MULTIPLY:
-				 if(octave < 6)
-					 octave++;
+				 if(state.octave < 6)
+					 state.octave++;
 				 break;
 			case SDLK_PLUS:
 			case SDLK_KP_PLUS:
 				instable.stepRow(1);
-				activeInstrument = instable.row;
+				state.activeInstrument = instable.row;
 				break;
 			case SDLK_MINUS:
 			case SDLK_KP_MINUS:
 				instable.stepRow(-1);
-				activeInstrument = instable.row;
+				state.activeInstrument = instable.row;
 				break;
 			 default:
 				 break;
@@ -581,7 +592,7 @@ final private class Toplevel : WindowSwitcher {
 				}
 			}
 		}
-		if(keyjamStatus == true || key.mods & KMOD_CAPS) {
+		if(state.keyjamStatus == true) {
 			inputKeyjam.keypress(key);
 		}
 		else {
@@ -594,7 +605,7 @@ final private class Toplevel : WindowSwitcher {
 	}	
 
 	override int keyrelease(Keyinfo key) {
-		if(keyjamStatus == true) {
+		if(state.keyjamStatus == true) {
 			inputKeyjam.keyrelease(key);
 		}
 		return activeWindow.keyrelease(key);
@@ -682,7 +693,7 @@ final private class Toplevel : WindowSwitcher {
 		followplay = false;
 		windows[0] = sequencer;
 		activateWindow(activeWindowNum);
-		sequencer.activeView.input.cursor.refresh();
+		sequencer.activeView.refresh();
 	}
 
 	void stopPlayback() {
@@ -716,7 +727,7 @@ final private class Toplevel : WindowSwitcher {
 			refresh();
 			clearcounter = 0;
 			//savedialog.setFilename("");
-			com.session.filename = "";
+			state.filename = "";
 			UI.statusline.display("Editor restarted.");
 		}
 		else {
@@ -743,7 +754,9 @@ final class UI {
 	private {
 		Window dialog = null;
 		int fullscreen;
-		bool printSIDDump = false;
+		//bool printSIDDump = false;
+		enum VisMode { None, Regs, Oscilloscope }
+		int vismode;
 		AboutDialog aboutdialog;
 		FileSelectorDialog loaddialog, savedialog;
 	}
@@ -779,27 +792,27 @@ final class UI {
 		audio.player.setMultiplier(song.multiplier);
 
 		if(com.fb.mode > 0)
-			com.session.shortTitles = false;
+			state.shortTitles = false;
 		toplevel.activate();
 		activateDialog(aboutdialog);
 		update();
 	}
 
-	Window activeWindow() {
+	@property Window activeWindow() {
 		if(dialog) return dialog;
 		return toplevel.activeWindow;
 	}
 
-	Input activeInput() {
+	@property Input activeInput() {
 		return activeWindow.input;
 	}
 
 	void timerEvent(int n) {
-		Exception e = audio.callback.getException;
+		Exception e = audio.callback.getException();
 		if(e !is null) {
-			writeln("error" ~ e.toString);
+			writeln("error" ~ e.toString());
 			audio.player.stop();
-			statusline.display(e.toString);
+			statusline.display(e.toString());
 		}
 		if((tickcounter3 >= 0) && ++tickcounter3 > 20) {
 			clearcounter = optimizecounter = escapecounter = restartcounter = 0;
@@ -815,8 +828,8 @@ final class UI {
 			toplevel.timerEvent();
 
 			if(audio.player.isPlaying || audio.player.keyjamEnabled) {
-				if(printSIDDump) {
-					int x = 10;
+				if(vismode == VisMode.Regs) {
+					int x = screen.width - 42;
 					screen.cprint(x, 1, 15, 0, "V1:");
 					screen.cprint(x, 2, 15, 0, "V2:");
 					screen.cprint(x, 3, 15, 0, "V3:");
@@ -850,10 +863,12 @@ final class UI {
 					}
 					
 				}
-				update();
-			
+				update();  // TESTME: just do video.updateFrame()
 			}
 		}
+		if(vismode == VisMode.Oscilloscope &&
+		   audio.player.isPlaying || audio.player.keyjamEnabled)
+			video.drawVisualizer(n);
 	}
 
 	void update() {
@@ -893,14 +908,14 @@ final class UI {
 			if(key.mods & KMOD_SHIFT) {
 				toplevel.startFp();
 			}
-			toplevel.startPlayback(Jump.ToMark);
+			toplevel.startPlayback(Jump.toMark);
 		}
 		else {
 			audio.player.start();
 			if(key.mods & KMOD_SHIFT) {
-				toplevel.startFp(Jump.ToBeginning);
+				toplevel.startFp(Jump.toBeginning);
 			}
-			toplevel.startPlayback(Jump.ToBeginning);
+			toplevel.startPlayback(Jump.toBeginning);
 		}
 	}
 
@@ -969,7 +984,7 @@ final class UI {
 				audio.player.toggleVoice(5);
 				break;
 			case SDLK_F11:
-				string s = savedialog.getFilename();
+				string s = savedialog.filename;
 				if(s == "")
 					statusline.display("Cannot Quicksave; give filename first by doing a regular save.");
 				else {
@@ -997,18 +1012,26 @@ final class UI {
 				key.mods & KMOD_SHIFT ? audio.player.prevFP() : audio.player.nextFP();
 				break;
 			case SDLK_F9:
+				/+
 				if(printSIDDump) {
 					screen.clrtoeol(55, 1, 0);
 					screen.clrtoeol(55, 2, 0);
 					screen.clrtoeol(55, 3, 0);
 				}
 				printSIDDump = !printSIDDump;
+				+/
+				vismode = umod(vismode + 1, 0, VisMode.max);
+				screen.clrtoeol(55, 1, 0);
+				screen.clrtoeol(55, 2, 0);
+				screen.clrtoeol(55, 3, 0);
+				video.clearVisualizer();
 				break;
 			case SDLK_SPACE:
 				if(song.ver < 7) break;
-				keyjamStatus ^= 1;
-				enableKeyjamMode(keyjamStatus);
-				statusline.display("Keyjam " ~ (keyjamStatus ? "enabled." : "disabled.") ~ " Press Ctrl-Space to toggle.");
+				state.keyjamStatus ^= 1;
+				enableKeyjamMode(state.keyjamStatus);
+				statusline.display("Keyjam " ~ (state.keyjamStatus ? "enabled." : "disabled.")
+								   ~ " Press Ctrl-Space to toggle.");
 				break;
 			default:
 				break;
@@ -1120,7 +1143,6 @@ final class UI {
 		}
 		catch(FileException e) {
 			statusline.display("Could not save file! Check your filename.");
-			//statusline.display(e.toString());
 			return;
 		}
 		// sync load filesel to save filesel
@@ -1128,7 +1150,7 @@ final class UI {
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
 		fn = fn[ind..$];
-		com.session.filename = fn;
+		state.filename = fn;
 	}
 
 	void importCallback(string s) {
@@ -1142,8 +1164,9 @@ final class UI {
 	private void loadCallback(string s, bool doImport) {
 		stop();
 		toplevel.reset();
+		
 		if(std.file.exists(s) == 0 || std.file.isDir(s)) {
-			statusline.display("File not found: " ~ s);
+			statusline.display("File not found or not accessible: " ~ s);
 			return;
 		}
 		try {
@@ -1163,14 +1186,15 @@ final class UI {
 			writeln("Error: " ~ e.toString());	
 			return;
 		}
+		
 		refresh();
 		// all voices ON
 		audio.player.setVoicon([0,0,0,0,0,0]);
 		
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
-		fn = fn[ind..$];
-		com.session.filename = fn;
+		fn = fn[ind .. $];
+		state.filename = fn;
 		infobar.refresh();
 		
 		// sync save filesel to load filesel in case dir was changed
@@ -1206,9 +1230,10 @@ final class UI {
 	}
 
 	void enableKeyjamMode(bool doEnable) {
+		if(audio.player.isPlaying) return;
 		doEnable ? com.fb.disableKeyRepeat() :
 			com.fb.enableKeyRepeat();
-		keyjamStatus = doEnable;
+		state.keyjamStatus = doEnable;
 	}
 
 	void activateInstrumentTable(int ins) {
@@ -1239,7 +1264,8 @@ final class UI {
 	static void activateInstrument(int ins) {
 		if(ins > 47) ins = 47;
 		if(ins < 0) ins = 0;
-		toplevel.instable.seekRow(ins % 48);
-		activeInstrument = ins % 48;
+		toplevel.instable.seekRow(ins);
+		state.activeInstrument = ins;
+		toplevel.refresh();
 	}
 }

@@ -6,8 +6,11 @@ module com.util;
 import std.stdio;
 import std.string;
 import std.conv;
+import std.regex;
 
 alias char* PetString;
+
+private auto regexFn = regex("[^a-zA-Z0-9_\\-\\.]");
 
 class UserException : Exception {
 	this(string msg) {
@@ -106,16 +109,84 @@ ubyte[] table2Array(string table) {
 
 int str2Value(string s) {
 	if(s[0] == 'x' || s[0] == '$') {
+		return convertHex(s[1 .. $]);
+	}
+	return to!int(s);
+}
+
+int convertHex(string s) {
+	int val, i;
+	foreach_reverse(c; toUpper(s)) {
+		if(c == 'x' || c == '$') break;
+		if("0123456789ABCDEF".indexOf(c) < 0)
+			throw new Exception("Illegal hexadecimal value in string.");
+		val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
+	}
+	return val;
+}
+
+void parseList(ref int[] array, string arg) {
+	int index;
+	string[] list = std.string.split(arg, ",");
+	foreach(valueset; list) {
+		string[] values = std.string.split(valueset, ":");
+		if(values.length == 0) { // length == 0, just skip
+			index++;
+		}
+		else if(values.length == 1) { // the sole value is the speed
+			array[index] = to!int(values[0]);
+		}
+		else {
+			index = to!int(values[0]);
+			if(index > 31)
+				throw new UserException("Value list index out of bounds.");
+			array[index] = to!int(values[1]);
+		}
+		index++;
+		if(index > 31)
+			throw new UserException("Value list too long.");
+	}
+}
+
+int str2Value2(string s) {
+	int idx;
+	bool hexUsed;
+	if(s[0] == 'x' || s[0] == '$') {
+		hexUsed = true; idx = 1;
+	}
+	else if(s[0..2] == "0x") {
+		hexUsed = true; idx = 2;
+	}
+	if(hexUsed) {
 		int val, i;
-		foreach_reverse(c; toUpper(s[1..$])) {
-			if(c == 'x' || c == '$') break;
+		foreach_reverse(char c; toUpper(s[idx..$])) {
 			if("0123456789ABCDEF".indexOf(c) < 0)
-				throw new Error("Illegal hexadecimal value in string.");
+				throw new UserException("Illegal hexadecimal value in argument.");
 			val += ( (c >= '0' && c <= '9') ? c - '0' : c - ('A' - 10)) << (4 * i++);
 		}
 		return val;
 	}
+	foreach(char c; s) {
+		if("0123456789".indexOf(c) < 0)
+			throw new UserException("Illegal value in argument.");
+	}
 	return to!int(s);
+}
+
+string arr2str(ubyte[] arr) {
+	char[] c = new string(arr.length * 2);
+	foreach(idx, ubyte byt; arr) {
+		c[idx * 2 .. idx * 2 + 2] = std.string.format("%02x", byt);
+	}
+	return to!string(c);
+}
+
+string fnClean(string fn) {
+	return replaceAll(fn,regexFn,"_");
+}
+
+bool fnIsSane(string fn) {
+	return matchAll(fn,regexFn).empty;
 }
 
 int clamp(int n, int l, int h) { return n > h ? h : n < l ? l : n; }

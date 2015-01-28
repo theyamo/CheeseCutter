@@ -13,13 +13,11 @@ import ui.input;
 import audio.player;
 import audio.resid.filter;
 import audio.audio;
-import std.file;
 import std.stdio;
-import std.conv;
 import std.string;
-import std.c.stdlib;
-import std.c.string;
 import std.cstream;
+import std.conv;
+import std.file;
 
 version(linux) {
 	const DIR_SEPARATOR = '/';
@@ -67,8 +65,8 @@ void mainloop() {
 				quit = true;
 				break;
 			case SDL_KEYDOWN:
-				if(mainui.activeInput() !is null) {
-					Cursor cursor = mainui.activeInput().cursor;
+				if(mainui.activeInput !is null) {
+					Cursor cursor = mainui.activeInput.cursor;
 					if(cursor !is null) cursor.reset();
 				}
 				mods = evt.key.keysym.mod;
@@ -132,9 +130,9 @@ void mainloop() {
 				break;
 			}
 		}
-		if(mainui.activeInput() !is null) {
-			mainui.activeInput().update();
-			Cursor cursor = mainui.activeInput().cursor;
+		if(mainui.activeInput !is null) {
+			mainui.activeInput.update();
+			Cursor cursor = mainui.activeInput.cursor;
 			if(cursor !is null) cursor.blink();
 		}
 		SDL_Delay(40);
@@ -143,7 +141,7 @@ void mainloop() {
 }
 
 void printheader() {
-	derr.writefln("CheeseCutter (C) 2009-14 Abaddon");
+	derr.writefln("CheeseCutter (C) 2009-15 Abaddon");
 	derr.writefln("Released under GNU GPL.");
 	derr.writef("\n");
 	derr.writefln("Usage: ccutter [OPTION]... [FILE]");
@@ -254,12 +252,11 @@ int main(char[][] args) {
 		return -1;
 	}
 	
-	initVideo(fs, display, yuvOverlay, yuvCenter);
 	audio.player.init();
+	initVideo(fs, display, yuvOverlay, yuvCenter);
 	initSession();
 	mainui = new UI();
 	loadFile(filename);
-	
 	video.updateFrame();
 		
 	SDL_PauseAudio(0);

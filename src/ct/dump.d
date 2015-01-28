@@ -9,22 +9,19 @@ module ct.dump;
 
 import ct.base;
 import com.util;
-import std.file;
 import std.string;
-import std.stdio;
 
 private const string byteOp = "!byte", wordOp = "!word";
 
-string dumpData(Song sng, string title) {
+string dumpData(Song sng) {
 	string output;
 
-	// really needs to be rewritten with table specific routine
 	int getHighestUsed(ubyte[] array) {
-		for(size_t i = array.length - 1; i > 0; i--) {
+		for(size_t i = array.length - 1; i >= 0; i--) {
 			if(array[i] > 0)
 				return cast(int)i;
 		}
-		return 0;
+		return -1;
 	}
 
 	void append(string s) {
@@ -74,21 +71,31 @@ string dumpData(Song sng, string title) {
 		hexdump(sng.instrumentTable[i * 48 .. i * 48 + (maxInsno+1)], 16);
 	}
 
-
+	tablen = 1;
 	append( "\nseqlo = *\n\t\t!8 ");
-	for(int i = 0; i < sng.numOfSeqs; i++) {
+	for(int i = 0; i < sng.numOfSeqs(); i++) {
 		append(format("<s%02x", i));
-		if(i < sng.numOfSeqs - 1)
+		if(i < sng.numOfSeqs() - 1)
 			append(",");
 	}
 	append( "\nseqhi = *\n\t\t!8 ");
-	for(int i = 0; i < sng.numOfSeqs; i++) {
+	for(int i = 0; i < sng.numOfSeqs(); i++) {
 		append(format(">s%02x", i));
-		if(i < sng.numOfSeqs - 1)
+		if(i < sng.numOfSeqs() - 1)
 			append(",");
 	}
+	
+	// cmd ----------------------------------------
+	
+	sng.seqIterator((Sequence s, Element e) { 
+			int val = e.cmd.value;
+			if(val == 0) return;
+			if(val < 0x40 && val > tablen) {
+				tablen = val;
+			}
+		});
 
-	tablen = getHighestUsed(sng.superTable[0..64]) + 1;
+	++tablen;
 	
 	if(tablen < 1) tablen = 1;
 	append( "\ncmd1 = *\n");
@@ -98,7 +105,7 @@ string dumpData(Song sng, string title) {
 	append( "cmd3 = *\n");
 	hexdump(sng.superTable[128..128+tablen], 16);
 
-	// dump songsets
+	// songsets ------------------------------------
 
 	append( "songsets = *\n");
 	for(int i = 0; i < sng.subtunes.numOf; i++) {
@@ -110,7 +117,9 @@ string dumpData(Song sng, string title) {
 		}
 		append( format("\n\t\t" ~ byteOp ~ " %d, 7\n", sng.songspeeds[i]));
 	}
-	// dump tracks
+	
+	// tracks -------------------------------------
+	
 	foreach(i, ref subtune; packedTracks) {
 		foreach(j, voice; subtune) {
 			append(format("track%d_%d = *\n", i, j));
@@ -118,12 +127,14 @@ string dumpData(Song sng, string title) {
 		}
 	}
 
-	for(int i = 0; i < sng.numOfSeqs; i++) {
+	for(int i = 0; i < sng.numOfSeqs(); i++) {
 		append( format("s%02x = *\n", i));
 		Sequence s = sng.seqs[i];
 		hexdump(s.compact(), 16);
 	}
 
+	// chords -------------------------------------
+	
 	tablen = getHighestUsed(sng.chordTable) + 1;
 	append("\nchord");
 	if(tablen < 1) tablen = 1;

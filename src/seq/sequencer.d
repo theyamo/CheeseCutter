@@ -21,7 +21,7 @@ import derelict.sdl.sdl;
 import std.string;
 
 enum PAGESTEP = 2;
-enum Jump { ToBeginning = 0, ToMark = -1, ToEnd = -2, ToWrapMark = -3 };
+enum Jump { toBeginning = 0, toMark = -1, toEnd = -2, toWrapMark = -3 };
 
 enum playbackBarColor = 6;
 enum wrapBarColor = 4;
@@ -31,13 +31,13 @@ int stepValue = 1;
 int activeVoiceNum;
 private int stepCounter;
 int tableTop = 15, tableBot = -16;
-immutable int anchor = 16;
+enum anchor = 16;
 
 private {
 	bool useRelativeNotes = true;
 }
 
-struct SequenceRowData {
+struct RowData {
 	Track trk; 
 	alias trk track;
 	// offset in tracklist, checked against endmark
@@ -54,22 +54,32 @@ struct SequenceRowData {
 struct VoiceInitParams {
 	Tracklist t;
 	Rectangle a;
-	Posinfo p;
+	PosData p;
 }
 
 private struct Clip {
 	int trans, no;
 }
 
-protected class Posinfo {
+protected class PosData {
 	int pointerOffsetValue = 0;
-	int pointerOffset() { return pointerOffsetValue - anchor; }
-	int pointerOffset(int i) { return pointerOffsetValue = i + anchor; }
 	int trkOffset = 0;
 	int seqOffset;
 	int mark; 
 	int rowCounter;
 	Tracklist tracks;
+
+	@property int pointerOffset() {
+		return pointerOffsetValue - anchor;
+	}
+	@property int pointerOffset(int i) {
+		return pointerOffsetValue = i + anchor;
+	}
+	
+	@property int rowOnCursor() {
+		return seqOffset + pointerOffset;
+	}
+	
 	int getRowCounter() {
 		int counter;
 		for(int i = 0; i <= trkOffset; i++) {
@@ -78,42 +88,48 @@ protected class Posinfo {
 		}
 		return counter + seqOffset;
 	}
-	int rowOnCursor() {
-		return seqOffset + pointerOffset;
-	}
+	
 }
 
-protected class PosinfoTable {
-	Posinfo[] pos;
+protected class PosDataTable {
+	PosData[] pos;
+
 	this() {
 		pos.length = 6;
-		foreach(ref p; pos) p = new Posinfo;
+		foreach(ref p; pos) p = new PosData;
 	}
-	Posinfo opIndex(int idx) {
+
+	PosData opIndex(int idx) {
 		return pos[idx];
 	}
-	int pointerOffset(int o) { 
+
+	@property int pointerOffset(int o) { 
 		foreach(ref p; pos) { p.pointerOffset = o; }
 		return 0;
 	}
-	int pointerOffset() { return pos[0].pointerOffset; }
-	int normalPointerOffset() { 
+	
+	@property int pointerOffset() {
+		return pos[0].pointerOffset;
+	}
+	
+	@property int normalPointerOffset() { 
 		int r = tableTop + pos[0].pointerOffset;
 		return r;
 	}
 			
-	int rowCounter() { 
+	@property int rowCounter() { 
 		return pos[0].rowCounter; 
 	}
-	int rowCounter(int o) { 
+	
+	@property int rowCounter(int o) { 
 		foreach(ref p; pos) { p.rowCounter = o; }
 		return 0;
 	}
 
-	void dup(PosinfoTable pt) {
+	void dup(PosDataTable pt) {
 		for(int i = 0 ; i < 6; i++) {
-			Posinfo p = pos[i];
-			Posinfo t = pt[i];
+			PosData p = pos[i];
+			PosData t = pt[i];
 			p.pointerOffset = t.pointerOffset;
 			p.seqOffset = t.seqOffset;
 			p.trkOffset = t.trkOffset;
@@ -127,8 +143,8 @@ protected class PosinfoTable {
 
 abstract protected class Voice : Window {
 	Tracklist tracks;
-	Posinfo pos;
-	SequenceRowData activeRow;
+	PosData pos;
+	RowData activeRow;
 	Input input;
 	alias input activeInput;
 	
@@ -141,19 +157,21 @@ abstract protected class Voice : Window {
 public:
 
 	bool atBeg() { 
-		return pos.trkOffset <= 0 && (pos.seqOffset + pos.pointerOffset) <= 0;
+		return pos.trkOffset <= 0
+			&& (pos.seqOffset + pos.pointerOffset) <= 0;
 	}
 
 	bool atEnd() {
-		SequenceRowData s = getRowData(pos.trkOffset, 
+		RowData s = getRowData(pos.trkOffset, 
 									   pos.seqOffset + pos.pointerOffset);
 		return (s.trk.trans >= 0xf0);
 	}
 	
 	bool pastEnd() { return pastEnd(0); }
+	
 	bool pastEnd(int y) {
-		SequenceRowData s = getRowData(pos.trkOffset,
-									   pos.seqOffset + y);
+		RowData s = getRowData(pos.trkOffset,
+							   pos.seqOffset + y);
 		int t = s.trkOffset2 - 1;
 		if(t < 0) return false;
 		Track trk = tracks[t];
@@ -164,22 +182,19 @@ public:
 
 	override void refresh() { refreshPointer(0); }
 
-	SequenceRowData getSequenceData(int trkofs, int seqofs) {
-		static SequenceRowData s;
+	RowData getRowData(int trkofs, int seqofs) {
+		static RowData s;
 		int trkofs2 = trkofs;
 		Sequence seq;
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
 		Sequence getSeq(Track t) {
 			if(t.trans >= 0xf0) return song.seqs[0];
-			else return song.seqs[t.no];
+			else return song.seqs[t.number];
 		}
-		int getRows() {
-			Sequence seq;
-			seq = getSeq(tracks[trkofs2]);
-			int r = seq.rows;
+		int numRowsInSeq() {
 			if(tracks[trkofs2].trans >= 0xf0)
-				r = 1;
-			return r;
+				return 1;
+			return getSeq(tracks[trkofs2]).rows;
 		}
 
 		if(trkofs > lasttrk) trkofs = lasttrk;
@@ -188,7 +203,7 @@ public:
 		seq = getSeq(s.trk);
 
 		while (seqofs < 0)  {
-			seqofs += getRows();
+			seqofs += numRowsInSeq();
 			if(--trkofs < 0) {
 				trkofs = 0;
 				seqofs = 0;
@@ -196,12 +211,12 @@ public:
 			}
 			--trkofs2;
 			s.trk = tracks[trkofs];
-			seq = song.seqs[s.trk.no];
+			seq = song.seqs[s.trk.number];
 		} 
 		assert(seqofs >= 0);
 
-		while(seqofs >= getRows()) {
-			seqofs -= getRows();
+		while(seqofs >= numRowsInSeq()) {
+			seqofs -= numRowsInSeq();
 			if(trkofs < lasttrk)
 				trkofs++;
 			trkofs2++;
@@ -223,11 +238,9 @@ public:
 		return s;
 	}
 	
-	SequenceRowData getRowData(int trkofs, int seqofs) {
-		return getSequenceData(trkofs, seqofs);
+	RowData getRowData(int tofs) {
+		return getRowData(tofs, 0);
 	}
-
-	SequenceRowData getRowData(int tofs) { return getRowData(tofs, 0); }
 
 	void scroll(int steps) {
 		scroll(steps, true);
@@ -235,7 +248,7 @@ public:
 
  	void scroll(int steps, bool canWrap) {
 		int oldRowcounter;
-		SequenceRowData s = getRowData(pos.trkOffset);
+		RowData s = getRowData(pos.trkOffset);
 		assert(s.seq.rows == s.clippedRows);
 		with(pos) {
 			seqOffset = seqOffset + steps;
@@ -244,7 +257,7 @@ public:
 			while(seqOffset + pointerOffset < 0) {
 				if(--trkOffset < 0) {
 					if(canWrap) {
-						trkOffset = tracks.trackLength() - 1;
+						trkOffset = tracks.trackLength - 1;
 						rowCounter = getRowCounter();
 					}
 					else trkOffset = 0;
@@ -283,15 +296,18 @@ public:
 
 
 protected:
+	
 	override void update();
+	
 	void refreshPointer() {
 		refreshPointer(pos.pointerOffset);
 	}
+	
 	void refreshPointer(int y);
 
 	void jump(int jumpto) {
-		if(jumpto == Jump.ToMark) jumpto = pos.mark;
-		else if(jumpto == Jump.ToWrapMark) jumpto = tracks.wrapOffset;
+		if(jumpto == Jump.toMark) jumpto = pos.mark;
+		else if(jumpto == Jump.toWrapMark) jumpto = tracks.wrapOffset;
 		assert(jumpto >= 0);
 		pos.trkOffset = jumpto;
 		pos.seqOffset = 0;
@@ -324,9 +340,9 @@ protected abstract class VoiceTable : Window {
 	Voice[6] voices;
 	Voice active;
 	alias active activeVoice;
-	PosinfoTable posTable;
+	PosDataTable posTable;
 	
-	this(Rectangle a, PosinfoTable pi) {
+	this(Rectangle a, PosDataTable pi) {
 		super(a);
 		posTable = pi;
 		activeVoice = voices[0];
@@ -359,10 +375,10 @@ protected abstract class VoiceTable : Window {
 			switch(key.raw)
 			{
 			case SDLK_HOME:
-				jump(Jump.ToBeginning,true);
+				jump(Jump.toBeginning,true);
 				break;
 			case SDLK_END:
-				jump(Jump.ToEnd,true);
+				jump(Jump.toEnd,true);
 				break;
 			case SDLK_PAGEUP:
 				step(-PAGESTEP * 2 * song.highlight);
@@ -378,7 +394,7 @@ protected abstract class VoiceTable : Window {
 			switch(key.raw)
 			{
 			case SDLK_h, SDLK_HOME:
-				jump(Jump.ToMark,true);
+				jump(Jump.toMark,true);
 				break;
 			case SDLK_l:
 				centralize();
@@ -460,6 +476,7 @@ protected abstract class VoiceTable : Window {
 	}
 
 	void stepVoice() { stepVoice(1); }
+	
 	void stepVoice(int i) {
 		// safety check - if we're past endmark on all voices,
 		// exit the method -- can happen if all tracklists
@@ -508,9 +525,9 @@ protected abstract class VoiceTable : Window {
 		screen.cprint(area.x + 1, area.y, 1, 0, format("#%02X",song.subtune));
 		for(int i = 0, x = area.x + 5 + com.fb.border; i < 6; i++) {
 			Voice v = voices[i];
-			SequenceRowData c = v.activeRow;
+			RowData c = v.activeRow;
 			screen.cprint(x, area.y, 1, 0,
-				format("+%03X %02X %s", c.trkOffset, c.trk.no,
+				format("+%03X %02X %s", c.trkOffset, c.trk.number,
 					   audio.player.muted[i] ? "Off" : "   ") );
 			x += 13 + com.fb.border;
 		}
@@ -551,42 +568,42 @@ protected abstract class VoiceTable : Window {
 
 	void jump(int to, bool doCtr) {
 		switch(to) {
-		case Jump.ToBeginning:
+		case Jump.toBeginning:
 			posTable.pointerOffset = 0;
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 			}
 			if(doCtr) centerTo(0);
 			break;
-		case Jump.ToMark:
+		case Jump.toMark:
 			posTable.pointerOffset = 0;
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 				v.jump(v.pos.mark);
 			}
 			if(doCtr) centerTo(0);
 			break;
-		case Jump.ToWrapMark:
+		case Jump.toWrapMark:
 			posTable.pointerOffset = 0;
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 				v.jump(v.tracks.wrapOffset);
 			}
 			if(doCtr) centerTo(0);
 			break;
-		case Jump.ToEnd:
+		case Jump.toEnd:
 			centralize();
 			toSeqStart();
 
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 			}
 
-			int e = activeVoice.tracks.trackLength() - 1;
+			int e = activeVoice.tracks.trackLength - 1;
 			
 			for(int i = 0; i < e; i++) {
 				activeVoice.refreshPointer(posTable.pointerOffset);
-				SequenceRowData s = activeVoice.getRowData(i);
+				RowData s = activeVoice.getRowData(i);
 				step(s.seq.rows);
 			}
 			activeVoice.refreshPointer(posTable.pointerOffset);
@@ -597,13 +614,13 @@ protected abstract class VoiceTable : Window {
 				to = activeVoice.pos.mark;
 			}
 			foreach(v; voices) {
-				v.jump(Jump.ToBeginning);
+				v.jump(Jump.toBeginning);
 			}
 			Voice v = activeVoice;
 			posTable.pointerOffset = 0;
 			for(int i = 0; i < to; i++) {
 				activeVoice.refreshPointer(0);
-				int trk = v.tracks[i].no;
+				int trk = v.tracks[i].number;
 				Sequence s = song.seqs[trk];
 				step(s.rows);
 			}
@@ -703,7 +720,7 @@ protected abstract class VoiceTable : Window {
 	}
 
 	// for seq copy/insert/etc 
-	SequenceRowData getRowData() {
+	RowData getRowData() {
 		return activeVoice.activeRow;
 	}
 
@@ -731,14 +748,13 @@ final class Sequencer : Window {
 		SequenceTable sequenceTable;
 		TrackTable trackTable;
 		QueryDialog queryCopy, queryClip, queryAppend;
-		UI mainUI;
 	}
 	VoiceTable activeView;
 	private Clip[] clip;
-	this(Rectangle a, UI m) {
+	
+	this(Rectangle a) {
 		int h = screen.height - 10;
 		super(a,ui.help.HELPSEQUENCER);
-		mainUI = m;
 		trackmapTable = new TrackmapTable(a, seqPos);
 		sequenceTable = new SequenceTable(a, seqPos);
 		trackTable = new TrackTable(a, seqPos);
@@ -763,18 +779,21 @@ final class Sequencer : Window {
 	}
 
 public:
+	
 	void activateVoice(int n) {
 		activeView.jumpToVoice(n);
 		input = activeView.input;
 	}
+	
 	void reset() { reset(true); }
+	
 	void reset(bool tostart) {
 		activeView.deactivate();
 		if(tostart) {
 			foreach(b; voiceTables) {
 				b.toSeqStart();
 			}
-			sequenceTable.jump(Jump.ToBeginning,true);
+			sequenceTable.jump(Jump.toBeginning,true);
 		}
 		activeView = sequenceTable;
 		activeView.activate();
@@ -798,20 +817,20 @@ public:
 		if(key.mods & KMOD_ALT) {
 			switch(key.raw) {
 			case SDLK_a:
-				mainUI.activateDialog(queryAppend);
+				mainui.activateDialog(queryAppend);
 				break;
 			case SDLK_c:
-				mainUI.activateDialog(queryCopy);
+				mainui.activateDialog(queryCopy);
 				break;
 			case SDLK_z:
-				mainUI.activateDialog(queryClip);
+				mainui.activateDialog(queryClip);
 				break;
 			case SDLK_b:
 				pasteCallback();
 				break;
 			case SDLK_RIGHT:
 				refresh();
-				mainUI.stop();
+				mainui.stop();
 				activeView.jump(0,false);
 				resetMark();
 				song.incSubtune();
@@ -819,7 +838,7 @@ public:
 				break;
 			case SDLK_LEFT:
 				refresh();
-				mainUI.stop();
+				mainui.stop();
 				activeView.jump(0,false);
 				resetMark();
 				song.decSubtune();
@@ -832,7 +851,7 @@ public:
 		else if(key.mods & KMOD_CTRL) {
 			switch(key.raw) {
 			case SDLK_F12:
-				mainUI.activateDialog(
+				mainui.activateDialog(
 					new DebugDialog(activeView.activeVoice.activeRow.seq));
 				break;
 			default:
@@ -910,6 +929,7 @@ public:
 	}
 
 protected:
+	
 	override void update() {
 		activeView.update();
 		input = activeView.input;
@@ -928,9 +948,10 @@ protected:
 	}
 
 private:
+	
 	void insertCallback(int param) {
 		if(param >= MAX_SEQ_NUM) return;
-		SequenceRowData s = activeView.getRowData();
+		RowData s = activeView.getRowData();
 		Sequence fr = song.seqs[param];
 		Sequence to = s.seq;
 		to.insertFrom(fr, s.seqOffset);
@@ -939,7 +960,7 @@ private:
 
 	void copyCallback(int param) {
 		if(param >= MAX_SEQ_NUM) return;
-		SequenceRowData s = activeView.getRowData();
+		RowData s = activeView.getRowData();
 		Sequence fr = song.seqs[param];
 		Sequence to = s.seq; 
 		to.copyFrom(fr);
@@ -958,7 +979,7 @@ private:
 		clip.length = length;
 		for(int i = 0; i < length; i++) {
 			clip[i].trans = tl[i].trans;
-			clip[i].no = tl[i].no;
+			clip[i].no = tl[i].number;
 		}
 	}
   

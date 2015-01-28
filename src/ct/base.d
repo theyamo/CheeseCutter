@@ -2,12 +2,12 @@
 CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 module ct.base;
-import std.stdio;
+import com.cpu;
+import com.util;
+import ct.purge;
 import std.string;
 import std.file;
 import std.zlib;
-import com.cpu;
-import com.util;
 
 enum Offsets
 {
@@ -56,12 +56,12 @@ alias char*[] ByteDescription;
 struct Cmd {
 	private ubyte[] data;
 	static Cmd opCall() {
-		Cmd cmd;
+		static Cmd cmd;
 		return cmd;
 	}
 
 	static Cmd opCall(ubyte[] d) {
-		Cmd cmd;
+		static Cmd cmd;
 		cmd.data = d;
 		return cmd;
 	}
@@ -75,7 +75,7 @@ struct Cmd {
 		data = cmd.data;
 	}
 
-	ubyte value() { return data[3]; }
+	@property ubyte value() { return data[3]; }
 	alias value rawValue;
 
 	string toString() {
@@ -100,11 +100,11 @@ struct Cmd {
 struct Ins {
 	private ubyte[] data;
 	static Ins opCall() {
-		Ins ins;
+		static Ins ins;
 		return ins;
 	}
 	static Ins opCall(ubyte[] d) {
-		Ins ins;
+		static Ins ins;
 		ins.data = d;
 		return ins;
 	}
@@ -120,11 +120,11 @@ struct Ins {
 	}
 
 
-	ubyte rawValue() { return data[0]; }
-	ubyte value() { return cast(ubyte)(data[0] - 0xc0); }
+	@property ubyte rawValue() { return data[0]; }
+	@property ubyte value() { return cast(ubyte)(data[0] - 0xc0); }
 	private alias value v;
 
-	bool hasValue() { return value() < 0x30; }
+	@property bool hasValue() { return value() < 0x30; }
 	
 	string toString() {
 		if(v >= 0 && v < 0x30) 
@@ -143,7 +143,7 @@ struct Ins {
 struct Note {
 	private ubyte[] data;
 	static Note opCall(ubyte[] d) {
-		Note no;
+		static Note no;
 		no.data = d;
 		return no;
 	}
@@ -157,20 +157,20 @@ struct Note {
 		data = note.data;
 	}
 
-	ubyte rawValue() {
+	@property ubyte rawValue() {
 		return data[2];
 	}
 	
-	ubyte value() {
+	@property ubyte value() {
 		return data[2] % 0x60;
 	}
+	private alias value v;
+
+	@property bool isTied() { return data[1] == 0x5f;	}
 	
 	void setTied(bool t) {
 		data[1] = t ? 0x5f : 0xf0;
 	}
-
-	bool isTied() {	return data[1] == 0x5f;	}
-	private alias value v;
 
 	string toString(int trns) {
 		string col, colh;
@@ -246,16 +246,12 @@ struct Element {
 }
 
 struct Tracklist {
-	private Track[] list; // rename
-	int length() { return cast(int) list.length; }
-	void length(size_t il) {
-		list.length = il;
-	}
+	private Track[] trackList; // rename
 
 	Track opIndex(int i) {
 		if(i >= 0x400) i = 0;
 		assert(i >= 0 && i < length);
-		return list[i];
+		return trackList[i];
 	}
 
 	static Tracklist opCall(Tracklist tl) {
@@ -266,26 +262,24 @@ struct Tracklist {
 
 	static Tracklist opCall(Track[] t) {
 		Tracklist tl;
-		tl.list = t;
+		tl.trackList = t;
 		return tl;
 	}
 
-	Track last() { return list[trackLength()]; }
-
 	void opIndexAssign(Track t, size_t il) {
-		list[il] = t;
+		trackList[il] = t;
 	}
 
-	Track[] opSlice() { return list; }
+	Track[] opSlice() { return trackList; }
 
 	Tracklist opSlice(size_t x, size_t y) {
-		return Tracklist(list[x..y]);
+		return Tracklist(trackList[x .. y]);
 	}
 
 	int opApply(int delegate(ref Track) dg) {
 		int result;
-		for(int i = 0; i < trackLength(); i++) {
-			result = dg(list[i]);
+		for(int i = 0; i < trackLength; i++) {
+			result = dg(trackList[i]);
 			if(result) break;
 		}
 		return result;
@@ -293,95 +287,105 @@ struct Tracklist {
 
 	int opApplyReverse(int delegate(ref Track) dg) {
 		int result;
-		for(int i = cast(int)(list.length - 1); i >= 0; i--) {
-			result = dg(list[i]);
+		for(int i = cast(int)(length - 1); i >= 0; i--) {
+			result = dg(trackList[i]);
 			if(result) break;
 		}
 		return result;
 	}
 
-	int trackLength() {
+	@property int length() { return cast(int) trackList.length; }
+	
+	@property void length(size_t il) {
+		trackList.length = il;
+	}
+
+	@property Track lastTrack() {
+		return trackList[trackLength];
+	}
+	
+	@property int trackLength() {
 		int i;
 		for(i = 0; i < length; i++) {
-			Track t = list[i];
+			Track t = trackList[i];
 			if(t.trans >= 0xf0) return i;
 		}
 		assert(0);
 	}
 
+	@property address wrapOffset() {
+		return (lastTrack.smashedValue() / 2) & 0x7ff;
+	}
+
+	@property void wrapOffset(address offset) {
+		if((offset & 0xff00) >= 0xf000) return; 
+		assert(offset >= 0 && offset < 0x400);
+		if(offset >= trackLength)
+			offset = cast(ushort)(trackLength - 1);
+		offset *= 2;
+		offset |= 0xf000;
+		lastTrack() = [(offset & 0xff00) >> 8, offset & 0x00ff];
+	}
+
 	void expand() {
-		insertAt(trackLength());
+		insertAt(trackLength);
 	}
 
 	void shrink() {
-		deleteAt(trackLength()-1);
+		deleteAt(trackLength-1);
 	}
 
 	// returns transpose value other than 0x80 above idx OR below(if idx == 0)
 	ubyte getTransAt(int idx) {
 		if(idx > 0) {
 			do {
-				if(list[idx].trans > 0x80 &&
-				   list[idx].trans < 0xc0)
-					return list[idx].trans;
+				if(trackList[idx].trans > 0x80 &&
+				   trackList[idx].trans < 0xc0)
+					return trackList[idx].trans;
 			} while(idx-- > 0);
 		}
 		else if(idx == 0) {
 			do {
-				if(list[idx].trans > 0x80 &&
-				   list[idx].trans < 0xc0)
-					return list[idx].trans;
-			} while(idx++ < trackLength());
+				if(trackList[idx].trans > 0x80 &&
+				   trackList[idx].trans < 0xc0)
+					return trackList[idx].trans;
+			} while(idx++ < trackLength);
 		}
 		return 0xa0;
 	}
 
 	void insertAt(int offset) {
-		assert(offset >= 0 && offset < list.length);
-		for(int i = cast(int)(list.length - 2); i >= offset; i--) {
-			list[i+1] = list[i].dup;
+		if(offset > trackList.length - 2) return;
+		assert(offset >= 0 && offset < trackList.length);
+		for(int i = cast(int)(trackList.length - 2); i >= offset; i--) {
+			trackList[i+1] = trackList[i].dup;
 		}
-		list[offset].trans = getTransAt(offset);
-		list[offset].trackNo = 0;
+		trackList[offset].trans = getTransAt(offset);
+		trackList[offset].number = 0;
 		if(wrapOffset() >= offset) {
-			wrapOffset( cast(address)(wrapOffset + 1));
+			wrapOffset = cast(address)(wrapOffset + 1);
 		}
 	}
 
 	void deleteAt(int offset) {
-		if(list[1].trans >= 0xf0) return;
-		for(int i = offset; i < list.length - 2; i++) {
-			list[i] = list[i+1].dup;
+		if(trackList[1].trans >= 0xf0) return;
+		for(int i = offset; i < trackList.length - 2; i++) {
+			trackList[i] = trackList[i+1].dup;
 		}		
 		if(wrapOffset() >= offset) {
-			wrapOffset( cast(address)(wrapOffset - 1));
+			wrapOffset = cast(address)(wrapOffset - 1);
 		}
 	}
 
 	void transposeAt(int s, int e, int t) {
-		foreach(trk; list[s..e]) trk.transpose(t);
+		foreach(trk; trackList[s .. e]) trk.transpose(t);
 	}
 
-	@property address wrapOffset() {
-		return (last.smashedValue() / 2) & 0x7ff;
-	}
-
-	@property void wrapOffset(address offset) {
-		if((offset & 0xff00) >= 0xfe00) return;
-		assert(offset >= 0 && offset < 0x400);
-		if(offset >= trackLength())
-			offset = cast(ushort)(trackLength() - 1);
-		offset *= 2;
-		offset |= 0xf000;
-		last() = [(offset & 0xff00) >> 8, offset & 0x00ff];
-	}
-
-	ubyte[] compact() {
-		ubyte[] arr;
+	auto compact() {
+		ubyte[] arr = new ubyte[1024];
 		int p, trans = -1, wrapptr = wrapOffset * 2;
 
-		arr.length = 1024;
-		foreach(idx, track; list) {
+		foreach(idx, track; trackList) {
 			if(track.trans >= 0xf0) {
 				wrapptr |= 0xf000;
 				arr[p .. p + 2] = [(wrapptr & 0xff00) >> 8, wrapptr & 0x00ff];
@@ -395,7 +399,7 @@ struct Tracklist {
 			else if(idx < wrapOffset) {
 				wrapptr--;
 			}
-			arr[p++] = track.no;
+			arr[p++] = track.number;
 		}
 		return arr[0..p];
 	}
@@ -424,21 +428,29 @@ struct Track {
 		data = tr.data;
 	}
 
-	@property void trackNo(ubyte no) {
-		data[1] = no;
-	}
-
 	@property void trans(ubyte t) {
 		data[0] = t;
 	}
 
-	ushort dup() {
-		return trans | (no << 8);
+	@property ushort dup() {
+		return trans | (number << 8);
 	}
 
 	@property ushort smashedValue() { // "real" int value, trans = highbyte
-		return no | (trans << 8);
+		return number | (trans << 8);
 	}
+
+	@property ubyte trans() {
+		return data[0];
+	}
+	
+	@property ubyte number() {
+		return data[1];
+	}
+	@property void number(ubyte no) {
+		data[1] = no;
+	}
+	alias number trackNumber;
 	
 	void setValue(int tr, int no) {
 		tr = clamp(tr, 0x80, 0xf3);
@@ -448,17 +460,9 @@ struct Track {
 		data[1] = no & 255;
 	}
 	
-	@property ubyte trans() {
-		return data[0];
-	}
-	
-	@property ubyte no() {
-		return data[1];
-	}
-	alias no trackNo;
 	
 	string toString() {
-		string s = format("%02X%02X", trans, no);
+		string s = format("%02X%02X", trans, number);
 		return s;
 	}
 
@@ -469,14 +473,12 @@ struct Track {
 	}
 }
 
-
 class Sequence {
 	ElementArray data;
 	int rows;
 
 	static struct ElementArray {
 		ubyte[] raw;
-		int length() { return cast(int)raw.length; }
 
 		Element opIndex(int i) {
 			assert(i < MAX_SEQ_ROWS * 4);
@@ -497,10 +499,11 @@ class Sequence {
 			}
 			return result;
 		}
+		
+		@property int length() { return cast(int)raw.length; }
 	}
 	
 	this(ubyte[] d) {
-		// FIX: most of it should only be done on song.open
 		data = ElementArray(d);
 		refresh();
 		if(rows*4+4 < 254)
@@ -683,12 +686,13 @@ class Sequence {
 		outarr[outp++] = cast(ubyte)SEQ_END_MARK;
 		return outarr[0..outp];
 	}
-	
 }
 
-struct Table {
+class Table {
 	ubyte[] data;
-	int offset;
+	this(ubyte[] data) {
+		this.data = data;
+	}
 	int size() {
 		foreach_reverse(idx, val; data) {
 			if(val != 0) return cast(int)(idx + 1);
@@ -702,26 +706,296 @@ struct Table {
 	}
 }
 
+class TWaveTable : Table {
+	struct WaveProgram {
+		ubyte[] wave1, wave2;
+		int offset;
+	}
+	// info for each waveprogram
+	struct Chunk {
+		int offset;
+		ubyte[] wave1, wave2;
+		bool used;
+		int tokill;
+		string toString() { return format("%x", offset); }
+		// TODO implement .dup which copies arrasys as well
+		Chunk dup() {
+			assert(0);
+		}
+	}
+
+	ubyte[] wave1, wave2;
+	
+	this(ubyte[] data) {
+		super(data);
+		wave1 = data[0 .. 256];
+		wave2 = data[256 .. 512];
+	}
+
+	int seekTableEnd() {
+		for(int i = 255; i >= 1; i--) {
+			if(wave1[i-1] != 0) {
+				return i;
+			}
+		}
+		return 0;
+	}
+
+	Chunk[] getChunks() {
+		return getChunks(data);
+	}
+
+	Chunk[] getChunks(ubyte[] wavetab) {
+		/+ static +/ Chunk[] chunks = new Chunk[256];
+		int counter;
+		for(int i = 0, b; i < 256; i++) {
+			if(wavetab[i] == 0x7f || wavetab[i] == 0x7e) {
+				chunks[counter] = Chunk(b, wavetab[b .. i + 1], wavetab[b + 256 .. i + 256 + 1]);
+				b = i + 1;
+				counter++;
+			}
+		}
+		return chunks[0 .. counter];
+	}
+	
+	// get program starting at waveOffset
+	// mostly copied from purgeWave
+	WaveProgram getProgram(int waveOffset) {
+		auto chunks = getChunks(data.dup); 
+		int topRow = 255;
+		
+		int cell = whichCell(chunks, waveOffset);
+		if(cell < 0)
+			throw new Error("Illegal waveprogram offset");
+		markCells(chunks, cell);
+			
+		WaveProgram wp;
+
+		/+ get top row in used chunks, needed to recalc arpofs NB might be necessary to calc last +/
+		foreach(ref chunk; chunks) {
+			if(chunk.used && chunk.offset < topRow)
+				topRow = chunk.offset;
+		}
+		/+ generate arrays +/
+		foreach(ref chunk; chunks) {
+			if(!chunk.used) {
+				if(waveOffset >= chunk.offset)
+					waveOffset -= cast(int)chunk.wave1.length;
+				
+				foreach(ref chunk2; chunks) {
+					if(chunk2.wave1[$ - 1] == 0x7f &&
+					   chunk2.wave2[$ - 1] >= chunk.offset) {
+						// check that 7f-xx is not pointing WITHIN this chunk
+						//assert(chunk2.wave2[$ - 1] > chunk.offset + chunk.wave1.length);
+						// calc wrap
+						int t = chunk2.wave2[$ - 1] - cast(int)chunk.wave1.length;
+						t = com.util.clamp(t, 0, 256);
+						chunk2.wave2[$ - 1] = cast(ubyte)t;
+					}
+					if(chunk2.offset >=chunk.offset)
+						chunk2.offset -= chunk.wave1.length;
+
+				}
+			}
+		}
+
+		foreach(ref chunk; chunks) {
+			if(!chunk.used) continue;
+			wp.wave1 ~= chunk.wave1;
+			wp.wave2 ~= chunk.wave2;
+			assert(wp.wave1[$-1] == 0x7f ||
+				   wp.wave1[$-1] == 0x7e);
+		}
+		wp.offset = waveOffset;
+		return wp;
+	}
+	
+	static int whichCell(Chunk[] chunks, int ptr) {
+		foreach(idx, chunk; chunks) {
+			int b = chunk.offset,
+				e = cast(int)(chunk.offset + chunk.wave1.length);
+			if(ptr >= b && ptr < e) {
+				return cast(int)idx;
+			}
+		}
+		return -1;
+	}
+
+	static void markCells(Chunk[] chunks, int cell) {
+		assert(cell >= 0 && cell < chunks.length);
+		for(;;) {
+			if(chunks[cell].used) break;
+			chunks[cell].used = true;
+			Chunk c = chunks[cell];
+			assert(c.wave1[$-1] == 0x7e ||
+				   c.wave1[$-1] == 0x7f);
+			if(c.wave1[$-1] == 0x7e)
+				break;
+			cell = whichCell(chunks, c.wave2[$-1]);
+			if(cell < 0) break;
+		}
+	}
+
+	void deleteRow(Song song, int pos) {
+		deleteRow(song, pos, 1);
+	}
+
+	void deleteRow(Song song, int pos, int num) {
+		for(int n = 0; n < num; n++) {
+			int i;
+			assert(pos < 255 && pos >= 0);
+			for(i = pos; i < 255; i++) {
+				wave1[i] = wave1[i + 1];
+				wave2[i] = wave2[i + 1];
+			}
+			for(i=0;i < 256;i++) {
+			if((wave1[i] == 0x7f || wave1[i] == 0x7e) &&
+			   wave2[i] >= pos) {
+				if(wave2[i] > 0) --wave2[i];
+			}
+			}
+			arpPointerUpdate(song, pos, -1);
+		}	
+	}
+
+	void insertRow(Song song, int pos) {
+		int i;
+		for(i = 254; i >= pos; i--) {
+			wave1[i + 1] = wave1[i];
+			wave2[i + 1] = wave2[i];
+		}
+		for(i=0;i<256;i++) {
+			if(wave1[i] == 0x7f &&
+			   wave2[i] >= pos)
+				wave2[i]++;
+		}
+		wave1[pos] = 0;
+		wave2[pos] = 0;
+		arpPointerUpdate(song, pos, 1);
+	}
+
+	private void arpPointerUpdate(Song song, int pos, int val) {
+		for(int j = 0; j < 48; j++) {
+			ubyte b7 = song.instrumentTable[j + 7 * 48];
+			if(b7 > pos) {
+				int v = b7 + val;
+				if(v < 0) v = 0;
+				// TODO rewrite not to access global..
+				song.instrumentTable[j + 7 * 48] = cast(ubyte)v;
+			}
+		}
+	}
+}
+
+class InstrumentTable : Table {
+	this(ubyte[] data) {
+		super(data);
+	}
+
+	ubyte[] getInstrument(int no) {
+		ubyte[] arr = new ubyte[8];
+		for(int i = 0; i < 8 ; i++) {
+			arr[i] = data[no + i * 48];
+		}
+		return arr;
+	}
+}
+
+class SweepTable : Table {
+	this(ubyte[] data) {
+		super(data);
+	}
+
+	struct SweepProgram {
+		int offset;
+		ubyte[] data;
+	}
+	
+	SweepProgram getProgram(int currentRow) {
+		bool[0x40] visited;
+		int topRow = currentRow;
+		for(int row = currentRow; row < 0x40;) {
+			if(row < topRow) topRow = row;
+			if(visited[row]) break;
+			visited[row] = true;
+			int jumpValue = data[row * 4 + 3];
+			if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break
+				break;
+			if(jumpValue == 0x7f)
+				break; // if loops or ends, break
+			else if(jumpValue == 0) 
+				row++;
+			else row = jumpValue;
+		}
+		
+		int toremove;
+		ubyte[] copy = data.dup;
+		foreach(idx, vis; visited) {
+			if(!vis && idx > 0) {
+				for(int i = 1; i < 64; i++) {
+					int jumpval =
+						data[i * 4 + 3];
+					if(jumpval < 0x40 &&
+					   jumpval >= idx) {
+						copy[i * 4 + 3]--;
+					}
+				}
+				if(currentRow >= idx)
+					++toremove;
+					//--currentRow;
+			}
+		}
+
+		ubyte[] arr;
+		
+		foreach(idx, vis; visited) {
+			if(vis) {
+				arr ~= copy[idx * 4 .. idx * 4 + 4];
+			}
+		}
+		
+		assert(arr[$-1] > 0);
+		
+		return SweepProgram(currentRow - toremove, arr);
+	}
+
+	int seekTableEnd() {
+		for(int i = 0x3c; i >= 0; i -= 4) {
+			if(data[i + 3] > 0) {
+				return i / 4 + 1;
+			}
+		}
+		return 0;
+	}
+	
+}
 
 class Song {
 	enum DatafileOffset {
-		Binary, Header = 65536, 
-		Title = Header + 256 + 5, Author = Title + 32, Release = Author + 32,
+		Binary,
+		Header = 65536, 
+		Title = Header + 256 + 5,
+		Author = Title + 32,
+		Release = Author + 32,
 		Insnames = Title + 40 * 4,
 		Subtunes = Insnames + 1024 * 2
 	}
 	
-	private {
-		struct Features {
-			ubyte requestedTables;
-			ubyte[8] instrumentFlags;
-			ubyte[16] cmdFlags;
-		}
+	private struct Features {
+		ubyte requestedTables;
+		ubyte[8] instrumentFlags;
+		ubyte[16] cmdFlags;
 	}
 
+	private struct Patch {
+		string name;
+		ubyte[] def, wave1, wave2, filt, pulse;
+	}
+	
 	class Subtunes {
 		ubyte[1024][3][32] subtunes;
 		private int active;
+		
 		this() {
 			initArray();
 		}
@@ -732,7 +1006,18 @@ class Song {
 			subts = cast(ubyte[])(&subtunes)[0..1];
 			subts[] = arr;
 		}
-
+/+
+		@property int numOf() {
+			foreach_reverse(idx, ref tune; subtunes) {
+				foreach(ref voice; tune) {
+					if(voice[1 .. 4] != cast(ubyte[])[0x00, 0xf0, 0x00]) {
+						return cast(int)(idx + 1);
+					}
+				}
+			}
+			return 0;
+		}
++/
 		private void initArray() {
 			foreach(ref tune; subtunes) {
 				foreach(ref voice; tune) {
@@ -792,7 +1077,7 @@ class Song {
 		}
 
 		Tracklist[] opIndex(int n) {
-			static Tracklist[] tr;
+			Tracklist[] tr;
 
 			tr.length = 6;
 			for(int i=0; i < 6; i++) { 
@@ -844,6 +1129,7 @@ class Song {
 			}
 		}
 
+		// hacked for stereosid
 		@property int numOf() {
 			foreach_reverse(idx, ref tune; subtunes) {
 				foreach(ref voice; tune) {
@@ -913,17 +1199,16 @@ class Song {
 
 	// dupes of raw tables above, will eventually update all code to use these 
 	Table tSongsets,
-		tWave1,
-		tWave2,
-		tWave,
-		tInstr,
-		tPulse,
-		tFilter,
+	//		tWave1,
+	//		tWave2,
 		tSuper,
 		tChord,
 		tChordIndex,
 		tSeqlo,
 		tSeqhi;
+	InstrumentTable tInstr;
+	TWaveTable tWave;
+	SweepTable tPulse, tFilter;
 	Table tTrack1, tTrack2, tTrack3;
 	Table[string] tables;
 	char[] playerID;
@@ -954,6 +1239,30 @@ class Song {
 		sidbuf = memspace[0xd400 .. 0xd439];
 	}
 
+	@property int numOfSeqs() {
+		int upto;
+		foreach(int i, s; seqs) {
+			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
+		}
+		return upto + 1;
+	}
+	
+	@property int speed() {
+		return memspace[offsets[Offsets.SPEED]];
+	}
+
+	@property void speed(int spd) {
+		memspace[offsets[Offsets.Songsets] + 6] = cast(ubyte)spd;
+		memspace[offsets[Offsets.SPEED]] = cast(ubyte)spd;
+		songspeeds[subtune] = cast(ubyte)spd;
+		if(ver >= 5 && spd >= 2)
+			memspace[offsets[Offsets.PlaySpeed]] = cast(ubyte)spd;
+	}
+
+	@property int playSpeed() {
+		return memspace[offsets[Offsets.PlaySpeed]];
+	}
+	
 	void open(string fn) {
 		ubyte[] inbuf = cast(ubyte[])read(fn);
 		if(inbuf[0..3] != cast(ubyte[])"CC2"[0..3]) {
@@ -965,6 +1274,9 @@ class Song {
 		ver = debuf[offset++];
 		if(ver < 6) 
 			throw new UserException("The song is incompatible (too old) for this version of the editor.");
+		if(ver >= 128)
+			throw new UserException("The song appears to be a stereo SID file and doesn't work with this editor.");
+			
 		clock = debuf[offset++];
 		multiplier = debuf[offset++];
 		sidModel = debuf[offset++];
@@ -1004,18 +1316,17 @@ class Song {
 	}
 
 	protected void initialize(ubyte[] buf) {
-		int i, voi;
-		//int lastused;
+		int voi, ofs, i;
 		data[] = buf;
 
 		offsets.length = 0x60;
 		seqs.length = MAX_SEQ_NUM;
 		tracks.length = 6;
-		for(i=0; i < 6; i++) { 
+		for(i = 0; i < 6; i++) { 
 			tracks[i].length = TRACK_LIST_LENGTH;
 		}
 
-		for(i = 0;i < OFFSETTAB_LENGTH; i++) {
+		for(i = 0; i < OFFSETTAB_LENGTH; i++) {
 			offsets[i] = data[0xfa0+i*2] | (data[0xfa1+i*2] << 8);
 		}
 
@@ -1035,62 +1346,59 @@ class Song {
 			int offset2 = offsets[Offsets.Track4 + voi];
 			b = data[offset .. offset + 0x400];
 			for(i = 0; i < b.length/2; i++) {
-				//int tr = b[i * 2 + 1];
-				//if(tr > lastused) lastused = tr;
 				tracks[voi][i] = Track(memspace[offset + i * 2 .. offset + i * 2 + 2]);
 				tracks[voi+3][i] = Track(memspace[offset2 + i * 2 .. offset2 + i * 2 + 2]);
 			}
 		}
+		
+		ofs = offsets[Offsets.Songsets];
+		songsets = data[ofs .. ofs + 256];
+		tSongsets = new Table(songsets);
 
-		i = offsets[Offsets.Songsets];
-		songsets = data[i .. i + 256];
-		tSongsets = Table(songsets, i);
+		ofs = offsets[Offsets.Arp1];
+		wave1Table = data[ofs .. ofs + 256];
+		wave2Table = data[ofs + 256 .. ofs + 512];
+		waveTable = data[ofs .. ofs + 512];
+//		tWave1 = new Table(wave1Table);
+//		tWave2 = new Table(wave2Table, ofs + 256);
+		tWave = new TWaveTable(waveTable);
 
-		i = offsets[Offsets.Arp1];
-		wave1Table = data[i .. i + 256];
-		wave2Table = data[i + 256 .. i + 512];
-		waveTable = data[i .. i + 512];
-		tWave1 = Table(wave1Table, i);
-		tWave2 = Table(wave2Table, i + 256);
-		tWave = Table(waveTable, i);
+		ofs = offsets[Offsets.Inst];
+		instrumentTable = data[ofs .. ofs + 512];
+		tInstr = new InstrumentTable(instrumentTable);
 
-		i = offsets[Offsets.Inst];
-		instrumentTable = data[i .. i + 512];
-		tInstr = Table(instrumentTable, i);
+		ofs = offsets[Offsets.CMD1];
+		superTable = data[ofs .. ofs + 256];
+		tSuper = new Table(superTable);
 
-		i = offsets[Offsets.CMD1];
-		superTable = data[i .. i + 256];
-		tSuper = Table(superTable, i);
+		ofs = offsets[Offsets.PULSTAB];
+		pulseTable = data[ofs .. ofs + 256];
+		tPulse = new SweepTable(pulseTable);
 
-		i = offsets[Offsets.PULSTAB];
-		pulseTable = data[i .. i + 256];
-		tPulse = Table(pulseTable, i);
+		ofs = offsets[Offsets.FILTTAB];
+		filterTable = data[ofs .. ofs + 256];
+		tFilter = new SweepTable(filterTable);
 
-		i = offsets[Offsets.FILTTAB];
-		filterTable = data[i .. i + 256];
-		tFilter = Table(filterTable, i);
+		ofs = offsets[Offsets.SeqLO];
+		seqlo = data[ofs .. ofs + 256];
+		tSeqlo = new Table(seqlo);
 
-		i = offsets[Offsets.SeqLO];
-		seqlo = data[i .. i + 256];
-		tSeqlo = Table(seqlo, i);
+		ofs = offsets[Offsets.SeqHI];
+		seqhi = data[ofs ..ofs + 256];
+		tSeqhi = new Table(seqhi);
 
-		i = offsets[Offsets.SeqHI];
-		seqhi = data[i ..i + 256];
-		tSeqhi = Table(seqlo, i);
+		ofs = offsets[Offsets.ChordTable];
+		chordTable = data[ofs .. ofs + 128];
+		tChord = new Table(chordTable);
 
-
-		i = offsets[Offsets.ChordTable];
-		chordTable = data[i .. i + 128];
-		tChord = Table(chordTable, i);
-
-		i = offsets[Offsets.ChordIndexTable];
-		chordIndexTable = data[i .. i + 32];
-		tChordIndex = Table(chordIndexTable, i);
+		ofs = offsets[Offsets.ChordIndexTable];
+		chordIndexTable = data[ofs .. ofs + 32];
+		tChordIndex = new Table(chordIndexTable);
 
 		generateChordIndex();
 
 		i = offsets[Offsets.Track1];
-		tTrack1 = Table(data[i .. i + 0x400], i);
+		tTrack1 = new Table(data[ofs .. ofs + 0x400]);
 		/+
 		i = offsets[Offsets.Track2];
 		tTrack2 = Table(data[i .. i + 0x400], i);
@@ -1101,23 +1409,23 @@ class Song {
 		playerID = cast(char[])data[0xfee .. 0xff5];
    		subtune = 0;
 
-		i = offsets[Offsets.Features];
-		ubyte[] b = memspace[i .. i + 64];
+		ofs = offsets[Offsets.Features];
+		ubyte[] b = memspace[ofs .. ofs + 64];
 		features.requestedTables = b[0];
 		features.instrumentFlags[] = b[1..9];
 
 		/*
 		ubyte* b = cast(ubyte*)&features;
-		b[0..features.sizeof] = memspace[i .. i + features.sizeof];
+		b[0..features.sizeof] = memspace[ofs .. ofs + features.sizeof];
 		*/
 
 		if(ver > 7) {
 			instrumentByteDescriptions.length = 8;
-			i = offsets[Offsets.InstrumentDescriptionsHeader];
+			ofs = offsets[Offsets.InstrumentDescriptionsHeader];
 			for(int j = 0; j < 8; j++) {
-				int ioffset = memspace[i] | (memspace[i+1] << 8);
-				instrumentByteDescriptions[j] = cast(char*)&memspace[ioffset];
-				i += 2;
+				int iofs = memspace[ofs] | (memspace[ofs+1] << 8);
+				instrumentByteDescriptions[j] = cast(char*)&memspace[iofs];
+				ofs += 2;
 			}
 		}
 
@@ -1155,7 +1463,7 @@ class Song {
 		speed = songspeeds[0];
 		cpu.reset();
 		cpu.execute(0x1000);
-		tables = [ cast(string)"songsets":tSongsets, "wave1":tWave1, "wave2":tWave2,
+		tables = [ cast(string)"songsets":tSongsets, "wave":tWave,
 				   "instr":tInstr, "pulse":tPulse, "filter":tFilter, "cmd":tSuper,
 				   "chord":tChord, "chordidx":tChordIndex, "seqlo":tSeqlo, "seqhi":tSeqhi ];
 	}
@@ -1200,14 +1508,14 @@ class Song {
 		append(fn, std.zlib.compress(b));
 	}
 
-	void splitSequence(int seqno, int seqofs) {
-		if(seqno == 0 || seqofs == 0) return;
+	void splitSequence(int seqnumber, int seqofs) {
+		if(seqnumber == 0 || seqofs == 0) return;
 		int suborig = subtune;
-		int newseqno = getFreeSequence(0);
-		Sequence s = seqs[seqno];
+		int newseqnumber = getFreeSequence(0);
+		Sequence s = seqs[seqnumber];
 		if(seqofs == s.rows - 1) return;
 		Sequence copy = new Sequence(s.data.raw.dup);
-		Sequence ns = seqs[newseqno];
+		Sequence ns = seqs[newseqnumber];
 		ns.copyFrom(s);
 		ns.shrink(0, seqofs, true);
 		s.shrink(seqofs, s.rows - seqofs, true);
@@ -1217,11 +1525,11 @@ class Song {
 			foreach(vIdx, voice; tracks) {
 				for(int tIdx = voice.length - 1; tIdx >= 0; tIdx--) {
 					Track t = voice[tIdx];
-					if(t.no == seqno) {
+					if(t.number == seqnumber) {
 						tracks[vIdx].insertAt(tIdx+1);
 						Track t2 = tracks[vIdx][tIdx+1];
 						t2.trans = 0x80;
-						t2.trackNo = (cast(ubyte)newseqno);
+						t2.number = (cast(ubyte)newseqnumber);
 					}
 					
 				}
@@ -1238,31 +1546,20 @@ class Song {
 		throw new UserException(std.string.format("Missing tablepointer %d", requestedFlag));
 	}
 	
-	int getWavetablePointer(int insno) {
+	int wavetablePointer(int insno) {
 		return getTablepointer(instrumentTable, features.instrumentFlags, 1, insno);
 	}
 
-	int getPulsetablePointer(int insno) {
+	int pulsetablePointer(int insno) {
 		int ptr = getTablepointer(instrumentTable, features.instrumentFlags, 3, insno);
 		if(ptr >= 0x80) return 0;
 		return ptr;
 	}
-
-	int getFiltertablePointer(int insno) {
+	
+	int filtertablePointer(int insno) {
 		return getTablepointer(instrumentTable, features.instrumentFlags, 4, insno);
 	}
-
-	void saveDump(string fn) {
-		subtunes.sync();
-		int upto = numOfSeqs() - 1;
 	
-		int lobyt = offsets[Offsets.SeqLO] + upto, hibyt = offsets[Offsets.SeqHI] + upto;
-		int lastaddr = memspace[lobyt] | (memspace[hibyt] << 8) + 256;
-
-		// w(format("saving up to $%X ($%04X)", upto, lastaddr));
-		std.file.write(fn, cast(ubyte[])[0x00, 0x10] ~ memspace[0x1000 .. lastaddr]);
-	}
-
 	void seqIterator(void delegate(Sequence s, Element e) dg) {
 		foreach(i, s; seqs) {
 			for(int j = 0; j < s.rows; j++) {
@@ -1283,6 +1580,7 @@ class Song {
 		}
 	}
 
+/+ stereoSID commentout
 	@property int numOfSeqs() {
 		int upto;
 		foreach(int i, s; seqs) {
@@ -1337,6 +1635,7 @@ class Song {
 		wave2Table[pos] = 0;
 		arpPointerUpdate(pos, 1);
 	}
++/
 
 	void setVoicon(int[] m) {
 		//setVoicon(m[0], m[1], m[2]);
@@ -1365,30 +1664,6 @@ class Song {
 			if(!seqUsed) return seqnum;
 		}
 		return -1;
-	}
-
-	// will some day be moved to tablecode
-	void wavetableRemove(int pos) {
-		wavetableRemove(pos, 1);
-	}
-
-	// will some day be moved to tablecode
-	void wavetableRemove(int pos, int num) {
-		for(int n = 0; n < num; n++) {
-			int i;
-			assert(pos < 255 && pos >= 0);
-			for(i = pos; i < 255; i++) {
-				wave1Table[i] = wave1Table[i + 1];
-				wave2Table[i] = wave2Table[i + 1];
-			}
-			for(i=0;i < 256;i++) {
-				if((wave1Table[i] == 0x7f || wave1Table[i] == 0x7e) &&
-				   wave2Table[i] >= pos) {
-					if(wave2Table[i] > 0) --wave2Table[i];
-				}
-			}
-			arpPointerUpdate(pos, -1);
-		}	
 	}
 
 	void clearSeqs() {
@@ -1422,7 +1697,8 @@ class Song {
 
 	void importData(Song insong) {
 		// copy tables
-		foreach(idx, table; [ "wave1", "wave2", "cmd", "instr", "chord", "pulse", "filter"]) {
+		foreach(idx, table; [ "wave1", "wave2", "cmd", "instr", "chord",
+							  "pulse", "filter"]) {
 			tables[table].data[] = insong.tables[table].data;
 		}
 		// sequences
@@ -1452,8 +1728,152 @@ class Song {
 
 	// hack to help sequencer rowcounting 
 	Sequence sequence(Track t) {
-		return seqs[t.no()];
+		return seqs[t.number];
+	}
+
+	void savePatch(string filename, int no) {
+		string insname = std.string.stripRight
+			(std.conv.to!string(insLabels[no]));
+		int waveptr = wavetablePointer(no);
+		int pulseptr = pulsetablePointer(no);
+		int filtptr = filtertablePointer(no);
+
+		auto wp = tWave.getProgram(waveptr);
+		auto pp = tPulse.getProgram(pulseptr);
+		auto fp = tFilter.getProgram(filtptr);
+		// rewrite pointers. TODO: move elsewhere
+
+		auto instr = tInstr.getInstrument(no);
+		instr[7] = cast(ubyte)wp.offset;
+		// skipping 0-rows since it implies inactive sweep
+		if(pp.offset > 0)
+			instr[5] = cast(ubyte)pp.offset;
+		if(fp.offset > 0)
+			instr[4] = cast(ubyte)fp.offset;
+
+		string csv =
+			std.conv.to!string(playerID[0..6]) ~ "`" ~
+			insname ~
+			"`" ~ com.util.arr2str(instr) ~
+			"`" ~ com.util.arr2str(wp.wave1) ~
+			"`" ~ com.util.arr2str(wp.wave2) ~
+			"`" ~ (pulseptr > 0 ?
+				   com.util.arr2str(pp.data) : "") ~
+			"`" ~ (filtptr > 0 ?
+				   com.util.arr2str(fp.data) : "");
+
+		if(filename is null) {
+			filename = com.util.fnClean(insname ~ ".cti");
+		}
+		std.file.write(filename, csv);
+	}
+
+	void insertPatch(string filename, int insno) {
+		import std.csv;
+		auto conv(string s) {
+			ubyte[] arr = new ubyte[s.length / 2];
+			for(int i = 0, j = 0; i < s.length; i += 2, j++) {
+				arr[j] = cast(ubyte)com.util.convertHex(s[i .. i + 2]);
+			}
+			return arr;
+		}
+		struct Rec {
+			string playerid, name, def, wave1, wave2, pulse, filt;
+		}
+		string patch = cast(string)std.file.read(filename);
+		auto recs = csvReader!Rec(patch,'`');
+		foreach(rec; recs) {
+			auto p = new Purge(this);
+			p.deleteInstrument(insno);
+			insertInstrument(Patch(rec.name, conv(rec.def), conv(rec.wave1),
+									 conv(rec.wave2), conv(rec.filt),
+									 conv(rec.pulse)), insno);
+
+			if(rec.name.length > 31) rec.name.length = 31;
+			insLabels[insno][] = ' ';
+			insLabels[insno][0..rec.name.length] = rec.name;
+			
+			// break because only 1st row needed (though there should never be more)
+			break;
+		}
+	}
+
+	private void insertInstrument(Patch patch, int insno) {
+		assert(patch.wave1.length == patch.wave2.length);
+		
+		// cram loaded data into tables
+		int waveptr = tWave.seekTableEnd();
+		if(patch.wave1.length + waveptr > tWave.wave1.length - 1)
+			throw new Exception("Not enough free rows in wavetable");
+		ubyte[] wave1 = tWave.wave1[waveptr .. waveptr + patch.wave1.length];
+		ubyte[] wave2 = tWave.wave2[waveptr .. waveptr + patch.wave2.length];
+		for(int i = 0; i < wave1.length; i++) {
+			if(wave1[i] == 0x7f)
+				wave2[i] += waveptr;
+		}
+		wave1[0..$] = patch.wave1[];
+		wave2[0..$] = patch.wave2[];
+
+		// ----------------------------------------
+		void fixSweepOffsets(ubyte[] table, int offset) {
+			for(int i = 0; i < table.length; i += 4) {
+				if(table[i + 3] > 0 && table[i + 3] < 0x40) {
+					table[i + 3] += offset;
+					assert(table[i + 3] < 0x40);
+				}
+			}
+		}
+
+		// insert pulse program if defined
+		if(patch.def[5] > 0) {
+			int pulseptr = tPulse.seekTableEnd() * 4;
+			if(patch.pulse.length + pulseptr > tPulse.data.length - 4)
+				throw new Exception("Not enough free rows in pulse table");
+			
+			ubyte[] pulse = tPulse.data[pulseptr .. $];
+			fixSweepOffsets(pulse, pulseptr + patch.def[5]);
+			
+			tPulse.data[pulseptr .. pulseptr + patch.pulse.length] =
+				patch.pulse[];
+
+			for(int i = 0; i < pulse.length - 4; i += 4) {
+				if(pulse[i + 3] > 0 && pulse[i + 3] < 0x40) {
+					pulse[i + 3] += pulseptr / 4 - 1;
+				}
+			}
+			patch.def[5] += pulseptr / 4 - 1;
+		}
+
+		// insert filter if defined
+		if(patch.def[4] > 0) {
+			int filterptr = tFilter.seekTableEnd() * 4;
+			if(patch.filt.length + filterptr > tFilter.data.length - 4)
+				throw new Exception("Not enough free rows in filter table");
+			
+			ubyte[] filt = tFilter.data[filterptr .. $];
+			fixSweepOffsets(filt, filterptr + patch.def[4]);
+			
+			tFilter.data[filterptr .. filterptr + patch.filt.length] =
+				patch.filt[];
+
+			for(int i = 0; i < filt.length; i += 4) {
+				if(filt[i + 3] > 0 && filt[i + 3] < 0x40) {
+					filt[i + 3] += filterptr / 4 - 1;
+				}
+			}
+			patch.def[4] += filterptr / 4 - 1;
+		}
+		
+		// recalc wrap points for inserted data
+		for(int i = 0; i < wave1.length; i++) {
+			if(wave1[i] == 0x7f)
+				wave2[i] += waveptr;
+		}
+
+		patch.def[7] += waveptr;
+		
+		for(int i = 0; i < 8; i++) {
+			instrumentTable[i * 48 + insno] = patch.def[i];
+		}
 	}
 }
-
-

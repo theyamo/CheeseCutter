@@ -7,13 +7,11 @@ CFLAGS=$(COMFLAGS) -O1
 CXXFLAGS=$(CFLAGS) -I./src -O3
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@
 COMPILE.c = $(CC) $(CFLAGS) -c -o $@
-OUTPUT_OPTION = 
-DC=gdc-win
-CXX=g++-win
-CC=gcc-win
-EXE=.exe
+DC=gdc
+CXX=g++
+CC=gcc
+EXE=
 TARGET=ccutter
-OBJCOPY=objcopy
 
 include Makefile.objects.mk
 
@@ -27,7 +25,7 @@ ct2util: $(C64OBJS) $(UTILOBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .c.o : $(C_SRCS)
-	gcc-win -c $< -o $@
+	$(CC) -c $< -o $@
 
 ct: $(C64OBJS) $(CTOBJS)
 
@@ -66,7 +64,7 @@ src/ct/base.o: src/c64/player.bin
 src/ui/ui.o: src/ui/help.o
 
 %.o: %.d
-	$(COMPILE.d) $(OUTPUT_OPTION) $<
+	$(COMPILE.d) $<
 
 
 

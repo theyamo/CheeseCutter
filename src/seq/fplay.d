@@ -20,19 +20,18 @@ protected class FPlayVoice : SeqVoice {
 	}
 
 	override protected void scroll(int steps) {
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
 		int seqofs = pos.seqOffset + steps;
 		int trkofs2 = pos.trkOffset;
 		Sequence seq;
 		Track trk;
 		int getRows() {
-			Sequence seq = song.seqs[tracks[trkofs2].no];
-			int r = seq.rows;
+			Sequence seq = song.seqs[tracks[trkofs2].number];
 			if(tracks[trkofs2].trans >= 0xf0)
-				r = 1;
-			return r;
+				return 1;
+			return seq.rows;
 		}
-		// FIX: will not work when step > 1 && track wraps
+
 		pos.rowCounter = pos.rowCounter + steps;
 
 		while(seqofs >= getRows()) {
@@ -41,14 +40,14 @@ protected class FPlayVoice : SeqVoice {
 			trk = tracks[trkofs2];
 			if(trk.trans >= 0xf0) {
 				if(song.ver >= 6)
-					jump(Jump.ToWrapMark);
+					jump(Jump.toWrapMark);
 				else 
 					jump(mode);
 				trkofs2 = pos.trkOffset;
 				trk = tracks[trkofs2];
 				assert(trk.trans < 0xf0);
 			}
-			seq = song.seqs[trk.no];
+			seq = song.seqs[trk.number];
 			assert(seqofs >= 0);
 
 		}
@@ -107,7 +106,7 @@ class Fplay : Window {
 			m3 = fplayPos.pos[2].mark;
 			stop();
 			audio.player.start([m1, m2, m3], [0, 0, 0]);
-			ftable.jump(Jump.ToMark,true);
+			ftable.jump(Jump.toMark,true);
 			break;
 			+/
 		case SDLK_SPACE:
@@ -128,7 +127,7 @@ class Fplay : Window {
 	void startFromCursor() {
 		fplayPos.dup(seqPos);
 		ftable.centerTo(0);
-		mode = Jump.ToBeginning;
+		mode = Jump.toBeginning;
 	}
 
 	void stop() {

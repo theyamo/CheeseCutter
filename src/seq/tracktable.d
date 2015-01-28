@@ -11,7 +11,7 @@ import com.session;
 import ui.ui;
 import ui.input;
 import derelict.sdl.sdl;
-import std.string;
+//import std.string;
 import ct.base;
 
 
@@ -51,7 +51,7 @@ class TrackVoice : SeqVoice {
 	override void deactivate() {
 		super.deactivate();
 		with(pos) {
-			if(trkOffset >= tracks.trackLength()) {
+			if(trkOffset >= tracks.trackLength) {
 				trkOffset = 0; rowCounter = seqOffset;
 			}
 		}
@@ -59,12 +59,12 @@ class TrackVoice : SeqVoice {
 
 	override void update() {
 		super.update();
-		SequenceRowData wseq, cseq;
+		RowData wseq, cseq;
 		int h = area.y + area.h + 1;
 		int y,i;
 		int trkofs = pos.trkOffset;
 		int rows = 0;
-		int lasttrk = tracks.trackLength();
+		int lasttrk = tracks.trackLength;
  		int counter;
 		int scry = area.y + 1; 
 
@@ -119,6 +119,7 @@ class TrackVoice : SeqVoice {
 	}
 
 protected:
+	
 	void refreshTrack(int po) {
 		refreshPointer(po);
 		trackinput.refresh(activeRow);
@@ -148,13 +149,13 @@ protected:
 		{
 			if(!doDelete) {
 				
-				if(tracks.trackLength() == 1) {
+				if(tracks.trackLength == 1) {
 					tracks[0].setValue(0xa0, 0);
 				}
 				tracks.shrink();
 			}
 			else {
-				if(tracks.trackLength() == 1) {
+				if(tracks.trackLength == 1) {
 					tracks[0].setValue(0xa0, 00);
 				}
 				else {
@@ -162,7 +163,7 @@ protected:
 
 					// TODO: add check that tracklist hasn't been shrunk below trkOffset
 					/+
-					if(pos.trkOffset >= tracks.trackLength()-1) 
+					if(pos.trkOffset >= tracks.trackLength-1) 
 						super.step(-1);+/
 				}
 			}
@@ -186,7 +187,7 @@ protected:
 }
 
 protected abstract class BaseTrackTable : VoiceTable {
-	this(Rectangle a, PosinfoTable pi) { super(a, pi); }
+	this(Rectangle a, PosDataTable pi) { super(a, pi); }
 
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL) {
@@ -201,7 +202,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 				} 
 				else {
 					(cast(TrackVoice)activeVoice).trackInsert(false);
-					jump(Jump.ToEnd,true);
+					jump(Jump.toEnd,true);
 
 				}
 				return OK;
@@ -210,13 +211,13 @@ protected abstract class BaseTrackTable : VoiceTable {
 					for(int i = 0; i < voices.length; i++) {
 						auto v = cast(TrackVoice)voices[i];
 	
-//					if(v.pos.trkOffset < v.tracks.trackLength()-1)
+//					if(v.pos.trkOffset < v.tracks.trackLength-1)
 							v.trackDelete((key.mods & KMOD_SHIFT) > 0);
 					} 
 				}
 				else { 
 					(cast(TrackVoice)activeVoice).trackDelete(false);
-					jump(Jump.ToEnd,true);
+					jump(Jump.toEnd,true);
 				}
 				return OK;
 			case SDLK_q:
@@ -242,8 +243,8 @@ protected abstract class BaseTrackTable : VoiceTable {
 			case SDLK_DELETE:
 				auto v = (cast(TrackVoice)activeVoice);
 				v.trackDelete(true);
-				if(v.pos.trkOffset >= v.tracks.trackLength()-1) 
-					jump(Jump.ToEnd,true);
+				if(v.pos.trkOffset >= v.tracks.trackLength-1) 
+					jump(Jump.toEnd,true);
 				return OK;
 			default: break;
 			}
@@ -329,8 +330,8 @@ protected abstract class BaseTrackTable : VoiceTable {
 			if(i >= to.length) break;
 			int temptrans, tempno;
 			temptrans = to[i].trans;
-			tempno = to[i].no;
-			to[i].setValue(from[i].trans, from[i].no);
+			tempno = to[i].number;
+			to[i].setValue(from[i].trans, from[i].number);
 			from[i].setValue(temptrans, tempno);
 		}
 		refresh();
@@ -339,7 +340,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 
 
 protected class TrackTable : BaseTrackTable {
-	this(Rectangle a, PosinfoTable pi) {
+	this(Rectangle a, PosDataTable pi) {
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0; v < 6; v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
@@ -379,8 +380,8 @@ protected class TrackTable : BaseTrackTable {
 		case SDLK_UP, SDLK_PAGEUP:
 			activeVoice.trackFlush(posTable.pointerOffset);
 			int t = activeVoice.activeRow.trkOffset;
-			if(t == 0) t = activeVoice.tracks.trackLength();
-			SequenceRowData s = activeVoice.getRowData(t - 1, 0);
+			if(t == 0) t = activeVoice.tracks.trackLength;
+			RowData s = activeVoice.getRowData(t - 1, 0);
 			step(-s.seq.rows, 0, area.height);
 			centerTo(tableBot);
 			refresh();
@@ -390,7 +391,7 @@ protected class TrackTable : BaseTrackTable {
 		}
 	}
 
-	final void displayTracklist(bool toggleOrDisable) {
+	@property void displayTracklist(bool toggleOrDisable) {
 		foreach(voice; voices) {
 			TrackVoice tv = cast(TrackVoice)voice;
 			if(!toggleOrDisable)

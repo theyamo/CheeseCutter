@@ -14,35 +14,49 @@ import ui.ui;
 import ui.input;
 import std.string;
 import std.file;
-import std.stdio;
-import std.math;
 import std.utf;
 import std.array;
 
-protected class QueryDialog : Window {
+abstract class QueryDialogBase(T) : Window {
 	string query;
 	static ubyte[1] byt;
-	alias void delegate(int) Callback;
+	alias void delegate(T) Callback;
 	Callback callback;
-	const int _maxValue;
-	this(string s,Callback fp, int m) {
+	protected int frameWidth;
+	this(string s, Callback fp) {
+		super(Rectangle(0, 0, 1));
 		query = s;
 		callback = fp;
-		input = new InputBoundedByte(byt);
-		this(Rectangle(0,0, 1), m);
+		frameWidth = cast(int)query.length;
 	}
 
-	this(Rectangle a, int m) {
-		_maxValue = m;
-		super(a);
-    }
-	
+	override void update() {
+		int x = cast(int)(screen.width / 2 - (frameWidth + 6)/2);
+		int y = cast(int)(screen.height / 2 - 11);
+		drawFrame(Rectangle(x, y, 5, frameWidth + 9));
+		screen.cprint(x + 4, y + 2, 15, 0, query);
+		input.setCoord(cast(int)(x + 4 + query.length), cast(int)( y + 2));
+	}
+
+	override void activate() {
+		return;
+	}
+}
+
+class QueryDialog : QueryDialogBase!int {
+	const int maxValue;
+	this(string s,Callback fp, int m) {
+		super(s, fp);
+		input = new InputBoundedByte(byt);
+		maxValue = m;
+	}
+
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_ALT) return OK;
 		int r = input.keypress(key);
 		if(r == WRAP &&
-		   (cast(InputBoundedByte)input).value >= _maxValue) {
-			input.setOutput(cast(ubyte[])[_maxValue-1]);
+		   (cast(InputBoundedByte)input).value >= maxValue) {
+			input.setOutput(cast(ubyte[])[maxValue - 1]);
 			return OK;
 		}
 		else if(r == RETURN) {
@@ -52,20 +66,52 @@ protected class QueryDialog : Window {
 		else if(r == CANCEL) { // no callback
 		}
 		else r = OK;
-		if(input.value >= _maxValue)
-			input.setOutput(cast(ubyte[])[_maxValue-1]);
+		if(input.value >= maxValue)
+			input.setOutput(cast(ubyte[])[maxValue - 1]);
 		return r;
 	}
+}
 
-	override void update() {
-		int x = cast(int)(screen.width / 2 - (query.length + 6 )/2);
-		int y = cast(int)(screen.height / 2 - 11);
-		drawFrame(Rectangle(x, y, 5, cast(int)(query.length + 9)));
-		screen.cprint(x + 4, y + 2, 15, 0, query);
-		input.setCoord(cast(int)(x + 4 + query.length), cast(int)( y + 2));
+class ConfirmationDialog : QueryDialogBase!int {
+	this(string s, Callback fp) {
+		super(s, fp);
+		input = new InputSingleChar(byt, "yn", 1);
 	}
 
-	override void activate() { return; }
+	override int keypress(Keyinfo key) {
+		if(key.mods & KMOD_ALT) return OK;
+		int r = input.keypress(key);
+		if(r == CANCEL)
+			return CANCEL; // just close dialog
+		if(r == RETURN) { // received legal key
+			callback(input.toInt());
+			return RETURN;
+		}
+		return OK;
+	}
+}
+
+class StringDialog : QueryDialogBase!string {
+	int inputLength;
+	this(string query,Callback fp, string inp, int length) {
+		super(query, fp);
+		input = new InputString(inp, length);
+		this.inputLength = length;
+		frameWidth = cast(int)query.length + inputLength;
+	}
+
+	override int keypress(Keyinfo key) {
+		if(key.mods & KMOD_ALT) return OK;
+		int r = input.keypress(key);
+		if(r == CANCEL)
+			return CANCEL; // just close dialog
+		if(r == RETURN) {
+			input.nibble = 0;
+			callback((cast(InputString)input).toString(false));
+			return RETURN;
+		}
+		return OK;
+	}
 }
 
 class HelpDialog : Window {
@@ -75,6 +121,7 @@ class HelpDialog : Window {
 	int numpages;
 	int page = 1;
 	int txt_x;
+	
 	this(Rectangle a, ContextHelp ctx) {
 		super(a);
 		pages.length = ctx.text.length;
@@ -121,6 +168,7 @@ class HelpDialog : Window {
 
 class DebugDialog : Window {
 	Sequence seq;
+	
 	this(Sequence s) {
 		super(Rectangle(screen.width / 2 - 24,
 				   screen.height / 2 - 10,
@@ -214,14 +262,17 @@ class FileSelector : Window {
 	struct FileSelPos {
 		int offset, pos;
 	}
+	
 	struct File {
 		string name;
 		int exists, isdir;
 	}
+	
 	FileSelPos fpos;
 	private File[] filelist;
 	string directory;
 	alias area filearea;
+	
 	this(Rectangle a) {
 		super(a);
 		directory = getcwd();
@@ -396,12 +447,12 @@ class FileSelector : Window {
 			cursorEnd();
 	}
 
-	string selected() { return filelist[num].name; }
+	@property string selected() { return filelist[num].name; }
 	alias selected getSelected;
   
 private:
 
-	int num() { return fpos.offset + fpos.pos; }
+	@property int num() { return fpos.offset + fpos.pos; }
 	string fstr(string fs) {
 		if(fs.length > (area.width))
 			fs.length = area.width;
@@ -422,7 +473,9 @@ class DialogString : Window {
 	}
 
 	override string toString() { return toString(false); }
+	
 	string toString(bool p) { return (cast(InputString)input).toString(p); }
+	
 	void setString(string s) {
 		(cast(InputString)input).setOutput(s);
 	}
@@ -438,15 +491,22 @@ class DialogString : Window {
 class FileSelectorDialog : WindowSwitcher {
 	alias void delegate(string) CB;
 	const CB callback;
-	alias activeWindow active;
+	alias callback processFileCallback;
 	private DialogString sfile, sdir;
 	FileSelector fsel;
-	private const string header;
-	private int active_window_num;
+	private string header;
 	private char[][] filelist;
 	Rectangle filearea;
+	
 	this(Rectangle a, string h, CB cb) {
 		header = h;
+		if(a == Rectangle.init) {
+			int dialog_width = screen.width - 32;
+			int dialog_height = screen.height - 10;
+			int dialog_x = screen.width / 2 - dialog_width / 2;
+			int dialog_y = screen.height / 2 - dialog_height / 2;
+			a = Rectangle(dialog_x, dialog_y, dialog_height, dialog_width);
+		}
 		filearea = Rectangle(a.x + 5, a.y + 2, a.height - 6, a.width - 10);
 		fsel = new FileSelector(Rectangle(a.x + 5, a.y + 2, a.height - 6, 
 								a.width - 18));
@@ -467,10 +527,14 @@ class FileSelectorDialog : WindowSwitcher {
 		sdir.setString(cast(string)s.dup);
 	}
 
-	string getFilename() {
+	@property string filename() {
 		return sfile.toString();
 	}
 
+	@property string fullname() {
+		return getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
+	}
+	
 	override void activate() {
 		refresh();
 		fsel.refresh();
@@ -497,13 +561,13 @@ class FileSelectorDialog : WindowSwitcher {
 		int ind = cast(int) (1+f.lastIndexOf(DIR_SEPARATOR));
 		screen.fprint(x,area.y+area.height-2,format("`0f Filename: `0d%s",f[ind..$]));
 		
-		active.update();
-		if(active == fsel) {
+		activeWindow.update();
+		if(activeWindow == fsel) {
 			fsel.blink();
 		} else {
 			fsel.update();
 		}
-		input = active.input;
+		input = activeWindow.input;
 	}
 
 	override int keypress(Keyinfo key) {
@@ -517,7 +581,7 @@ class FileSelectorDialog : WindowSwitcher {
 		case SDLK_RETURN:
 			return returnPressed(callback);
 		default:
-			int r = active.keypress(key);
+			int r = activeWindow.keypress(key);
 			if(r == WRAP){
 				int ind = cast(int) (1 + fsel.getSelected().lastIndexOf(DIR_SEPARATOR)); 
 				sfile.setString(cast(string)(fsel.getSelected()[ind..$]));
@@ -528,16 +592,16 @@ class FileSelectorDialog : WindowSwitcher {
 	}
 
 	protected int returnPressed(CB cb) {
-		if(active == fsel) {
+		if(activeWindow == fsel) {
 			int r = fsel.fileHandler();
 			if(r == RETURN)
 				cb(cast(string)(fsel.selected));
 			sdir.setString(getcwd());
 			return r;
 		}
-		else if(active == sfile) { // pressed RETURN in file dialog
-			string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
-			cb(filename);
+		else if(activeWindow == sfile) { // pressed RETURN in file dialog
+			//string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
+			cb(fullname);
 			return RETURN;
 		}
 		else {
@@ -551,6 +615,7 @@ class FileSelectorDialog : WindowSwitcher {
 
 class LoadFileDialog : FileSelectorDialog {
 	CB cbimport;
+	
 	this(Rectangle a, CB cbload, CB cbimp) {
 		super(a, "Load Song", cbload);
 		cbimport = cbimp;
@@ -568,5 +633,36 @@ class SaveFileDialog : FileSelectorDialog {
 	this(Rectangle a, CB cb) {
 		super(a, "Save Song", cb);
 		activateWindow(2);
+	}
+
+	override protected int returnPressed(CB cb) {
+		if(activeWindow != fsel && activeWindow != sfile)
+			return super.returnPressed(cb);
+
+		if(std.file.exists(fullname)) {
+			mainui.activateDialog(new ConfirmationDialog("Overwrite destination file (y/N)? ",
+														 &confirmCallback));
+			return OK;
+		}
+		else return super.returnPressed(cb);
+	}
+
+	private void confirmCallback(int param) {
+		if(param != 0) return;
+
+		// copypasted from super.returnPressed, ugh...
+		// need to implement getSelectedFilename to cut repetition
+
+		if(activeWindow == fsel) {
+			int r = fsel.fileHandler();
+			if(r == RETURN)
+				processFileCallback(cast(string)(fsel.selected));
+			sdir.setString(getcwd());
+		}
+		else if(activeWindow == sfile) { // pressed RETURN in file dialog
+			string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
+			std.stdio.writeln("saving ", filename);
+			processFileCallback(filename);
+		}
 	}
 }

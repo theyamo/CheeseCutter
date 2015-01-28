@@ -4,10 +4,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 
 module com.fb;
 import derelict.sdl.sdl;
-import std.string;
-import std.stdio;
-import std.file;
-import std.cstream;
+import std.string : indexOf;
 
 immutable SDL_Color[] PALETTE = [
 	{ 0,0,0 },       
@@ -55,11 +52,13 @@ abstract class Video {
 		SDL_Surface* surface;
 		int useFullscreen;
 		Screen screen;
+		Visualizer vis;
 	}
 	int height = RES_X, width = RES_Y;
 	float scalex, scaley;
 	immutable int displayHeight, displayWidth;
 	SDL_Rect rect;
+	
 	this(Screen scr, int fs) {
 		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 		screen = scr;
@@ -73,6 +72,14 @@ abstract class Video {
 			SDL_FreeSurface(surface);
 	}
 
+	void drawVisualizer(int n) {
+		vis.draw(n);
+	}
+
+	void clearVisualizer() {
+		vis.clear();
+	}
+	
 	abstract void enableFullscreen(bool fs);
 
 	protected void resize(bool maxres) {
@@ -106,6 +113,7 @@ class VideoStandard : Video {
 		}
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
+		vis = new Oscilloscope(surface, 500, 14);
 		screen.refresh();
 	}
 
@@ -133,12 +141,8 @@ class VideoStandard : Video {
 					bp = &font[a * 16];
 					ufg = (*bptr >> 8) & 15;
 					ubg = (*bptr >> 12);
-					int fgcolor = PALETTE[ufg].b << surface.format.Bshift | 
-						(PALETTE[ufg].g << surface.format.Gshift) |
-						(PALETTE[ufg].r << surface.format.Rshift);
-					int bgcolor = PALETTE[ubg].b << surface.format.Bshift | 
-						(PALETTE[ubg].g << surface.format.Gshift) |
-						(PALETTE[ubg].r << surface.format.Rshift);
+					auto fgcolor = getColor(surface, ufg),
+						bgcolor = getColor(surface, ubg);
 					for(c = 4; c < 18; c++, bp++) {
 						b = *bp;
 						if(b & 0x80) *(sp++) = fgcolor;
@@ -173,8 +177,9 @@ class VideoStandard : Video {
 
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
-  int correctedHeight, correctedWidth;
+	int correctedHeight, correctedWidth;
 	immutable bool yuvCenter;
+	
 	this(Screen scr, int fs, bool yuvCenter) {
 		super(scr, fs);
 		correctedHeight = displayHeight;
@@ -220,6 +225,7 @@ class VideoYUV : Video {
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
 		}
+		vis = new Oscilloscope(surface, 500, 14);
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
 		makeOverlay([width, height]);
@@ -260,12 +266,8 @@ class VideoYUV : Video {
 					bp = &font[a * 16];
 					ufg = (*bptr >> 8) & 15;
 					ubg = (*bptr >> 12);
-					int fgcolor = PALETTE[ufg].b << surface.format.Bshift | 
-						(PALETTE[ufg].g << surface.format.Gshift) |
-						(PALETTE[ufg].r << surface.format.Rshift);
-					int bgcolor = PALETTE[ubg].b << surface.format.Bshift | 
-						(PALETTE[ubg].g << surface.format.Gshift) |
-						(PALETTE[ubg].r << surface.format.Rshift);
+					auto fgcolor = getColor(surface, ufg),
+						bgcolor = getColor(surface, ubg);
 					for(c = 4; c < 18; c++, bp++) {
 						sp = &pixbuf[0];
 						b = *bp;
@@ -343,6 +345,7 @@ class Screen {
 	immutable int width, height;
 	alias width w;
 	alias height h;
+	
 	this(int xchars, int ychars) {
 		width = xchars;
 		height = ychars;
@@ -381,13 +384,6 @@ class Screen {
 		isDirty = true;
 	}
 
-	deprecated void setfg(int x, int y, int fg) {
-		Uint16* s = &data[x + y * width];
-		*s &= 0xf0ff;
-		*s |= (fg << 8);
-		isDirty = true;
-	}
-
 	void clrtoeol(int y, int bg) {
 		clrtoeol(0, y, bg);
 	}
@@ -397,19 +393,6 @@ class Screen {
 		Uint16* s = &data[x + y * width];
 		Uint16 v = cast(Uint16)(0x20 | (bg << 12));
 		while(x++ < width) *s++ = v;
-		isDirty = true;
-	}
-
-	deprecated void clrbgtoeol(int y, int bg) {
-		mixin(CHECKY);
-		Uint16* s = &data[y * width];
-		Uint16 v = cast(Uint16)(0x20 | (bg << 12));
-		int i;
-		
-		while(i++ < width) {
-			*s &= 0xfff;
-			*s++ |= v;
-		}
 		isDirty = true;
 	}
 
@@ -423,20 +406,6 @@ class Screen {
 		isDirty = true;
 	}
 
-	deprecated void setcoltoeol(int y, int fg, int bg) {
-		mixin(CHECKY);
-	
-		Uint16* s = &data[y * width];
-		Uint16 v = cast(Uint16)((fg << 8) | (bg << 12));
-		int i;
-		
-		while(i++ < width) {
-			*s &= 255;
-			*s |= v;
-			s++;		
-		}
-	}
-	
 	void cprint(int x, int y, int fg, int bg, string txt) {
 		mixin(CHECKS);
 		bool skipbg, skipfg;
@@ -487,6 +456,71 @@ class Screen {
 	}
 }
 
+interface Visualizer {
+	void clear();
+	void draw(int);
+}
+
+private class Oscilloscope : Visualizer {
+	private SDL_Surface* surface;
+	private short* samples;
+	private const short xconst, yconst;
+	enum width = 960/4, height = 3*14;
+
+	this(SDL_Surface* surface, short xpos, short ypos) {
+		this.surface = surface;
+		this.xconst = xpos;
+		this.yconst = ypos;
+		import audio.audio;
+		samples = audio.audio.mixbuf;
+		assert(samples !is null);
+	}
+
+	void clear() {
+		SDL_FillRect(surface, new SDL_Rect(xconst, yconst,
+                                           width, height), 0);
+	}
+	
+	void draw(int frames) {
+		float smpofs;
+		float n = frames * 50.0f;
+		int count = cast(int)(48000 / n);
+
+		auto colh = getColor(surface, 13),
+			coll = getColor(surface, 5);
+
+		clear();
+		
+		smpofs = 0.0f;
+		import audio.audio;
+		int oldposition = height / 2 + samples[cast(int)smpofs]  / 768;
+
+		for(int i = 0; i < width; i++) {
+			int sample = samples[cast(int)smpofs] / 768;
+			int position = height / 2 + sample;
+			position = com.util.umod(position, 0, height-1);
+			int a = oldposition, b = position;
+
+			if(a > b) {
+				int temp = b;
+				b = a;
+				a = temp;
+			}
+			assert(a <= b);
+			Uint32* pos = cast(Uint32 *)surface.pixels + xconst + i + (a + yconst) * surface.w;
+			*pos = (i > 12 && i < width - 12) ? colh : coll;
+			for(int k = a; k < b; k++) {
+				*pos = (i > 12 && i < width - 12) ? colh : coll;
+				pos += surface.w;
+			}
+			smpofs++;
+			if(smpofs >= audio.audio.getbufsize())
+				smpofs -= cast(int)audio.audio.getbufsize();
+			oldposition = position;
+		}
+	}
+}
+
 class DisplayError : Error {
 	this(string msg) {
 		super(msg ~ "SDL Error");
@@ -522,4 +556,8 @@ Uint16 readkey() {
 	return evt.key.keysym.unicode;
 }
 
-
+private int getColor(SDL_Surface* s, int c) {
+	return PALETTE[c].b << s.format.Bshift | 
+		(PALETTE[c].g << s.format.Gshift) |
+		(PALETTE[c].r << s.format.Rshift);
+}

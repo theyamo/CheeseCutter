@@ -15,7 +15,7 @@ import main;
 import std.string;
 import std.utf;
 
-enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT }
+enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT, IllegalValue }
 
 struct Keyinfo {
 	int key, mods, unicode;
@@ -35,11 +35,12 @@ class Cursor {
 
 	void refresh() {
 		if(x < 0 || y < 0) return;
-		return;
+
 		ushort col = screen.getChar(x, y);
 //		counter = BLINK_VAL;
-		bg = fg2 = (col >> 8) & 15;
+//		bg = fg2 = (col >> 8) & 15;
 		fg = bg2 = (col >> 12) & 15;
+		
 	}
 
 	void set(int nx, int ny) {
@@ -72,6 +73,7 @@ class Cursor {
 		fg = bg2 = (col >> 12) & 15;
 	}
 }
+
 class Input {
 	Cursor cursor;
 	const int width;
@@ -121,11 +123,14 @@ class Input {
 	void update() { assert(0); }
 
 	void refresh() { assert(0); }
-
+	
 	int toInt() {
 		return toInt(inarray);
 	}
-	alias toInt value;
+
+	@property int value() {
+		return toInt(inarray);
+	}
 	
 	int toInt(ubyte[] ar) {
 		int v;
@@ -136,7 +141,7 @@ class Input {
 		return v;
 	}
 	
-	int toInt(int b, int e) {
+	int toIntRange(int b, int e) {
 		return toInt(inarray[b..e]);
 	}
 
@@ -257,6 +262,45 @@ class InputBoundedByte : InputValue {
 	
 }
 
+class InputSingleChar : InputValue {
+	string keys;
+	int defaultKey;
+	this(ubyte[] p, string keys, int defaultKey) {
+		super(p, 2);
+		this.keys = keys;
+		setValue(0);
+		this.defaultKey = defaultKey;
+	}
+
+	override int keypress(Keyinfo key) {
+		auto v = keys.indexOf(key.unicode);
+		if(key.mods & KMOD_CTRL) return 0;
+		else if(key.raw == SDLK_ESCAPE) {
+			return CANCEL;
+		}
+		else if(key.raw == SDLK_RETURN) {
+			setValue(cast(ubyte)defaultKey);
+			return RETURN;
+		}
+		else if(v >= 0) {
+			setValue(cast(ubyte)(v));
+			return RETURN;
+		}
+		return IllegalValue;
+	}
+	
+	override int step(int st) {
+		return OK;
+	}
+
+	override void update() {
+		//screen.cprint(x, y, 1, -1, format("%02X ", toInt()));
+		screen.cprint(x + nibble, y, 1, -1, std.conv.to!string(keys[defaultKey]));
+		cursor.set(x + nibble, y);
+	}
+}
+
+
 class InputWord : InputValue {
 	this(ubyte[] p) {
 		super(p, 4);
@@ -266,15 +310,15 @@ class InputWord : InputValue {
 class InputTrack : InputWord {
 	Track trk;
 	ubyte[2] buf;
-	this(SequenceRowData s) {
+	this(RowData s) {
 		super(buf);
 		init(s);
 		flush();
 	}
 	
-	void init(SequenceRowData s) {
+	void init(RowData s) {
 		trk = s.trk;
-		buf[] = valueCheck(trk.trans, trk.no);
+		buf[] = valueCheck(trk.trans, trk.number);
 		super.setOutput(buf);
 	}
 	
@@ -343,6 +387,7 @@ class InputTrack : InputWord {
 	}
 
 private:
+	
 	ubyte[] valueCheck(int tr, int no) {
 		if(tr < 0x80) tr = 0x80;
 		if(no < 0) no = 0;
@@ -501,7 +546,6 @@ abstract class Newinput : Input {
 		return OK;
 	}
 
-
 	override int keypress(Keyinfo key) {
 		return keypress(key, "0123456789abcdef");
 	}
@@ -529,8 +573,8 @@ abstract class Newinput : Input {
 		//not reached
 	}
 
-protected:	
-
+protected:
+	
 	int valuekeyHandler(int value) {
 		if(width == 1) invalue = value;
 		else {
@@ -569,8 +613,6 @@ protected:
 		assert(0);
 	}
 	
-protected:
-
 	static int valueKeyReader(Keyinfo key,  const char[] keytab) {
         foreach(int i, k; keytab) {
 			if(key.raw == k) {
@@ -723,12 +765,12 @@ class InputNote : Newinput {
 			element.instr = 0x80;
 			break;
 		default:
-			int note = ((value - 3) & 0x7f) + 12 * octave - element.transpose;
+			int note = ((value - 3) & 0x7f) + 12 * state.octave - element.transpose;
 			if(note > 0x5e) break;
 			element.note = cast(ubyte)note;
-			if(autoinsertInstrument && value < 0x80) {
-				if(com.session.activeInstrument >= 0)
-					element.instr = cast(ubyte)(com.session.activeInstrument);
+			if(state.autoinsertInstrument && value < 0x80) {
+				if(state.activeInstrument >= 0)
+					element.instr = cast(ubyte)(state.activeInstrument);
 				else element.instr = 0x80;
 			}
 			if(value >= 0x80) {
@@ -765,7 +807,7 @@ class InputKeyjam : Newinput {
 			element.note = NOTE_KEYON;
 			break;
 		default:
-			int note = ((value - 3) & 0x7f) + 12 * octave;
+			int note = ((value - 3) & 0x7f) + 12 * state.octave;
 			if(note > 0x5e) return;
 			element.note = cast(ubyte)note;
 			if(value >= 0x80) {
@@ -775,8 +817,8 @@ class InputKeyjam : Newinput {
 
 			break;
 		}
-		if(com.session.activeInstrument >= 0)
-			element.instr = cast(ubyte)(com.session.activeInstrument);
+		if(state.activeInstrument >= 0)
+			element.instr = cast(ubyte)(state.activeInstrument);
 		audio.player.playNote(element);
 	}
 	
@@ -829,15 +871,15 @@ final class InputSeq : Newinput {
 	override int keypress(Keyinfo key) {
 		switch(key.unicode) {
 		case SDLK_SEMICOLON:
-			autoinsertInstrument ^= 1;
+			state.autoinsertInstrument ^= 1;
 			UI.statusline.display(format("Instrument autoinsert mode %s",
-										  autoinsertInstrument ? "enabled." : "disabled."));
+										  state.autoinsertInstrument ? "enabled." : "disabled."));
 			return OK;
 		case SDLK_LESS:
-			octave = clamp(--octave, 0, 6);
+			state.octave = clamp(--state.octave, 0, 6);
 			break;
 		case SDLK_GREATER:
-			octave = clamp(++octave, 0, 6);
+			state.octave = clamp(++state.octave, 0, 6);
 			break;
 		default:
 			break;
@@ -935,7 +977,7 @@ class InputSpecial : InputValue {
 	}
 	
 	override void update() {
-		immutable offsets = [0, 2, 3, 5, 6];
+		static immutable offsets = [0, 2, 3, 5, 6];
         screen.cprint(x, y, 1, -1, format("%01X-%02X %02X",inarray[0],toInt(inarray[1..3]),toInt(inarray[3..5])));
 		cursor.set(pointerX + offsets[nibble], pointerY);
 	}

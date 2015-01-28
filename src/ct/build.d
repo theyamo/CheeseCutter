@@ -9,7 +9,6 @@ import com.cpu;
 import com.util;
 import std.stdio;
 import std.string;
-import std.file;
 import std.conv;
 import std.c.string;
 import std.c.stdlib;
@@ -79,7 +78,7 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 								   int playAddress, int defaultSubtune) {
 	/+ SID default tune indicatior starts from value 1... +/
 	if(defaultSubtune > insong.subtunes.numOf)
-		throw new UserException(format("This song only has %d subtunes", insong.subtunes.numOf));
+		throw new UserException(format("This song has only %d subtunes", insong.subtunes.numOf));
 	data = SIDHEADER ~ data;
 	void outstr(char[] s, int offset) {
 		data[offset .. offset + s.length] = cast(ubyte[])s;
@@ -117,8 +116,24 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 
 ubyte[] doBuild(Song song, int address, bool genPSID,
 				int defaultSubtune, bool verbose) {
+	string input = dumpOptimized(song, address, genPSID, verbose);
+
+	if(verbose)
+		writeln("Assembling...");
+
+	ubyte[] assembled = cast(ubyte[])assemble(input);
+	
+	if(verbose)
+		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length - 2,
+					   address, address + assembled.length - 2));
+
+	return genPSID ? generatePSIDHeader(song, assembled, address, address + 3,
+										defaultSubtune) : assembled;
+}
+
+string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
 	string input = playerSource;
-	input ~= dumpData(song, "");
+	input ~= dumpData(song);
 	int maxInsno;
 	song.seqIterator((Sequence s, Element e) { 
 			int insval = e.instr.value;
@@ -183,7 +198,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 		if(song.songspeeds[i] < 2) swingUsed = true;
 	}
 	for(int i = 0; i < 48; i++) {
-		if(song.getFiltertablePointer(i) > 0)
+		if(song.filtertablePointer(i) > 0)
 			filterUsed = true;
 	}
 
@@ -224,15 +239,5 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 	}
 	setArgVal("BASEADDRESS", format("$%04x", address), );
 
-	if(verbose)
-		writeln("Assembling...");
-
-	ubyte[] assembled = cast(ubyte[])assemble(input);
-
-	if(verbose)
-		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length - 2,
-					   address, address + assembled.length - 2));
-
-	return genPSID ? generatePSIDHeader(song, assembled, address, address + 3,
-										defaultSubtune) : assembled;
+	return input;
 }

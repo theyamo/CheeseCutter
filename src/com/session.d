@@ -8,25 +8,41 @@ import com.fb;
 import ui.ui;
 import seq.sequencer;
 
-__gshared Song song;
+struct EditorState {
+	__gshared Song song;
+	PosDataTable fplayPos, seqPos;
+	int octave = 3;
+	int activeInstrument;
+	bool autoinsertInstrument = true;
+	bool shortTitles = true;
+	bool displayHelp = true;
+	bool keyjamStatus = false;
+	string filename;
+}
+
+@property song() {
+	return state.song;
+}
+
+@property seqPos() {
+	return state.seqPos;
+}
+
+@property fplayPos() {
+	return state.fplayPos;
+}
+
 UI mainui;
 Video video;
 Screen screen;
-PosinfoTable fplayPos, seqPos;
-int octave = 3;
-int activeInstrument;
-bool autoinsertInstrument = true;
-bool shortTitles = true;
-bool displayHelp = true;
-bool keyjamStatus = false;
-string filename;
+EditorState state;
 
 void initSession() {
-	song = new Song();
-	seqPos = new PosinfoTable();
-	fplayPos = new PosinfoTable();
+	state.song = new Song();
+	state.seqPos = new PosDataTable();
+	state.fplayPos = new PosDataTable();
 	for(int i = 0; i < 6; i++) {
-		seqPos[i].tracks = song.tracks[i];
-		fplayPos[i].tracks = song.tracks[i];
+		state.seqPos[i].tracks = song.tracks[i];
+		state.fplayPos[i].tracks = song.tracks[i];
 	}
 }

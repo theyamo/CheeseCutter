@@ -2,45 +2,109 @@
 CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
+/*
+  TODO: make all purge funcs public so user can optimize selected tables.
+  requires writing proper initialization for each func so they can be run
+  independently.
+ */
+
 module ct.purge;
 import ct.base;
-import ct.base : Sequence;
-import std.stdio;
-import std.string;
 import com.util;
+import std.string;
+import std.stdio;
 
-class Purge {
+final class Purge {
 	Song song;
 	private {
+		// song.seqIterator does not care if seq is in use or not
+		// therefore purgeSeqs must be done always 1st on purgeAll - unused seqs get cleared
 		bool[0x80] seqUsed;
 		bool[0x30] instrUsed;
 		bool[0x40] super_used, pulse_used, filter_used;
-	}
-	bool verbose;
-
-	this(Song sng) {
-		song = sng;
+		bool verbose, initialized;
 	}
 
-	this(Song sng, bool v) {
+	this(Song song) {
+		this.song = song;
+	}
+
+	this(Song song, bool v) {
 		verbose = v;
-		this(sng);
+		this(song);
 	}
 
 	void purgeAll() {
-		// get unused seqs
-		trackIterator((Track t) {
-				seqUsed[t.no] = true;
-			});
+		initialize(true);
 		purgeSeqs();
 		purgeInstruments();
 		purgeWavetable();
 		purgeChordtable();
 		purgeCmdtable();
 		purgePulseFilter();
+		initialized = false;
+	}
+	
+	void deleteInstrument(int insno) {
+		initialize(false);
+		int waveptr = song.wavetablePointer(insno);
+		int pulseptr = song.pulsetablePointer(insno);
+		int filtptr = song.filtertablePointer(insno);
+
+		// ugly hack to not clear defined but unused instruments
+		for(int i = 47; i >= 0; i--) {
+			if(instrUsed[i] == false)
+				instrUsed[i] = !instrIsEmpty(i);
+		}
+		instrUsed[insno] = false;
+
+		purgeWavetable();
+		purgePulseFilter();
+
+		for(int i = 0; i < 8; i++) {
+			song.instrumentTable[i * 48 + insno] = 0;
+		}
+		song.insLabels[insno][] = ' ';
+		initialized = false;
 	}
 
-	void purgeSeqs() {
+private:
+	bool instrIsEmpty(int insno) {
+		for(int i = 0; i < 8; i++) {
+			if(song.instrumentTable[i * 48 + insno] != 0)
+				return false;
+		}
+		return true;
+	}
+	
+	// marking unused seqs optional in case you only want to optimize some tables
+	void initialize(bool markUnusedSeqs) {
+		if(initialized) return;
+		if(markUnusedSeqs) {
+			seqUsed[] = false;
+			song.trackIterator((Track t) {
+					seqUsed[t.number] = true;
+				});
+		}
+		else seqUsed[] = true;
+
+		instrUsed[] = false;
+		// find out which instruments are in use
+		foreach(i, n; seqUsed) {
+			if(!n) continue;
+			Sequence s = song.seqs[i];
+			for(int j = 0; j < s.rows; j++) {
+				Element e = s.data[j];
+				if(!e.instr.hasValue()) continue;
+				instrUsed[e.instr.value] = true;
+			}
+		}
+	
+		initialized = true;
+	}
+	
+
+	private void purgeSeqs() {
 		int counter;
 		
 		for(int i = 0x7f; i >= 1; i--) {
@@ -80,17 +144,7 @@ class Purge {
 		explain(format("%d unused sequences removed.",counter));
 	}
 
-	void purgeInstruments() {
-		foreach(i, n; seqUsed) {
-			if(!n) continue;
-			Sequence s = song.seqs[i];
-			for(int j = 0; j < s.rows; j++) {
-				Element e = s.data[j];
-				if(!e.instr.hasValue()) continue;
-				instrUsed[e.instr.value] = true;
-			}
-		}
-
+	private void purgeInstruments() {
 		int counter;
 
 		// clear unused
@@ -132,70 +186,32 @@ class Purge {
 		explain(format("%d instruments used.", counter));
 	}
 
-	void purgeWavetable() {
-		ubyte[] wavetab = song.waveTable;
-		struct Chunk {
-			int offset;
-			ubyte[] wave1, wave2;
-			bool used;
-			string toString() { return format("%x", offset); }
-		}
-		Chunk[] chunks;
-		int counter;
-		chunks.length = 256;
-		for(int i = 0, b; i < 256; i++) {
-			if(wavetab[i] == 0x7f || wavetab[i] == 0x7e) {
-				chunks[counter] = Chunk(b, wavetab[b .. i + 1], wavetab[b + 256 .. i + 256 + 1]);
-				b = i + 1;
-				counter++;
-			}
-		}
-		chunks.length = counter;
+	private void purgeWavetable() {
+		TWaveTable.Chunk[] chunks = song.tWave.getChunks();
 
-		int whichCell(int ptr) {
-			foreach(idx, chunk; chunks) {
-				int b = chunk.offset,
-					e = cast(int)(chunk.offset + chunk.wave1.length);
-				if(ptr >= b && ptr < e) {
-					return cast(int)idx;
-				}
-			}
-			return -1;
-		}
-
-		void markCells(int cell) {
-			assert(cell >= 0 && cell < chunks.length);
-			for(;;) {
-				if(chunks[cell].used) break;
-				chunks[cell].used = true;
-				Chunk c = chunks[cell];
-				cell = whichCell(c.wave2[$-1]);
-				if(cell < 0) break;
-			}
-		}
-	
 		for(int i = 0; i < 48; i++) {
 			if(!instrUsed[i]) continue;
-			int ptr = song.getWavetablePointer(i);
-			int cell = whichCell(ptr);
+			int ptr = song.wavetablePointer(i);
+			int cell = song.tWave.whichCell(chunks, ptr);
 			if(cell < 0) continue;
-			markCells(cell);
+			song.tWave.markCells(chunks, cell);
 		}
 
 		int numcleared;
 		// compact
 		for(int i = cast(int)(chunks.length - 1); i >= 0; i--) {
-			Chunk chunk = chunks[i];
+			TWaveTable.Chunk chunk = chunks[i];
 			if(chunk.used) continue;
-			song.wavetableRemove(chunk.offset, cast(int)chunk.wave1.length);
+			song.tWave.deleteRow(song, chunk.offset, cast(int)chunk.wave1.length);
 			numcleared++;
 		}
 		explain(format("%d wave programs removed.", numcleared));
 	}
 
-	void purgePulseFilter() {
+	private void purgePulseFilter() {
 		int i;
 		pulse_used[] = false;
+		filter_used[] = false;
 		filter_used[0] = true;
 		pulse_used[0] = true;
 		void seekNMark(ref ubyte[] table, bool* usedflags, int pointer) {
@@ -213,46 +229,22 @@ class Purge {
 		for(i = 0; i < 48; i++) {
 			if(!instrUsed[i]) continue;
 			try {
-				seekNMark(song.pulseTable, &pulse_used[0], song.getPulsetablePointer(i));
-				seekNMark(song.filterTable, &filter_used[0], song.getFiltertablePointer(i));
+				seekNMark(song.pulseTable, &pulse_used[0], song.pulsetablePointer(i));
+				seekNMark(song.filterTable, &filter_used[0], song.filtertablePointer(i));
 			}
 			catch(Exception e) {
-				explain(format("Could not purge pulse / filter table: %s", e.toString));
+				explain(format("Could not purge pulse / filter table: %s", e.toString()));
 				return;
 			}
 		}
 
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(e.cmd.value >= 0x40 && e.cmd.value < 0x60)
 					seekNMark(song.pulseTable, &pulse_used[0], e.cmd.value - 0x40);
 				if(e.cmd.value >= 0x60 && e.cmd.value < 0x80)
 					seekNMark(song.filterTable, &filter_used[0], e.cmd.value - 0x60);
 				
 			});
-/+ TODO: table optimizer 
-		for(i = 0; i < 63; i++) {
-			if(!pulse_used[i]) {
-				int j = i+1, pos = i+1;
-				do {
-					ubyte[] tmp = song.pulseTable[j * 4 .. $].dup;
-					song.pulseTable[i * 4 .. $ - (j - i) * 4] =
-						tmp;
-					bool[] tmp2 = pulse_used[j .. $].dup;
-					pulse_used[i .. $ - 1] = tmp2;
-					for(int k = i; k < 64; k++) {
-						int wrap = song.pulseTable[k * 4 + 3];
-						if(wrap >= k && wrap < 0x7f) {
-							song.pulseTable[k * 4 + 3]--;
-						}
-					}
-					++pos;
-				} while(pos < 64 && !pulse_used[i]);
-			}
-			if(!filter_used[i])
-				song.filterTable[i * 4 .. i * 4 + 4] = 0;
-
-		}
-		+/
 
 		for(i = 0; i < 64; i++) {
 			if(!pulse_used[i]) 
@@ -261,49 +253,37 @@ class Purge {
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 		}
 
-		// compact filter table
-		/+
+		// compact filter & pulse table. this is EXTREMELY slow.
 		for(i = 0; i < 0x3e; i++) {
 			int seek = i + 1;
 			while(!filter_used[i] && seek < 64) {
 				{
-					int pos = i * 4;
-					song.filterTable[pos .. $ - 4] =
-						song.filterTable[pos + 4 .. $].dup;
+					filterDeleteRow(song, i);
 					filter_used[i .. $-1] = filter_used[i+1 .. $].dup;
-				}
-				{
-					for(int j = 0; j < 64; j++) {
-						int fptr = song.filterTable[j * 4 + 3];
-						if(fptr > 0 && fptr < 0x40) {
-							if(fptr >= i) song.filterTable[j * 4 + 3]--;
-						}
-					}
-				}
-				{
-					replaceCmdColumnvalue(0x60 + (seek & 0x1f), 0x60 + (i & 0x1f));
-				}
-				{
-					for(int j = 0; j < 48; j++) {
-						int fptr = song.instrumentTable[4 * 48 + j];
-						if(fptr >= seek)
-							song.instrumentTable[4 * 48 + j]--;// = cast(ubyte)i;
-					}
 				}
 				seek++;
 			}
 		}
-		+/
-	}
 
-	void purgeChordtable() {
+		for(i = 0; i < 0x3e; i++) {
+			int seek = i + 1;
+			while(!pulse_used[i] && seek < 64) {
+				{
+					pulseDeleteRow(song, i);
+					pulse_used[i .. $-1] = pulse_used[i+1 .. $].dup;
+				}
+				seek++;
+			}
+		}
+	}
+	
+	private void purgeChordtable() {
 		bool chordsUsed[0x20];
 		int usedCount;
-		seqIterator((Sequence s, Element e) { 				
-				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f) {
+		song.seqIterator((Sequence s, Element e) { 				
+				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f)
 					chordsUsed[e.cmd.value & 0x1f] = true;
 					usedCount++;
-				}
 			});
 
 		struct Chunk {
@@ -340,7 +320,7 @@ class Purge {
 						int idx = song.chordIndexTable[j];
 						int idx2 = getidx2(idx)+1;
 						
-						replaceCmdColumnvalue(0x80 + j, 0x80 + i);
+						replaceCmdColumnvalue(song, 0x80 + j, 0x80 + i);
 						ubyte[] chord = song.chordTable[idx .. idx2].dup;
 
 						chunks ~= Chunk(chord, idx);
@@ -376,8 +356,8 @@ class Purge {
 		explain(format("%d chords used.",counter));
 	}
 
-	void purgeCmdtable() {
-		seqIterator((Sequence s, Element e) {
+	private void purgeCmdtable() {
+		song.seqIterator((Sequence s, Element e) {
 				if(e.cmd.value == 0) return;
 				if(e.cmd.value < 0x40)
 					super_used[e.cmd.value] = true;
@@ -398,7 +378,7 @@ class Purge {
 					song.superTable[i] = song.superTable[j];
 					song.superTable[i+64] = song.superTable[j+64];
 					song.superTable[i+128] = song.superTable[j+128];
-					replaceCmdColumnvalue(j, i);
+					replaceCmdColumnvalue(song, j, i);
 					super_used[i] = true;
 					super_used[j] = false;
 					song.superTable[j] = 0;
@@ -409,53 +389,20 @@ class Purge {
 			}
 		}
 	}
-	
-private:
-	void seqIterator(void delegate(Sequence s, Element e) dg) {
-		foreach(i, n; seqUsed) {
-			if(!n) continue;
-			Sequence s = song.seqs[i];
-			for(int j = 0; j < s.rows; j++) {
-				Element e = s.data[j];
-				dg(s, e);
-			}
-		}
-	}
-
-	void trackIterator(void delegate(Track t) dg) {
-		for(int sidx = 0; sidx < 32; sidx++) {
-			Tracklist[] subtune = song.subtunes[sidx];
-			foreach(voice; subtune) {
-				foreach(track; voice) {
-					dg(track);
-				}
-			}
-		}
-	}
 
 	void replaceInsvalue(int seek, int repl) {
 		int skipped;
-		seqIterator((Sequence s, Element e) {
+		song.seqIterator((Sequence s, Element e) {
 				if(!e.instr.hasValue()) return;
 				if(e.instr.value() == seek)
 					e.instr = cast(ubyte)repl;
 			});
 	}
 
-	void replaceCmdColumnvalue(int seek, int repl) {
-		int skipped;
-
-		seqIterator((Sequence s, Element e) {
-				if(e.cmd.value == 0) return;
-				if(e.cmd.value() == seek)
-					e.cmd = cast(ubyte)repl;
-			});
-	}
-
 	void replaceTrackvalue(int find, int rep) {
-		trackIterator((Track t) {
-				if(t.no == find)
-					t.trackNo = cast(ubyte)rep;
+		song.trackIterator((Track t) {
+				if(t.number == find)
+					t.number = cast(ubyte)rep;
 			});
 	}
 
@@ -463,3 +410,92 @@ private:
 		if(verbose) writefln(s);
 	}
 }
+
+// TODO: move to tFilter
+void filterDeleteRow(Song song, int row) {
+	genericDeleteRow(song, song.filterTable, row);
+
+	song.seqIterator((Sequence s, Element e) {
+			if(row > 0x1f) return;
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() >= (0x60 + (row & 0x1f) + 1) && e.cmd.value() < 0x80)
+				e.cmd = cast(ubyte)(e.cmd.value - 1);
+		});
+			
+	for(int j = 0; j < 48; j++) {
+		int fptr = song.instrumentTable[4 * 48 + j];
+		if(fptr >= row && fptr < 0x40)
+			song.instrumentTable[4 * 48 + j]--;
+	}
+}
+
+// TODO: move to tPulse
+void pulseDeleteRow(Song song, int row) {
+	genericDeleteRow(song, song.pulseTable, row);
+
+	song.seqIterator((Sequence s, Element e) {
+			if(row > 0x1f) return;
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() >= (0x40 + (row & 0x1f) + 1) && e.cmd.value() < 0x60)
+				e.cmd = cast(ubyte)(e.cmd.value - 1);
+		});
+
+	for(int j = 0; j < 48; j++) {
+		int pptr = song.instrumentTable[5 * 48 + j];
+		if(pptr >= row && pptr < 0x40)
+			song.instrumentTable[5 * 48 + j]--;
+	}
+}
+
+// TODO: move to tFilter
+void filterInsertRow(Song song, int row) {
+	genericInsertRow(song, song.filterTable, row);
+}
+
+// TODO: move to tPulse
+void pulseInsertRow(Song song, int row) {
+	genericInsertRow(song, song.pulseTable, row);
+}
+
+private void replaceCmdColumnvalue(Song song, int seek, int repl) {
+	int skipped;
+
+	song.seqIterator((Sequence s, Element e) {
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() == seek)
+				e.cmd = cast(ubyte)repl;
+		});
+}
+
+// TODO: move to Table
+private void genericDeleteRow(Song song, ubyte[] table, int row) {
+	assert(row < 64 && row >= 0);
+		
+	int row4 = row * 4;
+	table[row4 .. $ - 4] =
+		table[row4 + 4 .. $].dup;
+
+	for(int j = 0; j < 64; j++) {
+		int fptr = table[j * 4 + 3];
+		if(fptr > 0 && fptr < 0x40) {
+			if(fptr >= row) table[j * 4 + 3]--;
+		}
+	}
+}
+
+// TODO: move to Table
+private void genericInsertRow(Song song, ubyte[] table, int row) {
+	assert(row < 64 && row >= 0);
+		
+	int row4 = row * 4;
+	table[row4 + 4 .. $] =
+		table[row4 .. $ - 4].dup;
+
+	for(int j = 0; j < 64; j++) {
+		int fptr = table[j * 4 + 3];
+		if(fptr > 0 && fptr < 0x40) {
+			if(fptr >= row) table[j * 4 + 3]++;
+		}
+	}
+}
+	

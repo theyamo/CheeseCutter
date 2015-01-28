@@ -2,13 +2,15 @@ CheeseCutter 2
 
 http://theyamo.kapsi.fi/ccutter
 
-Programmed by abaddon (abaddon@triad.se) 2009-2014.
+Programmed by abaddon (abaddon@triad.se) 2009-2015.
 
 Mac OSX and D2 port by Ruk (ruk@triad.se) 2013.
 
 reSID engine by Dag Lem & A. Lankila.
 
 Parts of reSID interface (sid.cpp) by Cadaver / CovertBitops.
+
+Includes Acme Assembler 0.91 by Marco Baye
 
 libSDL by the SDL team.
 

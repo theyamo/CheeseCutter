@@ -4,10 +4,8 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 
 module com.cpu;
 
-import std.file;
 import std.stdio;
 import std.string;
-import std.c.stdio;
 
 alias ushort address;
 
@@ -209,6 +207,7 @@ public:
 	}
 
 protected:
+	
 	/* execute a 6502 instruction
 	 * d indicates that ML monitor output is required
 	 * returns the number of cycles

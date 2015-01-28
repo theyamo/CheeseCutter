@@ -9,6 +9,7 @@ import ui.input;
 import ui.help;
 import com.session;
 import com.util;
+import ct.purge;
 import derelict.sdl.sdl;
 import std.string;
 
@@ -18,6 +19,7 @@ abstract class Table : Window {
 		ubyte[] data;
 		int column, row, cursorOffset, viewOffset;
 	}
+	
 	this(Rectangle a, ubyte[] tbl, int c, int r) {
 		super(a);
 		columns = c;
@@ -32,6 +34,7 @@ abstract class Table : Window {
 	}
 
 protected:
+	
 	void adjustView();
 }
 
@@ -202,23 +205,34 @@ protected:
 	}
 	
 	void showByteDescription(PetString pet) {
-		if(song.ver < 9 || !displayHelp) return;
+		if(song.ver < 9 || !state.displayHelp) return;
 		string[] s = com.util.petscii2D(pet).splitLines();
 		string outstr = s[0];
 		if(s.length > 1)
 			outstr ~= " `01[F12 for more]";
 		UI.statusline.display(format("Byte %d: %s", column + 1, outstr));
 	}
+
+	bool highlightRow(int row) {
+		return false;
+	}
+
 }
 
 class InsValueTable : HexTable {
-	static ubyte[8] instrBuffer;
-	static char[32] instrName;
-	int mark = -1;
-	int width;
+	private {
+		static ubyte[8] instrBuffer;
+		static char[32] instrName;
+		int mark = -1;
+		int width;
+		FileSelectorDialog loadDialog;
+	}
 	this(Rectangle a) {
 		width = com.fb.mode ? 32 : 16;
 		super(a, song.instrumentTable, 8, 48);
+		loadDialog = new FileSelectorDialog(Rectangle(),
+											"Load Instrument",
+											&loadCallback);
 	}
 
 	override void refresh() {
@@ -243,11 +257,39 @@ class InsValueTable : HexTable {
 				song.insLabels[row][] = instrName[];
 				initializeInput();
 				break;
-				/+
-			case SDLK_SPACE:
-				mark = row;
+			case SDLK_s:
+				void delegate(string) dg = (string fn) {
+					if(fn == "")
+						return;
+					if(!fnIsSane(fn)) {
+						UI.statusline.display("Illegal characters in filename!");
+						return;
+					}
+					com.session.song.savePatch(fn, state.activeInstrument);
+					std.stdio.writeln(fn);
+					UI.statusline.display(format("Saved instrument %d", state.activeInstrument));
+				};
+				string fn = fnClean(std.string.stripRight
+									(std.conv.to!string(song.insLabels[row])));
+				mainui.activateDialog(new StringDialog("Enter filename: ",
+													   dg,
+													   fn ~ ".cti",
+													   32));
+
 				break;
-				+/
+			case SDLK_l:
+				mainui.activateDialog(loadDialog);
+				break;
+			case SDLK_d:
+				void delegate(int) dg = (int param) {
+					if(param != 0) return;
+					new Purge(song).deleteInstrument(state.activeInstrument);
+				};
+				
+				mainui.activateDialog(new ConfirmationDialog("Delete current instrument (y/n)? ",
+															 dg));
+				
+				break;
 			case SDLK_x:
 				break;
 			default: break;
@@ -260,6 +302,23 @@ class InsValueTable : HexTable {
 		return OK;
 	}
 
+	private void loadCallback(string fn) {
+		if(!std.file.exists(fn)) {
+			UI.statusline.display("File does not exist or is not accessible!");
+			return;
+		}
+		if(fn.indexOf(".cti") == -1) {
+			UI.statusline.display("Not loading; possibly not an instrument def file.");
+			return;
+		}
+		try {
+			song.insertPatch(fn, state.activeInstrument);
+		}
+		catch(Exception e) {
+			UI.statusline.display("Error in parsing instrument data!");
+		}
+	}
+	
 	string insName(int row) {
 		assert(row >= 0 && row < 48);
 		return format(song.insLabels[row % 48][0..32]);
@@ -290,7 +349,7 @@ class InsValueTable : HexTable {
 			if(p > 47) p -= 48;
 			assert(p >= 0 && p < 48);
 			
-			int c = (com.session.activeInstrument >= 0 && row == p) ? 15 : 12;
+			int c = (state.activeInstrument >= 0 && row == p) ? 15 : 12;
 			screen.cprint(area.x,area.y + i + 1, c, 0, format("%02X:", p));
 			for(j=0; j<8; j++) {
 				ofs = p + j * 48;
@@ -332,6 +391,7 @@ class InsTable : Window {
 		InsValueTable insinput;
 	}
 	Window active;
+	
 	this(Rectangle a) {
 		super(a);
 		insdesc = new DialogString(a, com.fb.mode ? 32 : 16);
@@ -353,7 +413,7 @@ class InsTable : Window {
 		insinput.refresh();
 	}
 
-	int row() {
+	@property int row() {
 		return insinput.row;
 	}
 
@@ -426,6 +486,7 @@ class InsTable : Window {
 
 class CmdTable : HexTable {
 	alias row position;
+	
 	this(Rectangle a) {
 		super(a, song.superTable, 1, 64);
 		input = new InputSpecial(song.superTable);
@@ -433,7 +494,7 @@ class CmdTable : HexTable {
 
 	override void update() {
 		int i;
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x,area.y, "`01Co`b1m`01mand");
 		else
 			screen.fprint(area.x,area.y, "`01Cmd (Alt-S)");
@@ -479,8 +540,8 @@ class CmdTable : HexTable {
 		}
 		int r = input.keypress(key);
 		song.superTable[position] = input.inarray[0];
-		song.superTable[position+64] = cast(ubyte)input.toInt(1, 3);
-		song.superTable[position+128] = cast(ubyte)input.toInt(3, 5);
+		song.superTable[position+64] = cast(ubyte)input.toIntRange(1, 3);
+		song.superTable[position+128] = cast(ubyte)input.toIntRange(3, 5);
 		if(r == WRAP) {
 			stepRow(1);
 		} 
@@ -541,17 +602,17 @@ class ChordTable : HexTable {
 
 	override void update() {
 		int i;
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x,area.y, "`01Chor`b1d`01");
 		else
 			screen.fprint(area.x,area.y, "`01Chd (A-D)");
 
 		for(i = 0; i < visibleRows; i++) {
-			int row = (i + viewOffset) & 127;
+			int row = (i + viewOffset) & 0x7f;
 			string col = "`05";
 			if(data[row] >= 0x80) col = "`0d";
 			screen.fprint(area.x, area.y + i + 1,
-						  format("`0c%02X:%s%02X", (i + viewOffset) & 0x7f, col, data[row]));
+						  format("`0c%02X:%s%02X", row, col, data[row]));
 		}
 
 		for(i = 0; i < visibleRows; i++) {
@@ -651,7 +712,7 @@ class WaveTable : HexTable {
 	}
 
 	void seekCurWave() {
-		seekRow(song.instrumentTable[com.session.activeInstrument + 7 * 48]);
+		seekRow(song.instrumentTable[state.activeInstrument + 7 * 48]);
 	}
 
 	override int keypress(Keyinfo key) {
@@ -682,12 +743,12 @@ class WaveTable : HexTable {
 				seekCurWave();
 				return OK;
 			case SDLK_DELETE:
-				song.wavetableRemove(row);
+				song.tWave.deleteRow(song, row);
 				refresh();
 				set();
 				return OK;
 			case SDLK_INSERT:
-				song.wavetableInsert(row);
+				song.tWave.insertRow(song, row);
 				refresh();
 				set();
 				return OK;
@@ -704,7 +765,7 @@ class WaveTable : HexTable {
 	override void update() {
 		int i;
 		int t1, t2;
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x,area.y, "`b1W`01ave");
 		else
 			screen.fprint(area.x,area.y, "`01Wave (A-W)");
@@ -714,7 +775,7 @@ class WaveTable : HexTable {
 			t2 = data[row+256];
 			int col = (t1 == 0x7e || t1 == 0x7f) ?  0x0d : 0x05;
 			screen.fprint(area.x,area.y + i + 1, format("`0c%02X:`%02x%02X %02X", 
-														(i + viewOffset)&255, col, t1, t2));
+														row, col, t1, t2));
 
 		}
 	}
@@ -750,14 +811,39 @@ class SweepTable : HexTable {
 		super(a, d, 4, 64);
 	}
 
+	override int keypress(Keyinfo key) {
+		if(key.mods & KMOD_SHIFT) {
+			switch(key.raw) {
+			case SDLK_DELETE:
+				deleteRow();
+				refresh();
+				set();
+				return OK;
+			case SDLK_INSERT:
+				insertRow();
+				refresh();
+				set();
+				return OK;
+			default: break;
+			}
+		}
+		else if(key.raw == SDLK_DELETE ||
+				key.raw == SDLK_INSERT) return OK;
+		
+		return super.keypress(key);
+	}
+	
 	override void update() {
-		for(int i=0; i < visibleRows; i++) {
-			int p = ((i + viewOffset) & 63) * 4;
-			string col = "`05";
+		for(int i = 0; i < visibleRows; i++) {
+			int curRow = (i + viewOffset) & 63;
+			int p = curRow * 4;
+			string col = "`05", col2 = "`05";
 			if(data[p+3] > 0) col = "`0d";
+			if(data[p+3] > 0x3f && data[p+3] != 0x7f) col = "`0a";
+			if(highlightRow(curRow)) { col2 = col = "`0d"; }
 			screen.fprint(area.x,area.y + i + 1, 
-						  format("`0c%02X:`05%02X %02X %02X %s%02X", 
-								 (i + viewOffset) & 63,
+						  format("`0c%02X:%s%02X %02X %02X %s%02X", 
+								 curRow, col2,
 								 data[p], data[p+1], data[p+2], col, data[p+3]));
 		}
 	}
@@ -784,6 +870,29 @@ class SweepTable : HexTable {
 			}
 		}
 	}
+
+	protected bool highlightActiveFor(int startFrom, int currentRow) {
+		if(startFrom > 0x3f || startFrom == 0) return false;
+
+		if(startFrom == currentRow)
+			return true;
+		
+		bool[0x40] visited;
+		for(int row = startFrom; row < 0x40;) {
+			if(visited[row]) break;
+			visited[row] = true;
+			if(row == currentRow) return true;
+			int jumpValue = data[row * 4 + 3];
+			if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break
+				break;
+			if(jumpValue == 0x7f)
+				break; // if loops or ends, break
+			else if(jumpValue == 0) 
+				row++;
+			else row = jumpValue;
+		}
+		return false;
+	}
 }
 
 class PulseTable : SweepTable {
@@ -797,7 +906,7 @@ class PulseTable : SweepTable {
 	}
 
 	override void update() {
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x, area.y, "`b1P`01ulse");
 		else
 			screen.fprint(area.x, area.y, "`01Pulse (Alt-P)");
@@ -815,7 +924,19 @@ class PulseTable : SweepTable {
 			return genPlayerContextHelp("Pulse table", 
 										song.pulseDescriptions);
 		return ui.help.HELPMAIN;
-	}		
+	}
+
+	override void deleteRow() {
+		ct.purge.pulseDeleteRow(song, row);
+	}
+
+	override void insertRow() {
+		ct.purge.pulseInsertRow(song, row);
+	}
+
+	override bool highlightRow(int row) {
+		return highlightActiveFor(song.instrumentTable[state.activeInstrument + 5 * 48], row);
+	}
 }
 
 class FilterTable : SweepTable {
@@ -830,7 +951,7 @@ class FilterTable : SweepTable {
 	}
 
 	override void update() {
-		if(shortTitles)
+		if(state.shortTitles)
 			screen.fprint(area.x, area.y, "`b1F`01ilter");
 		else 
 			screen.fprint(area.x, area.y, "`01Filter (Alt-F)");
@@ -849,5 +970,18 @@ class FilterTable : SweepTable {
 			super.showByteDescription(song.filterDescriptions[column]);
 		}
 	}
+
+	override void deleteRow() {
+		ct.purge.filterDeleteRow(song, row);
+	}
+
+	override void insertRow() {
+		ct.purge.filterInsertRow(song, row);
+	}
+
+	override bool highlightRow(int row) {
+		return highlightActiveFor(song.instrumentTable[state.activeInstrument + 4 * 48], row);
+	}
+	
 }
 

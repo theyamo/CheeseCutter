@@ -1,4 +1,5 @@
 make                   -- build Linux binary using gdc
 make -f Makefile.mac   -- build MacOS binary using ldc2
 make -f Makefile.mingw -- build MinGW binary using gdc on Wine
+make -f Makefile.dmd   -- build using dmd
 make-wintest.sh        -- build Windows zip archive with required dlls

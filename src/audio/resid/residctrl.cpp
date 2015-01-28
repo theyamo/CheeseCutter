@@ -186,4 +186,8 @@ extern "C" {
 		assert(total1 == total2);
 		return total1;
 	}
+	
+	float* get_sample_buf() {
+		return sidfp[0]->sample; // FIXME
+	}
 }

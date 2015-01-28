@@ -185,12 +185,12 @@ public:
     {
     }
 
-    string name()
+	@property string name()
     {
         return _name;
     }
 
-    bool isLoaded()
+    @property bool isLoaded()
     {
         return (_hlib !is null);
     }

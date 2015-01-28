@@ -4,7 +4,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 
 module ui.help;
 
-import std.string;
+import std.string : format;
 import com.util;
 
 struct ContextHelp {
