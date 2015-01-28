@@ -101,25 +101,19 @@ int main(string[] args) {
 	speeds.length = 32;
 	masks.length = 32;
 	void printheader() {
-		writefln("CheeseCutter 2 utilities (BETA)");
+		writefln("CheeseCutter 2.7 2SID utils");
 		writefln("\nUsage: \t%s <command> <options> <infile> <-o outfile>",args[0]);
 		writefln("\t%s import <infile> <infile2> <-o outfile>",args[0]);
 		writefln("\t%s init <binaryfile> <-o outfile>",args[0]);
 		writefln("\nCommands:");
 		writefln("  prg           Export song (.ct) to PRG file");
 		writefln("  sid           Export song (.ct) to SID file");
-		writefln("  dump          Dump song data to assembler source (BETA)");
 		writefln("  import        Copy data from another song without overwriting the player");
-		writefln("  init          Create a fresh .ct from player binary");
 		writefln("\nGeneral options:");
 		writefln("  -o <outfile>  Set output filename (by default gathered from input filename)");
 		writefln("\nExport options:");
-//		writefln("  -n            Do not purge before exporting/dumping (leaves unused data)");
 		writefln("  -r <addr>     Relocate output to address (default = $1000)");
 		writefln("  -d <num>      Set the default subtune (1-32)");
-//		writefln("  -s [subtune]:[speed],...    Set speeds for subtunes");
-//		writefln("  -c [subtune]:[voicemask],...Set voice bitmasks for subtunes");
-		writefln("  -s <num>      Export single subtune (1-32) (disables -d)");
 		writefln("  -q            Don't output information");
 		writefln("\nPrefix value options with '0x' or '$' to indicate a hexadecimal value.");
 	}
@@ -249,7 +243,11 @@ int main(string[] args) {
 		case Command.ExportPRG, Command.ExportSID:
 			insong = new Song;
 			insong.open(infn);
+			if(insong.ver < 128)
+				throw new UserException("Use this version for StereoSID tunes only");
 			if(singleSubtune >= 0) {
+				//if(insong.isStereo)
+				throw new UserException("-s works only on regular sids");
 				for(int i = 0; i < 32; i++) {
 					if(i == singleSubtune) continue;
 					insong.subtunes.clear(i);

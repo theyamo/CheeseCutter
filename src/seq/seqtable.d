@@ -186,7 +186,7 @@ protected class SeqVoice : Voice {
 protected class SequenceTable : VoiceTable {
 	this(Rectangle a, PosinfoTable pi) { 
 		int x = 5 + com.fb.border + a.x;
-		for(int v=0;v<3;v++) {
+		for(int v=0; v < 6; v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 			voices[v] = new SeqVoice(VoiceInitParams(song.tracks[v],
@@ -216,7 +216,7 @@ protected class SequenceTable : VoiceTable {
 		super.update();
 		if(!audio.player.isPlaying || audio.player.keyjamEnabled) return;
 		// trackbar
-		for(int i = 0 ; i < 3; i++) {
+		for(int i = 0 ; i < 6; i++) {
 			Posinfo fp = fplayPos[i];
 			Posinfo vp = posTable[i];
 			int tp = fp.rowCounter - vp.rowCounter + anchor;
@@ -233,7 +233,7 @@ protected class SequenceTable : VoiceTable {
 	override void stepVoice(int i) {
 		int n = activeVoiceNum + i;
 		int c = (n - activeVoiceNum) > 0 ? 0 : 1;
-		n = umod(n, 0, 2);
+		n = umod(n, 0, 5);
 		if(!voices[n].atEnd())
 			super.stepVoice(i);
 

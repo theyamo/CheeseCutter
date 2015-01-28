@@ -261,8 +261,8 @@ class Purge {
 				song.filterTable[i * 4 .. i * 4 + 4] = 0;
 		}
 
-		hexdump(song.filterTable[0 .. 24*4], 4, true);
 		// compact filter table
+		/+
 		for(i = 0; i < 0x3e; i++) {
 			int seek = i + 1;
 			while(!filter_used[i] && seek < 64) {
@@ -293,16 +293,17 @@ class Purge {
 				seek++;
 			}
 		}
-
-		hexdump(song.filterTable[0 .. 24*4], 4, true);
-
+		+/
 	}
 
 	void purgeChordtable() {
 		bool chordsUsed[0x20];
+		int usedCount;
 		seqIterator((Sequence s, Element e) { 				
-				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f)
+				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f) {
 					chordsUsed[e.cmd.value & 0x1f] = true;
+					usedCount++;
+				}
 			});
 
 		struct Chunk {
@@ -319,7 +320,8 @@ class Purge {
 
 		song.generateChordIndex();
 		Chunk[] chunks;
-		chunks ~= Chunk(song.chordTable[0 .. song.chordIndexTable[1]].dup, 0);
+		if(usedCount > 0)
+			chunks ~= Chunk(song.chordTable[0 .. song.chordIndexTable[1]].dup, 0);
 		int tablestart = 1;
 		// TODO: find out if swingtepo is used and purge first chunk too if needed
 		for(int i = tablestart; i < 0x20; i++) {
@@ -357,6 +359,7 @@ class Purge {
 
 		foreach(chunk; chunks) {
 			if(chunk.data.length == 0) continue;
+			writeln(chunk, " ", chunk.data.length);
 			int oldwrap = (chunk.data[$-1] - 0x80) - chunk.oldOffset;
 			assert(chunk.data[$-1] >= 0x80);
 			chunk.data[$-1] = cast(ubyte)(idx + oldwrap + 0x80);

@@ -5,6 +5,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 module audio.callback;
 import derelict.sdl.sdl;
 import audio.player;
+import audio.audio;
 import com.session;
 import com.cpu;
 import ct.base;
@@ -79,7 +80,8 @@ extern(C) __gshared void audio_frame() {
 	}
 
 	for(int i=0; i<0x19; i++) {
-		sidreg[i] = song.sidbuf[i];
+		sidreg[0][i] = song.sidbuf[i];
+		sidreg[1][i] = song.sidbuf[i+0x20];
 	}
 }
 
@@ -126,7 +128,8 @@ void cpuCall(ushort pc, bool lockAudio, bool forcedump) {
 		if(lockAudio) SDL_UnlockAudio();
 	}
 }
-
+/+
 extern(C) {
-	__gshared extern char[0x19] sidreg;
+	__gshared extern ubyte[0x19][2] sidreg;
 }
++/

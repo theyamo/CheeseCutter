@@ -28,6 +28,7 @@ immutable SDL_Color[] PALETTE = [
 	{ 37 << 2,37 << 2,37 << 2 } ];
 
 immutable FONT_X = 8, FONT_Y = 14;
+enum RES_X = 1200, RES_Y = 600;
 __gshared ubyte[] font;
 int mode;
 bool isDirty = false;
@@ -45,6 +46,7 @@ static this() {
 	for(int i=0;i<256;i++) {
 		font[i*16..i*16+14] = cast(ubyte[])rawfont[i*FONT_Y+4..i*FONT_Y+4+FONT_Y];
 	}
+//	font = arr.idup;
 }
 
 
@@ -54,7 +56,7 @@ abstract class Video {
 		int useFullscreen;
 		Screen screen;
 	}
-	int height = 800, width = 600;
+	int height = RES_X, width = RES_Y;
 	float scalex, scaley;
 	immutable int displayHeight, displayWidth;
 	SDL_Rect rect;
@@ -74,8 +76,8 @@ abstract class Video {
 	abstract void enableFullscreen(bool fs);
 
 	protected void resize(bool maxres) {
-		scalex = 800.0 / width;
-		scaley = 600.0 / height;
+		scalex = cast(float)RES_X / width;
+		scaley = cast(float)RES_Y / height;
 	}
 	
 	abstract void updateFrame();
@@ -88,8 +90,8 @@ class VideoStandard : Video {
 	}
 
 	override protected void resize(bool maxres) {
-		width = 800;
-		height = 600;
+		width = RES_X;
+		height = RES_Y;
 		super.resize(maxres);
 	}
 
@@ -201,8 +203,8 @@ class VideoYUV : Video {
 			height = correctedHeight;
 		}
 		else {
-			width = 800;
-			height = 600;
+			width = RES_X;
+			height = RES_Y;
 		}
 
 		super.resize(maxres);
@@ -213,7 +215,7 @@ class VideoYUV : Video {
 		useFullscreen = fs ? SDL_FULLSCREEN : 0;
 		int sdlflags = SDL_SWSURFACE | useFullscreen;
 		if(!useFullscreen)
-			surface = SDL_SetVideoMode(800, 600, 0, sdlflags); 
+			surface = SDL_SetVideoMode(RES_X, RES_Y, 0, sdlflags); 
 		else surface = SDL_SetVideoMode(displayWidth, displayHeight, 0, sdlflags); 
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
@@ -320,7 +322,7 @@ class VideoYUV : Video {
 	private void makeOverlay(int[] scrRes) {
 		if(overlay !is null)
 			SDL_FreeYUVOverlay(overlay);
-		overlay = SDL_CreateYUVOverlay(800, 600, SDL_YV12_OVERLAY, surface);
+		overlay = SDL_CreateYUVOverlay(RES_X, RES_Y, SDL_YV12_OVERLAY, surface);
 		if(overlay is null) {
 			throw new DisplayError("Couldn't initialize YUV overlay.");
 		}

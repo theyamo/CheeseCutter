@@ -64,7 +64,8 @@ abstract class Window {
 	abstract void update();
 	int keypress(Keyinfo key) { return 0; }
 	int keyrelease(Keyinfo key) { return 0; }
-	void refresh() {}
+	void refresh() {
+	}
 	void deactivate() {}
 	void activate() { refresh(); }
 	void clickedAt(int scrx, int scry, int button) {}
@@ -220,7 +221,7 @@ class Infobar : Window {
 	  
 		screen.clrtoeol(0, headerColor);
 		
-		screen.cprint(4, 0, 1, headerColor, "CheeseCutter 2.7");
+		screen.cprint(4, 0, 1, headerColor, "CheeseCutter 2.7 2SID BETA");
 		screen.cprint(screen.width - 14, 0, 1, headerColor, "F12 = Help");
 		int c1 = audio.player.isPlaying ? 13 : 12;
 		screen.fprint(x1,area.y,format("`05Time: `0%x%02d:%02d / $%02x",
@@ -336,7 +337,7 @@ final private class Toplevel : WindowSwitcher {
  	this(UI ui) {
 		this.ui = ui;
 		int zone1x = 0;
-		int zone2x = screen.width / 2 + zone1x - 1;
+		int zone2x = 91;
 		int zone1y = 4;
 		int zone1h = screen.height / 2 - 5;
 		int zone2y = screen.height / 2;
@@ -447,6 +448,13 @@ final private class Toplevel : WindowSwitcher {
 			break;
 		}
 
+		void _voiceActivate(Keyinfo key, int voice) {
+			if(!(key.mods & KMOD_CTRL)) {
+				activateWindow(0);
+				sequencer.activateVoice(voice);
+			}
+		}
+		
 		if(key.mods & KMOD_ALT) {
 			switch(key.raw)
 			{
@@ -454,30 +462,27 @@ final private class Toplevel : WindowSwitcher {
 				activateWindow(0);
 				break;
 			case SDLK_1:
-				if(!(key.mods & KMOD_CTRL)) {
-					activateWindow(0);
-					sequencer.activateVoice(0);
-				}
+				_voiceActivate(key, 0);
 				break;
 			case SDLK_2:
-				if(!(key.mods & KMOD_CTRL)) {
-					activateWindow(0);
-					sequencer.activateVoice(1);
-				}
+				_voiceActivate(key, 1);
 				break;
 			case SDLK_3:
-				if(!(key.mods & KMOD_CTRL)) {
-					activateWindow(0);
-					sequencer.activateVoice(2);
-				}
+				_voiceActivate(key, 2);
 				break;
 			case SDLK_4:
+				_voiceActivate(key, 3);
+				break;
+			case SDLK_5:
+				_voiceActivate(key, 4);
+				break;
+			case SDLK_6:
+				_voiceActivate(key, 5);
+				break;
 			case SDLK_i:
 				activateWindow(1);
 				break;
-			case SDLK_5:
 			case SDLK_w:
-			case SDLK_6:
 			case SDLK_p:
 			case SDLK_7:
 			case SDLK_f:
@@ -640,13 +645,13 @@ final private class Toplevel : WindowSwitcher {
 		return null;
 	}
 
-	void playFromCursor() {
+	void playFromCursor() { // recode
 		Voice[] v = sequencer.getVoices();
-		auto d1 = v[0].activeRow;
-		auto d2 = v[1].activeRow;
-		auto d3 = v[2].activeRow;
-		audio.player.start([d1.trkOffset,d2.trkOffset,d3.trkOffset],
-					  [d1.seqOffset,d2.seqOffset,d3.seqOffset]);
+			audio.player.start([v[0].activeRow.trkOffset,v[1].activeRow.trkOffset,v[2].activeRow.trkOffset,
+								v[3].activeRow.trkOffset,v[4].activeRow.trkOffset,v[5].activeRow.trkOffset],
+							   [v[0].activeRow.seqOffset,v[1].activeRow.seqOffset,v[2].activeRow.seqOffset,
+								v[3].activeRow.seqOffset,v[4].activeRow.seqOffset,v[5].activeRow.seqOffset]);
+		
 		fplay.startFromCursor();
 	}
 	
@@ -657,6 +662,7 @@ final private class Toplevel : WindowSwitcher {
 
 	void startFp() {
 		followplay = true;
+//		sequencer.deactivate();
 		windows[0] = fplay;
 		if(activeWindow == sequencer)
 			activateWindow(0);
@@ -676,6 +682,7 @@ final private class Toplevel : WindowSwitcher {
 		followplay = false;
 		windows[0] = sequencer;
 		activateWindow(activeWindowNum);
+		sequencer.activeView.input.cursor.refresh();
 	}
 
 	void stopPlayback() {
@@ -809,26 +816,39 @@ final class UI {
 
 			if(audio.player.isPlaying || audio.player.keyjamEnabled) {
 				if(printSIDDump) {
-					int x = screen.width - 42;
+					int x = 10;
 					screen.cprint(x, 1, 15, 0, "V1:");
 					screen.cprint(x, 2, 15, 0, "V2:");
 					screen.cprint(x, 3, 15, 0, "V3:");
 					screen.cprint(x+26, 1, 15, 0, "$D415 16 17 18");
 					
 					for(int i = 0; i < 7; i++) {
-						screen.cprint(x+3+i*3, 1, 5,0, format("%02X", audio.audio.sidreg[i]));
-						screen.cprint(x+3+i*3, 2, 5,0, format("%02X", audio.audio.sidreg[i+7]));
-						screen.cprint(x+3+i*3, 3, 5,0, format("%02X", audio.audio.sidreg[i+14]));
+						screen.cprint(x+3+i*3, 1, 5,0, format("%02X", audio.audio.sidreg[0][i]));
+						screen.cprint(x+3+i*3, 2, 5,0, format("%02X", audio.audio.sidreg[0][i+7]));
+						screen.cprint(x+3+i*3, 3, 5,0, format("%02X", audio.audio.sidreg[0][i+14]));
 					}
 
 					for(int i = 0; i < 4;i++) {
-						screen.cprint(x+8+21+i*3, 2, 5,0, format("%02X", audio.audio.sidreg[i+0x15]));
+						screen.cprint(x+8+21+i*3, 2, 5,0, format("%02X", audio.audio.sidreg[0][i+0x15]));
 					}
-					/+
-					for(int i = 0; i < 16; i++) {
-						screen.cprint(8+i*3, 3, 5,0, format("%02X", song.memspace[0xdf00+i]));
+
+					x += 42;
+
+					screen.cprint(x, 1, 15, 0, "V1:");
+					screen.cprint(x, 2, 15, 0, "V2:");
+					screen.cprint(x, 3, 15, 0, "V3:");
+					screen.cprint(x+26, 1, 15, 0, "$D435 36 37 38");
+					
+					for(int i = 0; i < 7; i++) {
+						screen.cprint(x+3+i*3, 1, 5,0, format("%02X", audio.audio.sidreg[1][i]));
+						screen.cprint(x+3+i*3, 2, 5,0, format("%02X", audio.audio.sidreg[1][i+7]));
+						screen.cprint(x+3+i*3, 3, 5,0, format("%02X", audio.audio.sidreg[1][i+14]));
 					}
-					+/
+
+					for(int i = 0; i < 4;i++) {
+						screen.cprint(x+8+21+i*3, 2, 5,0, format("%02X", audio.audio.sidreg[1][i+0x15]));
+					}
+					
 				}
 				update();
 			
@@ -858,13 +878,18 @@ final class UI {
 			}
 			// song is playing but plain F1 pressed; restart
 		}
-		int m1, m2, m3;
-		m1 = seqPos.pos[0].mark;
-		m2 = seqPos.pos[1].mark;
-		m3 = seqPos.pos[2].mark;
+
+		int[] marks =
+			[ seqPos.pos[0].mark,
+			  seqPos.pos[1].mark,
+			  seqPos.pos[2].mark,
+			  seqPos.pos[3].mark,
+			  seqPos.pos[4].mark,
+			  seqPos.pos[5].mark ];
+		
 		stop();
 		if(!fromStart) {
-			audio.player.start([m1, m2, m3], [0, 0, 0]);
+			audio.player.start(marks, [0,0,0,0,0,0]);
 			if(key.mods & KMOD_SHIFT) {
 				toplevel.startFp();
 			}
@@ -933,6 +958,15 @@ final class UI {
 				break;
 			case SDLK_3:
 				audio.player.toggleVoice(2);
+				break;
+			case SDLK_4:
+				audio.player.toggleVoice(3);
+				break;
+			case SDLK_5:
+				audio.player.toggleVoice(4);
+				break;
+			case SDLK_6:
+				audio.player.toggleVoice(5);
 				break;
 			case SDLK_F11:
 				string s = savedialog.getFilename();
@@ -1113,6 +1147,9 @@ final class UI {
 			return;
 		}
 		try {
+			Song tmp = new Song();
+			tmp.open(s);
+			if(tmp.ver < 128) doImport = true;
 			if(!doImport)
 				song.open(s);
 			else {
@@ -1128,7 +1165,7 @@ final class UI {
 		}
 		refresh();
 		// all voices ON
-		audio.player.setVoicon(0,0,0);
+		audio.player.setVoicon([0,0,0,0,0,0]);
 		
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);

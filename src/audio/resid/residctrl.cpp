@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <resid/sid.h>
 #include <resid-fp/sidfp.h>
-//#include <assert.h>
+#include <assert.h>
 #include <stdio.h>
 
 extern "C" {
@@ -32,7 +32,7 @@ extern "C" {
 
 	int clockrate;
 	int samplerate;
-	unsigned char sidreg[NUMSIDREGS];
+	unsigned char sidreg[2][NUMSIDREGS];
 	const unsigned char sidorder[] = {
         0x0e,0x0f,0x14,0x13,0x10,0x11,0x12,
         0x07,0x08,0x0d,0x0c,0x09,0x0a,0x0b,
@@ -40,20 +40,58 @@ extern "C" {
         0x16,0x17,0x18,0x15
 	};
 	SID *sid= 0;
-	SIDFP *sidfp = 0;
+	SIDFP *sidfp[2] = { 0, 0 };
 	int residdelay = 0;
+	int usestereo = 0;
 	int usefp = 0;
 
 	void sid_close() {
 		if(sid) delete sid;
-		if(sidfp) delete sidfp;
+		if(sidfp[0]) delete sidfp[0];
+		if(sidfp[1]) delete sidfp[1];
+	}
+
+	void sid_set_fp_params(SIDFP *sidfp, FILTERPARAMS *fparams, int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate) {
+		switch(interpolate)
+		{
+		case 0:
+			sidfp->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed);
+			break;
+		default:
+			sidfp->set_sampling_parameters(clockrate, SAMPLE_RESAMPLE_INTERPOLATE, speed);
+			break;
+		}
+		sidfp->reset();
+		if (m == 1) {
+			sidfp->set_chip_model(MOS8580);
+		}
+		else {
+			sidfp->set_chip_model(MOS6581);
+		}
+		sidfp->get_filter().set_distortion_properties(
+			fparams->distortionrate,
+			fparams->distortionpoint,
+			fparams->distortioncfthreshold);
+		sidfp->get_filter().set_type3_properties(
+			fparams->type3baseresistance,
+			fparams->type3offset,
+			fparams->type3steepness,
+			fparams->type3minimumfetresistance);
+		sidfp->get_filter().set_type4_properties(
+			fparams->type4k,
+			fparams->type4b);
+		sidfp->set_voice_nonlinearity(
+			fparams->voicenonlinearity);
+		sidfp->enable_filter(true);
+
 	}
 	
-	void sid_init(int fp, FILTERPARAMS *fparams, int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate)
+	void sid_init(int fp, FILTERPARAMS *fparams, int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, int stereo)
 	{
 		int c;
 
 		usefp = fp;
+		usestereo = stereo;
 		
 		if (ntsc) clockrate = NTSCCLOCKRATE;
 		else clockrate = PALCLOCKRATE;
@@ -63,43 +101,18 @@ extern "C" {
 	
 		samplerate = speed;
 	
-		if (!sidfp) sidfp = new SIDFP();
+		if (!sidfp[0]) sidfp[0] = new SIDFP();
+		if (!sidfp[1]) sidfp[1] = new SIDFP();
 		if (!sid) sid = new SID();
-		
-		if(usefp) {
-			switch(interpolate)
-			{
-			case 0:
-				sidfp->set_sampling_parameters(clockrate, SAMPLE_INTERPOLATE, speed);
-				break;
-			default:
-				sidfp->set_sampling_parameters(clockrate, SAMPLE_RESAMPLE_INTERPOLATE, speed);
-				break;
-			}
-			sidfp->reset();
-			for (c = 0; c < NUMSIDREGS; c++) {
-				sidreg[c] = 0x00;
-			}
 
-			if (m == 1)
-				sidfp->set_chip_model(MOS8580);
-			else
-				sidfp->set_chip_model(MOS6581);
-			sidfp->get_filter().set_distortion_properties(
-                fparams->distortionrate,
-                fparams->distortionpoint,
-                fparams->distortioncfthreshold);
-			sidfp->get_filter().set_type3_properties(
-                fparams->type3baseresistance,
-                fparams->type3offset,
-                fparams->type3steepness,
-                fparams->type3minimumfetresistance);
-			sidfp->get_filter().set_type4_properties(
-                fparams->type4k,
-                fparams->type4b);
-			sidfp->set_voice_nonlinearity(
-                fparams->voicenonlinearity);
-			sidfp->enable_filter(true);
+		for (c = 0; c < NUMSIDREGS; c++) {
+			sidreg[0][c] = 0x00;
+			sidreg[1][c] = 0x00;
+		}
+
+		if(usefp) {
+			sid_set_fp_params(sidfp[0], fparams, speed, m, ntsc, interpolate, customclockrate);
+			sid_set_fp_params(sidfp[1], fparams, speed, m, ntsc, interpolate, customclockrate);
 		}
 		else {
 			switch(interpolate)
@@ -112,10 +125,6 @@ extern "C" {
 				break;
 			}
 			sid->reset();
-			for (c = 0; c < NUMSIDREGS; c++) {
-				sidreg[c] = 0x00;
-			}
-  
 			if (m == 1) {
 				sid->set_chip_model(MOS8580);
 			}
@@ -124,74 +133,57 @@ extern "C" {
 			}
 		}
 	}
-  
-	unsigned char sid_getorder(unsigned char index) {
-		return sidorder[index];
-	}
-	
-	int sid_fillbuffer(short *ptr, int samples, const int cyc) {
-		int os = samples;
+
+	extern "C++"
+	template<typename T>
+	int sid_fillbuffer_worker(T sid, unsigned char *tsidreg, short *ptr, int samples, const int cyc) {
 		int rc = cyc / 3; // NUMVOICE
-		int badline = rand() % NUMSIDREGS;
 		int tdelta;
 		int tdelta2;
-		int result;
+		int result = 0;
 		int total = 0;
 		int c;
 
 		tdelta = clockrate * samples / samplerate;
 		
 		for (c = 0; c < NUMSIDREGS; c++) {
-			unsigned char o = sid_getorder(c);
+			unsigned char o = sidorder[c];
 			
 			// Extra delay per music routine iteration
 			if (cyc > 0 &&
 				((c == 0) || (c == 7) || (c == 14))) {
 				tdelta2 = rc;
-				if(usefp)
-					result = sidfp->clock(tdelta2, ptr, samples);
-				else
-					result = sid->clock(tdelta2, ptr, samples);
+				result = sid->clock(tdelta2, ptr, samples);
 				total += result;
 				ptr += result;
 				samples -= result;
 				tdelta -= rc;
 			}
-			
-			// Possible random badline delay once per writing
-			/*
-			if ((badline == c) && (residdelay)) {
-				tdelta2 = residdelay;
-				result = sid->clock(tdelta2, ptr, samples);
-				total += result;
-				ptr += result;
-				samples -= result;
-				tdelta -= residdelay;
-			}
-			*/
-			if(usefp)
-				sidfp->write(o, sidreg[o]);
-			else
-				sid->write(o, sidreg[o]);
-		
+			sid->write(o, tsidreg[o]);
 			tdelta2 = SIDWRITEDELAY;
-			if(usefp)
-				result = sidfp->clock(tdelta2, ptr, samples);
-			else
-				result = sid->clock(tdelta2, ptr, samples);
+			result = sid->clock(tdelta2, ptr, samples);
 			total += result;
 			ptr += result;
 			samples -= result;
 			tdelta -= SIDWRITEDELAY;
 		}
-
-		if(usefp)
-			result = sidfp->clock(tdelta, ptr, samples);
-		else
-			result = sid->clock(tdelta, ptr, samples);
-		
+		result = sid->clock(tdelta, ptr, samples);
 		total += result;
-//		assert(total <= os);
 		return total;
+	}
+
+	int sid_fillbuffer(short *ptr, int samples, const int cyc) {
+		if(usefp) {
+			return sid_fillbuffer_worker(sidfp[0], sidreg[0], ptr, samples, cyc);
+		}
+		else return sid_fillbuffer_worker(sid, sidreg[0], ptr, samples, cyc);
+	}
+
+	int sid_fillbuffer_stereo(short *left, short *right, int samples, const int cyc) {
+		int total1, total2;
+		total1 = sid_fillbuffer_worker(sidfp[0], sidreg[0], left, samples, cyc);
+		total2 = sid_fillbuffer_worker(sidfp[1], sidreg[1], right, samples, cyc);
+		assert(total1 == total2);
+		return total1;
 	}
 }

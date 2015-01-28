@@ -18,10 +18,10 @@ extern(C) {
 	extern char* acme_assemble(const char*,int*,char*);
 }
 
-static const string playerSource = import("player_v4.acme");
+static const string playerSource = import("player_v4s.acme");
 
 const ubyte[] SIDHEADER = [
-  0x50, 0x53, 0x49, 0x44, 0x00, 0x02, 0x00, 0x7c, 0x00, 0x00, 0x10, 0x00,
+  0x50, 0x53, 0x49, 0x44, 0x00, 0x03, 0x00, 0x7c, 0x00, 0x00, 0x10, 0x00,
   0x10, 0x03, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x53, 0x77,
   0x61, 0x6d, 0x70, 0x20, 0x50, 0x6f, 0x6f, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -46,6 +46,7 @@ enum {
 //	CIA_OFFSET = 0x09,
 //	DIV_COUNTER = 0x1b,
 	PAL_CLOCK = 0x4cc7,
+	PSID_SECOND_SID_ADDR = 0x7a,
 	PSID_DATA_START = 0x7c 
 }
 
@@ -93,8 +94,10 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	char[32] release = insong.release; release[paddedStringLength(release,' ') .. $] = '\0';
 	outstr(title,PSID_TITLE_OFFSET);
 	outstr(author,PSID_TITLE_OFFSET + 0x20);
-	outstr(release,PSID_TITLE_OFFSET + 0x40); 
-	data[PSID_NUM_SONGS + 1] = cast(ubyte)insong.subtunes.numOf;
+	outstr(release,PSID_TITLE_OFFSET + 0x40);
+	int numof = insong.subtunes.numOf / 2;
+	if(numof < 1) numof = 1;
+	data[PSID_NUM_SONGS + 1] = cast(ubyte)numof;
 	data[PSID_START_SONG + 1] = cast(ubyte)defaultSubtune;
 	if(insong.multiplier > 1) {
 		data[PSID_SPEED_OFFSET .. PSID_SPEED_OFFSET + 4] = 255;
@@ -108,6 +111,7 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	data[PSID_FLAGS_OFFSET + 1] 
 		= cast(ubyte)(0x04 /+ PAL +/ | (insong.sidModel ? 0x20 : 0x10));
 
+	data[PSID_SECOND_SID_ADDR] = 0x42; // d420
 	return data;
 }
 
@@ -224,7 +228,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 		writeln("Assembling...");
 
 	ubyte[] assembled = cast(ubyte[])assemble(input);
-	
+
 	if(verbose)
 		writeln(format("Size %d bytes ($%04x-$%04x).", assembled.length - 2,
 					   address, address + assembled.length - 2));

@@ -2,7 +2,7 @@ LIBS=-ldl -lstdc++
 COMFLAGS=
 DLINK=$(COMFLAGS) -Wl,--gc-sections 
 VERSION=$(shell cat Version)
-DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O1
+DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O1 -g
 CFLAGS=$(COMFLAGS) -O1
 CXXFLAGS=-I./src -O3
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@
@@ -52,6 +52,10 @@ tar:
 
 src/c64/player.bin: src/c64/player_v4.acme
 	acme -f cbm --outfile $@ $<
+
+src/c64/player_s.bin: src/c64/player_v4s.acme
+	acme -f cbm --outfile $@ $<
+
 
 src/ct/base.o: src/c64/player.bin
 src/ui/ui.o: src/ui/help.o

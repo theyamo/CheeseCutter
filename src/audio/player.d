@@ -17,7 +17,9 @@ import std.stdio;
 
 enum Status { Stop, Play, Keyjam };
 shared private int playstatus;
-shared int[3] muted;
+__gshared int[6] muted;
+
+// resid params. should really be in audio.d
 int usefp = 1, sidtype, interpolate = 1, badline, ntsc;
 __gshared Filterparams curfp;
 int curfp6581 = 0, curfp8580 = 0;
@@ -40,7 +42,7 @@ void init() {
 	}
 	SDL_LockAudio();
 	curfp = sidtype ? FP8580[curfp8580] : FP6581[curfp6581];
-	sid_init(usefp, &curfp, freq, sidtype, ntsc, interpolate, 0);
+	sid_init(usefp, &curfp, freq, sidtype, ntsc, interpolate, 0, stereo);
 	/+
 	if(!audioinited) {
 		writefln("audio init: engine=%s, freq=%d, buf=%d, sid=%d, clock=%s, interpolation=%s%s",
@@ -77,8 +79,9 @@ void playNote(Element emt) {
 	playstatus = Status.Stop;
 	audio.callback.reset();
 	audio.audio.reset();
-	song.setVoicon([v == 0 ? 0 : 1, v == 1 ? 0 : 1, v == 2 ? 0 : 1]);
-	muteSID(1,1,1);
+	//song.setVoicon([v == 0 ? 0 : 1, v == 1 ? 0 : 1, v == 2 ? 0 : 1]);
+	song.setVoicon([v != 0, v != 1, v != 2, v != 3, v != 4, v != 5]);
+	muteSID([1,1,1,1,1,1]);
 	song.cpu.reset();
 	song.cpu.regs.a = emt.note.value;
 	song.cpu.regs.x = cast(ubyte)v;
@@ -93,12 +96,14 @@ void playNote(Element emt) {
 	playstatus = Status.Keyjam;
 }
 
-void start(int[3] trk, int[3] seq) {
+void start(int[] trk, int[] seq) {
 	SDL_PauseAudio(1);
 	if(SDL_GetAudioStatus() == SDL_AUDIO_PLAYING)
 		std.stdio.writefln("Audio thread not finished!");
 	SDL_Delay(20);
+
 	initPlayOffset(trk,seq);
+
 	audio.timer.start();
 	audio.callback.reset();
 	audio.audio.reset();
@@ -107,37 +112,31 @@ void start(int[3] trk, int[3] seq) {
 }
 
 void start() {
-	start([0, 0, 0], [0, 0, 0]);
+	start([0, 0, 0, 0, 0, 0],
+		  [0, 0, 0, 0, 0, 0]);
 }
 
 void stop() {
 	playstatus = Status.Stop;
-	muteSID(1,1,1);
+	muteSID([1,1,1,1,1,1]);
 }
 
 void toggleVoice(int v) {
-	if(v > 2 || v < 0) return;
+	if(v > 5 || v < 0) return;
 	muted[v] = muted[v] ^ 1;
 	setVoicon(muted);
 }
 
-void setVoicon(int v1, int v2, int v3) {
-	setVoicon([v1, v2, v3]);
-}
-
 void setVoicon(int[] m) {
-	muted[0] = m[0];
-	muted[1] = m[1];
-	muted[2] = m[2];
-	muteSID(m[0], m[1], m[2]);
+	assert(m.length == 6);
+	muted[0..$] = m[0..$].dup;
+	muteSID(m); //m[0], m[1], m[2]);
 	song.setVoicon(muted);
 }
 
-void setVoicon(shared int[] m) {
-	muted[0] = m[0];
-	muted[1] = m[1];
-	muted[2] = m[2];
-	muteSID(m[0], m[1], m[2]);
+deprecated void setVoicon(shared int[] m) {
+	muted[] = cast(int[])m.dup;
+	muteSID(muted); //m[0], m[1], m[2]);
 	song.setVoicon(muted);
 }
 
@@ -216,46 +215,63 @@ void incMultiplier() {
 	setMultiplier(song.multiplier + 1);
 }
 
-private void initPlayOffset(int[3] t, int[3] s) {
+private void initPlayOffset(int[] t, int[] s) {
 	void out16b(int offs, int value) {
 		song.buffer[offs] = value & 255;
 		song.buffer[offs + 1] = (value >> 8) & 255;
 	}
+	address[] offset = new address[6];
 	address off1 = cast(ushort)(song.offsets[Offsets.Track1] + t[0] * 2);
-	address off2 = cast(ushort)(song.offsets[Offsets.Track2] + t[1] * 2);
-	address off3 = cast(ushort)(song.offsets[Offsets.Track3] + t[2] * 2);
+	address off2 = cast(ushort)(song.offsets[Offsets.Track1 + 1] + t[1] * 2);
+	address off3 = cast(ushort)(song.offsets[Offsets.Track1 + 2] + t[2] * 2);
+	address off4 = cast(ushort)(song.offsets[Offsets.Track1] + (3 * 0x400)+ t[3] * 2);
+	address off5 = cast(ushort)(song.offsets[Offsets.Track1] + (4 * 0x400)+ t[4] * 2);
+	address off6 = cast(ushort)(song.offsets[Offsets.Track1] + (5 * 0x400)+ t[5] * 2);
 	int tpoin2 = song.offsets[Offsets.Songsets];
 	int tpoin = song.offsets[Offsets.TRACKLO];
 	song.cpu.reset();
 	if(song.ver >= 6) {
-		song.buffer[tpoin] = off1 & 255;
-		song.buffer[tpoin+1] = off2 & 255;
-		song.buffer[tpoin+2] = off3 & 255;
-		song.buffer[tpoin+3] = off1 >> 8;
-		song.buffer[tpoin+4] = off2 >> 8;
-		song.buffer[tpoin+5] = off3 >> 8;
+		{
+			song.buffer[tpoin] = off1 & 255;
+			song.buffer[tpoin+1] = off2 & 255;
+			song.buffer[tpoin+2] = off3 & 255;
+			song.buffer[tpoin+3] = off4 & 255;
+			song.buffer[tpoin+4] = off5 & 255;
+			song.buffer[tpoin+5] = off6 & 255;
+			song.buffer[tpoin+6] = off1 >> 8;
+			song.buffer[tpoin+7] = off2 >> 8;
+			song.buffer[tpoin+8] = off3 >> 8;
+			song.buffer[tpoin+9] = off4 >> 8;
+			song.buffer[tpoin+10] = off5 >> 8;
+			song.buffer[tpoin+11] = off6 >> 8;
+		}	
 		out16b(tpoin2, song.offsets[Offsets.Track1]);
-		out16b(tpoin2+2, song.offsets[Offsets.Track2]);
-		out16b(tpoin2+4, song.offsets[Offsets.Track3]);
-	}
- 	else {
-		out16b(tpoin2, off1);
-		out16b(tpoin2+2, off2);
-		out16b(tpoin2+4, off3);
+		out16b(tpoin2+2, song.offsets[Offsets.Track1+1]);
+		out16b(tpoin2+4, song.offsets[Offsets.Track1+2]);
+		{
+			out16b(tpoin2+8, song.offsets[Offsets.Track4]);
+			out16b(tpoin2+10, song.offsets[Offsets.Track4] + 0x400);
+			out16b(tpoin2+12, song.offsets[Offsets.Track4] + 0x800);
+		}
 	}
 	cpuCall(0x1000,false);
  	int seqcnt = song.offsets[Offsets.NEWSEQ];
-	song.buffer[seqcnt] = cast(ubyte)(s[0] * 4 + 1);
-	song.buffer[seqcnt+1] = cast(ubyte)(s[1] * 4 + 1);
-	song.buffer[seqcnt+2] = cast(ubyte)(s[2] * 4 + 1);
+
+	for(int i = 0; i < s.length; i++) {
+		song.buffer[seqcnt + i] = cast(ubyte)(s[i] * 4 + 1);
+	}
 	song.setVoicon(muted);
 
 	SDL_PauseAudio(0);
 }
 
-private void muteSID(int v1, int v2, int v3 ) {
-	if(v1) song.sidbuf[4] = 0x08;
-	if(v2) song.sidbuf[7 + 4] = 0x08;
-	if(v3) song.sidbuf[14 + 4]= 0x08;
+private void muteSID(int[] m) {
+	assert(m.length == 6);
+	if(m[0]) song.sidbuf[4] = 0x08;
+	if(m[1]) song.sidbuf[7 + 4] = 0x08;
+	if(m[2]) song.sidbuf[14 + 4]= 0x08;
+	if(m[3]) song.sidbuf[0x20 + 4]= 0x08;
+	if(m[4]) song.sidbuf[0x20 + 7 + 4]= 0x08;
+	if(m[5]) song.sidbuf[0x20 + 14 + 4]= 0x08;
 }
 

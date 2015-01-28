@@ -25,7 +25,7 @@ void initSession() {
 	song = new Song();
 	seqPos = new PosinfoTable();
 	fplayPos = new PosinfoTable();
-	for(int i = 0; i < 3; i++) {
+	for(int i = 0; i < 6; i++) {
 		seqPos[i].tracks = song.tracks[i];
 		fplayPos[i].tracks = song.tracks[i];
 	}

@@ -231,18 +231,9 @@ protected abstract class BaseTrackTable : VoiceTable {
 			}	
 		}
 		if((key.mods & KMOD_CTRL) && (key.mods & KMOD_ALT)) {
-			switch(key.raw)
-			{
-			case SDLK_1:
-				trackSwap(0);
-				break;
-			case SDLK_2:
-				trackSwap(1);
-				break;
-			case SDLK_3:
-				trackSwap(2);
-				break;
-			default: break;
+			int key1to6 = key.raw - SDLK_1;
+			if(key1to6 >= 0 && key1to6 < 6) {
+				trackSwap(key1to6);
 			}
 		}
 		else if(key.mods & KMOD_SHIFT) {
@@ -306,7 +297,8 @@ protected abstract class BaseTrackTable : VoiceTable {
 	/* custom voicestepper: voice resync needed because
 	 * tracks may not be aligned */
 	override void stepVoice(int i) {
-		int nib = 3 ^ 3 - activeVoice.activeInput.nibble;
+		//int nib = 3 ^ 3 - activeVoice.activeInput.nibble;
+		int nib = activeVoice.activeInput.nibble == 0 ? 0 : 3;
 		super.stepVoice(i);
 		super.step(-activeVoice.activeRow.seqOffset,0);
 		activeVoice.activeInput.nibble = nib;
@@ -349,7 +341,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 protected class TrackTable : BaseTrackTable {
 	this(Rectangle a, PosinfoTable pi) {
 		int x = 5 + com.fb.border + a.x;
-		for(int v=0;v<3;v++) {
+		for(int v=0; v < 6; v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 

@@ -41,7 +41,7 @@ void initVideo(bool useFullscreen, int m, bool useyuv, bool yuvcenter) {
 	}
 	// not in use
 	mode = m;
-	mx = 800; my = 600;
+	mx = RES_X; my = RES_Y;
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
@@ -151,20 +151,17 @@ void printheader() {
 	derr.writefln("Options:");
 	derr.writefln("  -b [value]       Set playback buffer size (def=%d)", audio.audio.bufferSize);
 	derr.writefln("  -f               Start in fullscreen mode");
-	derr.writefln("  -nofp            Do not use resid-fp emulation");
 	derr.writefln("  -fpr [x]         Specify filter preset. x = 0..16 for 6581 and 0..1 for 8580");
 	derr.writefln("  -i               Disable resid interpolation (use fast mode instead)");
 	derr.writefln("  -m [0|1]         Specify SID model for reSID (6581/8580) (def=0)");
-	derr.writefln("  -n               Enable NTSC mode");
 	derr.writefln("  -r [value]       Set playback frequency (def=48000)");
-	derr.writefln("  -y               Use YUV video overlay");
 	derr.writef("\n");
 }
 
 int main(char[][] args) {
 	int i;
 	bool fs = false;
-	bool yuvOverlay, yuvCenter = true, display;
+	bool yuvOverlay = true, yuvCenter = true, display;
 	string filename;
 	bool fnDefined = false;
 
@@ -223,9 +220,6 @@ int main(char[][] args) {
 				break;
 			case "-f","--full":
 				fs = true;
-				break;
-			case "-nofp":
-				audio.player.usefp = 0;
 				break;
 			case "-y", "-ya", "-yuv":	
 				yuvOverlay = true;

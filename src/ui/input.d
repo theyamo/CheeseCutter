@@ -30,18 +30,23 @@ class Cursor {
 		int bg2, fg2;
 		int bg, fg;
 	}
-	
+
 	void set() { set(x,y); }
-	alias set refresh;
-  
+
+	void refresh() {
+		if(x < 0 || y < 0) return;
+		return;
+		ushort col = screen.getChar(x, y);
+//		counter = BLINK_VAL;
+		bg = fg2 = (col >> 8) & 15;
+		fg = bg2 = (col >> 12) & 15;
+	}
+
 	void set(int nx, int ny) {
 		if(nx < 0 || ny < 0) return;
 		if(x != nx || y != ny) {
 			x = nx; y = ny;
-			ushort col = screen.getChar(x, y);
-			counter = BLINK_VAL;
-			bg = fg2 = (col >> 8) & 15;
-			fg = bg2 = (col >> 12) & 15;
+			swapColors();
 		}
 		screen.setColor(x,y,bg2,fg2);
 	}
@@ -59,8 +64,14 @@ class Cursor {
 			t = bg2; bg2 = fg2; fg2 = t;
 		}
 	}
-}
 
+	private void swapColors() {
+		ushort col = screen.getChar(x, y);
+		counter = BLINK_VAL;
+		bg = fg2 = (col >> 8) & 15;
+		fg = bg2 = (col >> 12) & 15;
+	}
+}
 class Input {
 	Cursor cursor;
 	const int width;
@@ -745,14 +756,16 @@ class InputKeyjam : Newinput {
 		if(value < 0) return;
 		switch(value) {
 		case 0:
-			element.note = 1;
+			element.note = NOTE_KEYOFF;
+			element.note.setTied(false);
+//			element.instr = 0x80;
 			break;
 		case 2:
 		case 0x80:
-			element.note = 2;
+			element.note = NOTE_KEYON;
 			break;
 		default:
-			int note = ((value - 3) & 0x7f) + 12 * octave;// - element.transpose;
+			int note = ((value - 3) & 0x7f) + 12 * octave;
 			if(note > 0x5e) return;
 			element.note = cast(ubyte)note;
 			if(value >= 0x80) {
@@ -772,8 +785,7 @@ class InputKeyjam : Newinput {
 	}
 
 	int keyrelease(Keyinfo key) {
-		setRowValue(0); // noteoff
-		return 0;
+		return OK;
 	}
 }
 

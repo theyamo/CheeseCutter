@@ -86,7 +86,7 @@ protected class Posinfo {
 protected class PosinfoTable {
 	Posinfo[] pos;
 	this() {
-		pos.length = 3;
+		pos.length = 6;
 		foreach(ref p; pos) p = new Posinfo;
 	}
 	Posinfo opIndex(int idx) {
@@ -111,7 +111,7 @@ protected class PosinfoTable {
 	}
 
 	void dup(PosinfoTable pt) {
-		for(int i = 0 ; i < 3; i++) {
+		for(int i = 0 ; i < 6; i++) {
 			Posinfo p = pos[i];
 			Posinfo t = pt[i];
 			p.pointerOffset = t.pointerOffset;
@@ -321,7 +321,7 @@ protected:
 }
 
 protected abstract class VoiceTable : Window {
-	Voice[3] voices;
+	Voice[6] voices;
 	Voice active;
 	alias active activeVoice;
 	PosinfoTable posTable;
@@ -330,6 +330,7 @@ protected abstract class VoiceTable : Window {
 		super(a);
 		posTable = pi;
 		activeVoice = voices[0];
+		activate();
 	}
 
 	override void activate() {
@@ -346,6 +347,7 @@ protected abstract class VoiceTable : Window {
 		foreach(v; voices) {
 			v.refresh(); 
 		}
+		input.cursor.refresh();
 	}
 
 	void centralize() {
@@ -468,7 +470,7 @@ protected abstract class VoiceTable : Window {
 				pastAll = false;
 		}
 		if(pastAll) return;
-		int nv = umod(activeVoiceNum + i, 0, 2);
+		int nv = umod(activeVoiceNum + i, 0, 5);
 		while(voices[nv].pastEnd(posTable.pointerOffset)) {
 			nv = umod(nv + i, 0, 2);
 		}
@@ -504,7 +506,7 @@ protected abstract class VoiceTable : Window {
 		}
 		// statusline
 		screen.cprint(area.x + 1, area.y, 1, 0, format("#%02X",song.subtune));
-		for(int i = 0, x = area.x + 5 + com.fb.border; i < 3; i++) {
+		for(int i = 0, x = area.x + 5 + com.fb.border; i < 6; i++) {
 			Voice v = voices[i];
 			SequenceRowData c = v.activeRow;
 			screen.cprint(x, area.y, 1, 0,
@@ -920,8 +922,8 @@ protected:
 	}
 
 	override void refresh() {
-	  foreach(b; voiceTables) {
-	    b.refresh();
+	  foreach(vt; voiceTables) {
+		  vt.refresh();
 	  }
 	}
 

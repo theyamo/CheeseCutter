@@ -17,7 +17,7 @@ enum Offsets
 	CmdDescriptionsHeader, FREQTABLE, FINETUNE, Arp1, Arp2,
 	FILTTAB, PULSTAB, Inst, Track1, Track2, Track3, SeqLO, SeqHI,
 	CMD1, S00, SPEED, TRACKLO, VOICE, GATE, ChordTable, TRANS, ChordIndexTable, 
-	SHTRANS, FOO3, NEXT, CURINST, GEED, NEWSEQ
+	SHTRANS, Track4, NEXT, CURINST, GEED, NEWSEQ
 }
 
 immutable string[] NOTES =
@@ -44,14 +44,13 @@ enum {
 	TRACK_LIST_LENGTH = 0x200,
 	OFFSETTAB_LENGTH = 16 * 6,
 	SEQ_END_MARK = 0xbf,
-	SONG_REVISION = 11,
+	SONG_REVISION = 128,
 	NOTE_KEYOFF = 1,
 	NOTE_KEYON = 2,
 }
 
 immutable ubyte[] CLEAR = [0xf0, 0xf0, 0x60, 0x00];
 immutable ubyte[] INITIAL_SEQ = [0xf0, 0xf0, 0x60, 0x00, 0xbf];
-
 alias char*[] ByteDescription;
 
 struct Cmd {
@@ -762,6 +761,7 @@ class Song {
 		}
 
 		void swap(int targetNo, int sourceNo) {
+			throw new Exception("not implemented");
 			if(targetNo == sourceNo) return;
 			if(targetNo == active || sourceNo == active)
 				sync();
@@ -780,25 +780,31 @@ class Song {
 		
 		void syncFromBuffer() {
 			for(int i = 0; i < 3; i++) {
-				data[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400] =
-					subtunes[active][i][0..0x400];
+				int offset1 = offsets[Offsets.Track1] + (i * 0x400);
+				int offset2 = offsets[Offsets.Track4] + (i * 0x400);
+				
+				data[offset1 .. offset1 + 0x400] =
+					subtunes[active * 2][i][0..0x400];
+				data[offset2 .. offset2 + 0x400] =
+					subtunes[active * 2 + 1][i][0..0x400];
+				
 			}
 		}
 
 		Tracklist[] opIndex(int n) {
 			static Tracklist[] tr;
 
-			tr.length = 3;
-			for(int i=0;i<3;i++) { 
+			tr.length = 6;
+			for(int i=0; i < 6; i++) { 
 				tr[i].length = TRACK_LIST_LENGTH;
 			}
-			for(int i = 0; i < 3 ; i++) {
+			for(int i = 0; i < 6 ; i++) {
 				
 				ubyte[] b;
 				// use array from c64 memory if getting current subtune
 				if(n == active)
-					b = buffer[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400];
-				else b = subtunes[n][i][0..0x400];
+					b = buffer[offsets[Offsets.Track1] + i * 0x400 .. offsets[Offsets.Track1] + (i+1) * 0x400];
+				else b = subtunes[n % 3 + i / 2][i % 3][0..0x400];
 				for(int j = 0; j < b.length / 2; j++) {
 					tr[i][j] = Track(b[j * 2 .. j * 2 + 2]);
 				}
@@ -812,20 +818,29 @@ class Song {
 			if(dosync)
 				sync();
 			active = n;
+					
 			for(int i = 0; i < 3; i++) {
-				buffer[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400] =
-					subtunes[active][i][0..0x400];
+				int offset1 = offsets[Offsets.Track1] + (i * 0x400);
+				int offset2 = offsets[Offsets.Track4] + (i * 0x400);
+				buffer[offset1 .. offset1 + 0x400] =
+					subtunes[active * 2][i][0..0x400];
+				buffer[offset2 .. offset2 + 0x400] =
+					subtunes[active * 2 + 1][i][0..0x400];
 			}
 			if(ver >= 6)
-				speed = songspeeds[active];
+				speed = songspeeds[active * 2];
+			
 		}	
 
 		/* sync "external" subtune array to active one (stored in c64s mem)
 		 * the correct way would be to let trackinput also update the external array */
 		void sync() {
 			for(int i = 0; i < 3; i++) {
-				subtunes[active][i][0..0x400] =
+				subtunes[active * 2][i][0..0x400] =
 					buffer[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400];
+				subtunes[active * 2 + 1][i][0..0x400] =
+					buffer[offsets[Offsets.Track4 + i] .. offsets[Offsets.Track4 + i] + 0x400];
+					
 			}
 		}
 
@@ -833,7 +848,8 @@ class Song {
 			foreach_reverse(idx, ref tune; subtunes) {
 				foreach(ref voice; tune) {
 					if(voice[1 .. 4] != cast(ubyte[])[0x00, 0xf0, 0x00]) {
-						return cast(int)(idx + 1);
+						int subts = cast(int)(idx+1 + (idx+1)%2);
+						return subts;
 					}
 				}
 			}
@@ -843,13 +859,13 @@ class Song {
 		// highly dubious coding here (actually, like in most of this class..)
 		ubyte[][][] compact() {
 			ubyte[][][] arr;
-//			sync();
-			arr.length = numOf();
+			int numof = numOf() + numOf() % 2;
+			arr.length = numof;
 			foreach(ref subarr; arr) {
 				subarr.length = 3;
 			}
 
-			for(int i = 0; i < numOf(); i++) {
+			for(int i = 0; i < numof; i++) {
 				ubyte[][] subarr = arr[i];
 				for(int j = 0; j < 3; j++) {
 					buffer[offsets[Offsets.Track1 + j] .. offsets[Offsets.Track1 + j] + 0x400] =
@@ -860,11 +876,9 @@ class Song {
 					voice = tracks[idx].compact().dup;
 				}
 			}
-	
 			return arr;
 		}
 	}
-
 	int ver = SONG_REVISION, clock, multiplier = 1, sidModel, fppres;
 	char[32] title = ' ', author = ' ', release = ' ', message = ' ';
 	char[32][48] insLabels;
@@ -920,7 +934,7 @@ class Song {
 		highlightOffset = 0;
 
 	this() {
-		this(cast(ubyte[])import("player.bin"));
+		this(cast(ubyte[])import("player_s.bin"));
 	}
 
 	this(ubyte[] player) {
@@ -937,7 +951,7 @@ class Song {
 			throw new UserException("Illegal loading address.");
 		songspeeds[] = 5;
 		initialize(bin);
-		sidbuf = memspace[0xd400 .. 0xd419];
+		sidbuf = memspace[0xd400 .. 0xd439];
 	}
 
 	void open(string fn) {
@@ -996,8 +1010,8 @@ class Song {
 
 		offsets.length = 0x60;
 		seqs.length = MAX_SEQ_NUM;
-		tracks.length = 3;
-		for(i=0;i<3;i++) { 
+		tracks.length = 6;
+		for(i=0; i < 6; i++) { 
 			tracks[i].length = TRACK_LIST_LENGTH;
 		}
 
@@ -1018,11 +1032,13 @@ class Song {
 			ubyte[] b; 
 			int t;
 			int offset = offsets[Offsets.Track1 + voi];
+			int offset2 = offsets[Offsets.Track4 + voi];
 			b = data[offset .. offset + 0x400];
 			for(i = 0; i < b.length/2; i++) {
 				//int tr = b[i * 2 + 1];
 				//if(tr > lastused) lastused = tr;
 				tracks[voi][i] = Track(memspace[offset + i * 2 .. offset + i * 2 + 2]);
+				tracks[voi+3][i] = Track(memspace[offset2 + i * 2 .. offset2 + i * 2 + 2]);
 			}
 		}
 
@@ -1075,10 +1091,12 @@ class Song {
 
 		i = offsets[Offsets.Track1];
 		tTrack1 = Table(data[i .. i + 0x400], i);
+		/+
 		i = offsets[Offsets.Track2];
 		tTrack2 = Table(data[i .. i + 0x400], i);
 		i = offsets[Offsets.Track3];
 		tTrack3 = Table(data[i .. i + 0x400], i);
+		+/
 		
 		playerID = cast(char[])data[0xfee .. 0xff5];
    		subtune = 0;
@@ -1264,28 +1282,14 @@ class Song {
 			}
 		}
 	}
-	
-	@property int numOfSeqs() {
-		// this worked only because the song was always purged just before
-		int numOfSeqs_old() {
-			int upto;
-			foreach(int i, s; seqs) {
-				if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
-			}
-			return upto + 1;
-		}
-		
-		int upto = 0;
-		trackIterator((Track trk) {
-				if(trk.no > upto) upto = trk.no;
-			});
 
-		if((upto + 1) != numOfSeqs_old())
-			throw new Error("failed counting num of used sequences");
+	@property int numOfSeqs() {
+		int upto;
+		foreach(int i, s; seqs) {
+			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
+		}
 		return upto + 1;
 	}
-
-	
 	
 	@property int speed() {
 		return memspace[offsets[Offsets.SPEED]];
@@ -1334,11 +1338,15 @@ class Song {
 		arpPointerUpdate(pos, 1);
 	}
 
-	void setVoicon(shared int[] m) {
+	void setVoicon(int[] m) {
 		//setVoicon(m[0], m[1], m[2]);
-		buffer[offsets[Offsets.VOICE]+0] = m[0] ? 0x19 : 0x00;
-		buffer[offsets[Offsets.VOICE]+1] = m[1] ? 0x19 : 0x07;
-		buffer[offsets[Offsets.VOICE]+2] = m[2] ? 0x19 : 0x0e;
+		assert(m.length == 6);
+		buffer[offsets[Offsets.VOICE]+0] = m[0] ? 0x50 : 0x00;
+		buffer[offsets[Offsets.VOICE]+1] = m[1] ? 0x50 : 0x07;
+		buffer[offsets[Offsets.VOICE]+2] = m[2] ? 0x50 : 0x0e;
+		buffer[offsets[Offsets.VOICE]+3] = m[3] ? 0x50 : 0x20;
+		buffer[offsets[Offsets.VOICE]+4] = m[4] ? 0x50 : 0x27;
+		buffer[offsets[Offsets.VOICE]+5] = m[5] ? 0x50 : 0x2e;
 	}
 	
 	int getFreeSequence(int start) {
@@ -1391,8 +1399,8 @@ class Song {
 	}
 	
 	void incSubtune() { 
-		if(subtune < 31)
-			subtunes.activate(++subtune); 
+		if(subtune < 15)
+			subtunes.activate(++subtune);
 	}
 
 	void decSubtune() { 
@@ -1436,6 +1444,8 @@ class Song {
 		multiplier = insong.multiplier;
 		sidModel = insong.sidModel;
 		fppres = insong.fppres;
+		songspeeds = insong.songspeeds[];
+		speed = songspeeds[0];
 		// TODO highlight, highlightoffset
 		generateChordIndex();
 	}
@@ -1445,4 +1455,5 @@ class Song {
 		return seqs[t.no()];
 	}
 }
+
 

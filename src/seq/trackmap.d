@@ -98,7 +98,7 @@ protected class TrackmapVoice : TrackVoice {
 protected class TrackmapTable : BaseTrackTable {
 	this(Rectangle a, PosinfoTable pi) {
 		int x = 5 + com.fb.border + a.x;
-		for(int v=0;v<3;v++) {
+		for(int v=0; v < 6; v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 			voices[v] = new TrackmapVoice(VoiceInitParams(song.tracks[v],

@@ -61,11 +61,11 @@ protected class FPlayVoiceTable : SequenceTable {
 	this(Rectangle a) {
 		super(a, fplayPos);
 		int x = 5 + com.fb.border + a.x;
-		for(int v=0;v<3;v++) {
+		for(int v=0; v < 6; v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 			voices[v] =
-				new	FPlayVoice(VoiceInitParams(song.tracks[v],
+				new FPlayVoice(VoiceInitParams(song.tracks[v],
 											   na, fplayPos[v]));
 		}
 	}
@@ -98,6 +98,7 @@ class Fplay : Window {
 	override int keypress(Keyinfo key) {
 		switch(key.raw)
 		{
+			/+
 		case SDLK_HOME:
 			int m1, m2, m3;
 			if(!key.mods & KMOD_CTRL) break;
@@ -108,30 +109,7 @@ class Fplay : Window {
 			audio.player.start([m1, m2, m3], [0, 0, 0]);
 			ftable.jump(Jump.ToMark,true);
 			break;
-		/+ jump forward/backward disabled for now ...
-		case SDLK_PLUS:
-			int m1, m2, m3;
-			m1 = ++fplayPos.pos[0].trkOffset;
-			m2 = ++fplayPos.pos[1].trkOffset;
-			m3 = ++fplayPos.pos[2].trkOffset;
-			stop();
-			audio.player.start([m1, m2, m3], [0, 0, 0]);
-			int[] m = [m1 , m2, m3];
-			ftable.jump(m1,true);
-			update();
-			break;
-		case SDLK_MINUS:
-			int m1, m2, m3;
-			m1 = --fplayPos.pos[0].trkOffset;
-			m2 = --fplayPos.pos[1].trkOffset;
-			m3 = --fplayPos.pos[2].trkOffset;
-			stop();
-			audio.player.start([m1, m2, m3], [0, 0, 0]);
-			int[] m = [m1 , m2, m3];
-			ftable.jump(m1,true);
-			update();
-			break;			
-		+/
+			+/
 		case SDLK_SPACE:
 			audio.player.fastForward(25);
 			break;
