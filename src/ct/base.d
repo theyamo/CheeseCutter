@@ -689,288 +689,6 @@ class Sequence {
 	}
 }
 
-class Table {
-	ubyte[] data;
-	this(ubyte[] data) {
-		this.data = data;
-	}
-	int size() {
-		foreach_reverse(idx, val; data) {
-			if(val != 0) return cast(int)(idx + 1);
-		}
-		return 0;
-	}
-	int length() { return cast(int)data.length; }
-	ubyte[] opSlice() { return data; }
-	ubyte[] opSlice(size_t x, size_t y) {
-		return data[x..y];
-	}
-}
-
-class TWaveTable : Table {
-	struct WaveProgram {
-		ubyte[] wave1, wave2;
-		int offset;
-	}
-	// info for each waveprogram
-	struct Chunk {
-		int offset;
-		ubyte[] wave1, wave2;
-		bool used;
-		int tokill;
-		string toString() { return format("%x", offset); }
-		// TODO implement .dup which copies arrasys as well
-		Chunk dup() {
-			assert(0);
-		}
-	}
-
-	ubyte[] wave1, wave2;
-	
-	this(ubyte[] data) {
-		super(data);
-		wave1 = data[0 .. 256];
-		wave2 = data[256 .. 512];
-	}
-
-	int seekTableEnd() {
-		for(int i = 255; i >= 1; i--) {
-			if(wave1[i-1] != 0) {
-				return i;
-			}
-		}
-		return 0;
-	}
-
-	Chunk[] getChunks() {
-		return getChunks(data);
-	}
-
-	Chunk[] getChunks(ubyte[] wavetab) {
-		/+ static +/ Chunk[] chunks = new Chunk[256];
-		int counter;
-		for(int i = 0, b; i < 256; i++) {
-			if(wavetab[i] == 0x7f || wavetab[i] == 0x7e) {
-				chunks[counter] = Chunk(b, wavetab[b .. i + 1], wavetab[b + 256 .. i + 256 + 1]);
-				b = i + 1;
-				counter++;
-			}
-		}
-		return chunks[0 .. counter];
-	}
-	
-	// get program starting at waveOffset
-	// mostly copied from purgeWave
-	WaveProgram getProgram(int waveOffset) {
-		auto chunks = getChunks(data.dup); 
-		int topRow = 255;
-		
-		int cell = whichCell(chunks, waveOffset);
-		if(cell < 0)
-			throw new Error("Illegal waveprogram offset");
-		markCells(chunks, cell);
-			
-		WaveProgram wp;
-
-		/+ get top row in used chunks, needed to recalc arpofs NB might be necessary to calc last +/
-		foreach(ref chunk; chunks) {
-			if(chunk.used && chunk.offset < topRow)
-				topRow = chunk.offset;
-		}
-		/+ generate arrays +/
-		foreach(ref chunk; chunks) {
-			if(!chunk.used) {
-				if(waveOffset >= chunk.offset)
-					waveOffset -= cast(int)chunk.wave1.length;
-				
-				foreach(ref chunk2; chunks) {
-					if(chunk2.wave1[$ - 1] == 0x7f &&
-					   chunk2.wave2[$ - 1] >= chunk.offset) {
-						// check that 7f-xx is not pointing WITHIN this chunk
-						//assert(chunk2.wave2[$ - 1] > chunk.offset + chunk.wave1.length);
-						// calc wrap
-						int t = chunk2.wave2[$ - 1] - cast(int)chunk.wave1.length;
-						t = com.util.clamp(t, 0, 256);
-						chunk2.wave2[$ - 1] = cast(ubyte)t;
-					}
-					if(chunk2.offset >=chunk.offset)
-						chunk2.offset -= chunk.wave1.length;
-
-				}
-			}
-		}
-
-		foreach(ref chunk; chunks) {
-			if(!chunk.used) continue;
-			wp.wave1 ~= chunk.wave1;
-			wp.wave2 ~= chunk.wave2;
-			assert(wp.wave1[$-1] == 0x7f ||
-				   wp.wave1[$-1] == 0x7e);
-		}
-		wp.offset = waveOffset;
-		return wp;
-	}
-	
-	static int whichCell(Chunk[] chunks, int ptr) {
-		foreach(idx, chunk; chunks) {
-			int b = chunk.offset,
-				e = cast(int)(chunk.offset + chunk.wave1.length);
-			if(ptr >= b && ptr < e) {
-				return cast(int)idx;
-			}
-		}
-		return -1;
-	}
-
-	static void markCells(Chunk[] chunks, int cell) {
-		assert(cell >= 0 && cell < chunks.length);
-		for(;;) {
-			if(chunks[cell].used) break;
-			chunks[cell].used = true;
-			Chunk c = chunks[cell];
-			assert(c.wave1[$-1] == 0x7e ||
-				   c.wave1[$-1] == 0x7f);
-			if(c.wave1[$-1] == 0x7e)
-				break;
-			cell = whichCell(chunks, c.wave2[$-1]);
-			if(cell < 0) break;
-		}
-	}
-
-	void deleteRow(Song song, int pos) {
-		deleteRow(song, pos, 1);
-	}
-
-	void deleteRow(Song song, int pos, int num) {
-		for(int n = 0; n < num; n++) {
-			int i;
-			assert(pos < 255 && pos >= 0);
-			for(i = pos; i < 255; i++) {
-				wave1[i] = wave1[i + 1];
-				wave2[i] = wave2[i + 1];
-			}
-			for(i=0;i < 256;i++) {
-			if((wave1[i] == 0x7f || wave1[i] == 0x7e) &&
-			   wave2[i] >= pos) {
-				if(wave2[i] > 0) --wave2[i];
-			}
-			}
-			arpPointerUpdate(song, pos, -1);
-		}	
-	}
-
-	void insertRow(Song song, int pos) {
-		int i;
-		for(i = 254; i >= pos; i--) {
-			wave1[i + 1] = wave1[i];
-			wave2[i + 1] = wave2[i];
-		}
-		for(i=0;i<256;i++) {
-			if(wave1[i] == 0x7f &&
-			   wave2[i] >= pos)
-				wave2[i]++;
-		}
-		wave1[pos] = 0;
-		wave2[pos] = 0;
-		arpPointerUpdate(song, pos, 1);
-	}
-
-	private void arpPointerUpdate(Song song, int pos, int val) {
-		for(int j = 0; j < 48; j++) {
-			ubyte b7 = song.instrumentTable[j + 7 * 48];
-			if(b7 > pos) {
-				int v = b7 + val;
-				if(v < 0) v = 0;
-				// TODO rewrite not to access global..
-				song.instrumentTable[j + 7 * 48] = cast(ubyte)v;
-			}
-		}
-	}
-}
-
-class InstrumentTable : Table {
-	this(ubyte[] data) {
-		super(data);
-	}
-
-	ubyte[] getInstrument(int no) {
-		ubyte[] arr = new ubyte[8];
-		for(int i = 0; i < 8 ; i++) {
-			arr[i] = data[no + i * 48];
-		}
-		return arr;
-	}
-}
-
-class SweepTable : Table {
-	this(ubyte[] data) {
-		super(data);
-	}
-
-	struct SweepProgram {
-		int offset;
-		ubyte[] data;
-	}
-	
-	SweepProgram getProgram(int currentRow) {
-		bool[0x40] visited;
-		int topRow = currentRow;
-		for(int row = currentRow; row < 0x40;) {
-			if(row < topRow) topRow = row;
-			if(visited[row]) break;
-			visited[row] = true;
-			int jumpValue = data[row * 4 + 3];
-			if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break
-				break;
-			if(jumpValue == 0x7f)
-				break; // if loops or ends, break
-			else if(jumpValue == 0) 
-				row++;
-			else row = jumpValue;
-		}
-		
-		int toremove;
-		ubyte[] copy = data.dup;
-		foreach(idx, vis; visited) {
-			if(!vis && idx > 0) {
-				for(int i = 1; i < 64; i++) {
-					int jumpval =
-						data[i * 4 + 3];
-					if(jumpval < 0x40 &&
-					   jumpval >= idx) {
-						copy[i * 4 + 3]--;
-					}
-				}
-				if(currentRow >= idx)
-					++toremove;
-					//--currentRow;
-			}
-		}
-
-		ubyte[] arr;
-		
-		foreach(idx, vis; visited) {
-			if(vis) {
-				arr ~= copy[idx * 4 .. idx * 4 + 4];
-			}
-		}
-		
-		assert(arr[$-1] > 0);
-		
-		return SweepProgram(currentRow - toremove, arr);
-	}
-
-	int seekTableEnd() {
-		for(int i = 0x3c; i >= 0; i -= 4) {
-			if(data[i + 3] > 0) {
-				return i / 4 + 1;
-			}
-		}
-		return 0;
-	}
-	
-}
-
 class Song {
 	enum DatafileOffset {
 		Binary,
@@ -992,8 +710,292 @@ class Song {
 		string name;
 		ubyte[] def, wave1, wave2, filt, pulse;
 	}
+
+	static struct Chunk {
+		int offset;
+		ubyte[] wave1, wave2;
+		bool used;
+		int tokill;
+		string toString() { return format("%x", offset); }
+		// TODO implement .dup which copies arrasys as well
+		Chunk dup() {
+			assert(0);
+		}
+	}
 	
-	class Subtunes {
+	static class Table {
+		ubyte[] data;
+		this(ubyte[] data) {
+			this.data = data;
+		}
+		int size() {
+			foreach_reverse(idx, val; data) {
+				if(val != 0) return cast(int)(idx + 1);
+			}
+			return 0;
+		}
+		int length() { return cast(int)data.length; }
+		ubyte[] opSlice() { return data; }
+		ubyte[] opSlice(size_t x, size_t y) {
+			return data[x..y];
+		}
+	}
+
+	static class WaveTable : Table {
+		struct WaveProgram {
+			ubyte[] wave1, wave2;
+			int offset;
+		}
+		// info for each waveprogram
+
+		ubyte[] wave1, wave2;
+	
+		this(ubyte[] data) {
+			super(data);
+			wave1 = data[0 .. 256];
+			wave2 = data[256 .. 512];
+		}
+
+		int seekTableEnd() {
+			for(int i = 255; i >= 1; i--) {
+				if(wave1[i-1] != 0) {
+					return i;
+				}
+			}
+			return 0;
+		}
+
+		Chunk[] getChunks() {
+			return getChunks(data);
+		}
+
+		Chunk[] getChunks(ubyte[] wavetab) {
+			/+ static +/ Chunk[] chunks = new Chunk[256];
+			int counter;
+			for(int i = 0, b; i < 256; i++) {
+				if(wavetab[i] == 0x7f || wavetab[i] == 0x7e) {
+					chunks[counter] = Chunk(b, wavetab[b .. i + 1], wavetab[b + 256 .. i + 256 + 1]);
+					b = i + 1;
+					counter++;
+				}
+			}
+			return chunks[0 .. counter];
+		}
+	
+		// get program starting at waveOffset
+		// mostly copied from purgeWave
+		WaveProgram getProgram(int waveOffset) {
+			auto chunks = getChunks(data.dup); 
+			int topRow = 255;
+		
+			int cell = whichCell(chunks, waveOffset);
+			if(cell < 0)
+				throw new Error("Illegal waveprogram offset");
+			markCells(chunks, cell);
+			
+			WaveProgram wp;
+
+			/+ get top row in used chunks, needed to recalc arpofs NB might be necessary to calc last +/
+			foreach(ref chunk; chunks) {
+				if(chunk.used && chunk.offset < topRow)
+					topRow = chunk.offset;
+			}
+			/+ generate arrays +/
+			foreach(ref chunk; chunks) {
+				if(!chunk.used) {
+					if(waveOffset >= chunk.offset)
+						waveOffset -= cast(int)chunk.wave1.length;
+				
+					foreach(ref chunk2; chunks) {
+						if(chunk2.wave1[$ - 1] == 0x7f &&
+						   chunk2.wave2[$ - 1] >= chunk.offset) {
+							// check that 7f-xx is not pointing WITHIN this chunk
+							//assert(chunk2.wave2[$ - 1] > chunk.offset + chunk.wave1.length);
+							// calc wrap
+							int t = chunk2.wave2[$ - 1] - cast(int)chunk.wave1.length;
+							t = com.util.clamp(t, 0, 256);
+							chunk2.wave2[$ - 1] = cast(ubyte)t;
+						}
+						if(chunk2.offset >=chunk.offset)
+							chunk2.offset -= chunk.wave1.length;
+
+					}
+				}
+			}
+
+			foreach(ref chunk; chunks) {
+				if(!chunk.used) continue;
+				wp.wave1 ~= chunk.wave1;
+				wp.wave2 ~= chunk.wave2;
+				assert(wp.wave1[$-1] == 0x7f ||
+					   wp.wave1[$-1] == 0x7e);
+			}
+			wp.offset = waveOffset;
+			return wp;
+		}
+	
+		static int whichCell(Chunk[] chunks, int ptr) {
+			foreach(idx, chunk; chunks) {
+				int b = chunk.offset,
+					e = cast(int)(chunk.offset + chunk.wave1.length);
+				if(ptr >= b && ptr < e) {
+					return cast(int)idx;
+				}
+			}
+			return -1;
+		}
+
+		static void markCells(Chunk[] chunks, int cell) {
+			assert(cell >= 0 && cell < chunks.length);
+			for(;;) {
+				if(chunks[cell].used) break;
+				chunks[cell].used = true;
+				Chunk c = chunks[cell];
+				assert(c.wave1[$-1] == 0x7e ||
+					   c.wave1[$-1] == 0x7f);
+				if(c.wave1[$-1] == 0x7e)
+					break;
+				cell = whichCell(chunks, c.wave2[$-1]);
+				if(cell < 0) break;
+			}
+		}
+
+		void deleteRow(Song song, int pos) {
+			deleteRow(song, pos, 1);
+		}
+
+		void deleteRow(Song song, int pos, int num) {
+			for(int n = 0; n < num; n++) {
+				int i;
+				assert(pos < 255 && pos >= 0);
+				for(i = pos; i < 255; i++) {
+					wave1[i] = wave1[i + 1];
+					wave2[i] = wave2[i + 1];
+				}
+				for(i=0;i < 256;i++) {
+					if((wave1[i] == 0x7f || wave1[i] == 0x7e) &&
+					   wave2[i] >= pos) {
+						if(wave2[i] > 0) --wave2[i];
+					}
+				}
+				arpPointerUpdate(song, pos, -1);
+			}	
+		}
+
+		void insertRow(Song song, int pos) {
+			int i;
+			for(i = 254; i >= pos; i--) {
+				wave1[i + 1] = wave1[i];
+				wave2[i + 1] = wave2[i];
+			}
+			for(i=0;i<256;i++) {
+				if(wave1[i] == 0x7f &&
+				   wave2[i] >= pos)
+					wave2[i]++;
+			}
+			wave1[pos] = 0;
+			wave2[pos] = 0;
+			arpPointerUpdate(song, pos, 1);
+		}
+
+		private void arpPointerUpdate(Song song, int pos, int val) {
+			for(int j = 0; j < 48; j++) {
+				ubyte b7 = song.instrumentTable[j + 7 * 48];
+				if(b7 > pos) {
+					int v = b7 + val;
+					if(v < 0) v = 0;
+					// TODO rewrite not to access global..
+					song.instrumentTable[j + 7 * 48] = cast(ubyte)v;
+				}
+			}
+		}
+	}
+
+	static class InstrumentTable : Table {
+		this(ubyte[] data) {
+			super(data);
+		}
+
+		ubyte[] getInstrument(int no) {
+			ubyte[] arr = new ubyte[8];
+			for(int i = 0; i < 8 ; i++) {
+				arr[i] = data[no + i * 48];
+			}
+			return arr;
+		}
+	}
+
+	static class SweepTable : Table {
+		this(ubyte[] data) {
+			super(data);
+		}
+
+		struct SweepProgram {
+			int offset;
+			ubyte[] data;
+		}
+	
+		SweepProgram getProgram(int currentRow) {
+			bool[0x40] visited;
+			int topRow = currentRow;
+			for(int row = currentRow; row < 0x40;) {
+				if(row < topRow) topRow = row;
+				if(visited[row]) break;
+				visited[row] = true;
+				int jumpValue = data[row * 4 + 3];
+				if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break
+					break;
+				if(jumpValue == 0x7f)
+					break; // if loops or ends, break
+				else if(jumpValue == 0) 
+					row++;
+				else row = jumpValue;
+			}
+		
+			int toremove;
+			ubyte[] copy = data.dup;
+			foreach(idx, vis; visited) {
+				if(!vis && idx > 0) {
+					for(int i = 1; i < 64; i++) {
+						int jumpval =
+							data[i * 4 + 3];
+						if(jumpval < 0x40 &&
+						   jumpval >= idx) {
+							copy[i * 4 + 3]--;
+						}
+					}
+					if(currentRow >= idx)
+						++toremove;
+					//--currentRow;
+				}
+			}
+
+			ubyte[] arr;
+		
+			foreach(idx, vis; visited) {
+				if(vis) {
+					arr ~= copy[idx * 4 .. idx * 4 + 4];
+				}
+			}
+		
+			assert(arr[$-1] > 0);
+		
+			return SweepProgram(currentRow - toremove, arr);
+		}
+
+		int seekTableEnd() {
+			for(int i = 0x3c; i >= 0; i -= 4) {
+				if(data[i + 3] > 0) {
+					return i / 4 + 1;
+				}
+			}
+			return 0;
+		}
+	
+	}
+
+	
+	private class Subtunes {
 		ubyte[1024][3][32] subtunes;
 		private int active;
 		
@@ -1063,7 +1065,7 @@ class Song {
 				syncFromBuffer();
 		}
 		
-		void syncFromBuffer() {
+		private void syncFromBuffer() {
 			for(int i = 0; i < 3; i++) {
 				data[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400] =
 					subtunes[active][i][0..0x400];
@@ -1106,7 +1108,7 @@ class Song {
 
 		/* sync "external" subtune array to active one (stored in c64s mem)
 		 * the correct way would be to let trackinput also update the external array */
-		void sync() {
+		private void sync() {
 			for(int i = 0; i < 3; i++) {
 				subtunes[active][i][0..0x400] =
 					buffer[offsets[Offsets.Track1 + i] .. offsets[Offsets.Track1 + i] + 0x400];
@@ -1116,7 +1118,6 @@ class Song {
 		// highly dubious coding here (actually, like in most of this class..)
 		ubyte[][][] compact() {
 			ubyte[][][] arr;
-//			sync();
 			arr.length = numOf();
 			foreach(ref subarr; arr) {
 				subarr.length = 3;
@@ -1172,15 +1173,13 @@ class Song {
 
 	// dupes of raw tables above, will eventually update all code to use these 
 	Table tSongsets,
-	//		tWave1,
-	//		tWave2,
 		tSuper,
 		tChord,
 		tChordIndex,
 		tSeqlo,
 		tSeqhi;
 	InstrumentTable tInstr;
-	TWaveTable tWave;
+	WaveTable tWave;
 	SweepTable tPulse, tFilter;
 	Table tTrack1, tTrack2, tTrack3;
 	Table[string] tables;
@@ -1332,7 +1331,7 @@ class Song {
 		waveTable = data[ofs .. ofs + 512];
 //		tWave1 = new Table(wave1Table);
 //		tWave2 = new Table(wave2Table, ofs + 256);
-		tWave = new TWaveTable(waveTable);
+		tWave = new WaveTable(waveTable);
 
 		ofs = offsets[Offsets.Inst];
 		instrumentTable = data[ofs .. ofs + 512];
