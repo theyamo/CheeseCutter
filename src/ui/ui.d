@@ -758,6 +758,7 @@ final class UI {
 	static Statusline statusline;
 	static Infobar infobar;
 	static Toplevel toplevel;
+	bool exitRequested = false;
 
 	this() {
 		statusline = new Statusline(Rectangle(0, 2, 1));
@@ -1006,8 +1007,12 @@ final class UI {
 				 if(dialog || activeWindow == infobar)
 					 break;
 				 if(++escapecounter > 1) {
-					 audio.player.stop();
-					 return EXIT;
+					 activateDialog(new ConfirmationDialog("Really exit? (y/n)", (int param) {
+								 if(param != 0) return;
+								 audio.player.stop();
+								 exitRequested = true;
+							 }));
+					 return OK;
 				 }
 				 tickcounter3 = 0;
 				 break;
