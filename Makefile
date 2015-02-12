@@ -31,11 +31,18 @@ c64: $(C64OBJS)
 
 all: c64 $(OBJS) $(CXX_OBJS) $(UTILOBJS) ct2util ct $(TARGET)
 
+# release version with additional optimizations
 release: DFLAGS += -frelease -fno-bounds-check
 release: all
 	strip ccutter$(EXE)
 	strip ct2util$(EXE)
 
+# development release pulled from git master
+devrelease: DFLAGS += -fversion=DEV
+devrelease: all
+	tar --transform 's,^\.,cheesecutter-devbuild,' -cvf cheesecutter-devbuild-linux-x86.tar.gz $(DIST_FILES)
+
+# tarred release
 dist:	release
 	tar --transform 's,^\.,cheesecutter-$(VERSION),' -cvf cheesecutter-$(VERSION)-linux-x86.tar.gz $(DIST_FILES)
 
@@ -46,6 +53,7 @@ clean:
 dclean: clean
 	rm -f cheesecutter-$(VERSION)-linux-x86.tar.gz
 
+# tarred source from master
 tar:
 	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-src.tar.bz2
 # --------------------------------------------------------------------------------
