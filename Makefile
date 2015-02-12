@@ -31,6 +31,7 @@ c64: $(C64OBJS)
 
 all: c64 $(OBJS) $(CXX_OBJS) $(UTILOBJS) ct2util ct $(TARGET)
 
+release: DFLAGS += -frelease -fno-bounds-check
 release: all
 	strip ccutter$(EXE)
 	strip ct2util$(EXE)
