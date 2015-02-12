@@ -229,8 +229,9 @@ class Infobar : Window {
 		if(escapecounter) headerColor = 7;
 	  
 		screen.clrtoeol(0, headerColor);
-		
-		screen.cprint(4, 0, 1, headerColor, "CheeseCutter 2.7.1");
+
+		enum hdr = "CheeseCutter 2.7.1" ~ com.util.versionInfo;
+		screen.cprint(4, 0, 1, headerColor, hdr);
 		screen.cprint(screen.width - 14, 0, 1, headerColor, "F12 = Help");
 		int c1 = audio.player.isPlaying ? 13 : 12;
 		screen.fprint(x1,area.y,format("`05Time: `0%x%02d:%02d / $%02x",

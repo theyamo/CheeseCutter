@@ -12,6 +12,12 @@ alias char* PetString;
 
 private auto regexFn = regex("[^a-zA-Z0-9_\\-\\.]");
 
+string versionInfo() {
+	version(DEV)
+		return " (" ~__DATE__ ~ " git)";
+	return " (" ~__DATE__ ~ ")";
+}
+
 class UserException : Exception {
 	this(string msg) {
 		super(msg);
