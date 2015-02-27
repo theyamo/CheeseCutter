@@ -10,7 +10,7 @@ COMPILE.c = $(CC) $(CFLAGS) -c -o $@
 DC=gdc
 CXX=g++
 CC=gcc
-EXE=
+EXE=.exe
 TARGET=ccutter
 
 include Makefile.objects.mk
