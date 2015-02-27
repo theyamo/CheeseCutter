@@ -121,8 +121,8 @@ CTOBJS	=
 
 DIST_FILES = \
 	./ChangeLog \
-	./COPYING \
-	./README \
+	./LICENSE.md \
+	./README.md \
 	./ccutter$(EXE) \
 	./ct2util$(EXE) \
 	./tunes/*

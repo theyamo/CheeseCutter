@@ -283,7 +283,7 @@ class InsValueTable : HexTable {
 			case SDLK_d:
 				void delegate(int) dg = (int param) {
 					if(param != 0) return;
-					new Purge(song).deleteInstrument(state.activeInstrument);
+					(new Purge(song)).deleteInstrument(state.activeInstrument);
 				};
 				
 				mainui.activateDialog(new ConfirmationDialog("Delete current instrument (y/n)? ",

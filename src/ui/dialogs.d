@@ -19,7 +19,7 @@ import std.array;
 
 abstract class QueryDialogBase(T) : Window {
 	string query;
-	static ubyte[1] byt;
+	ubyte[1] byt;
 	alias void delegate(T) Callback;
 	Callback callback;
 	protected int frameWidth;

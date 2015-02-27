@@ -187,7 +187,7 @@ private:
 	}
 
 	private void purgeWavetable() {
-		TWaveTable.Chunk[] chunks = song.tWave.getChunks();
+		Song.Chunk[] chunks = song.tWave.getChunks();
 
 		for(int i = 0; i < 48; i++) {
 			if(!instrUsed[i]) continue;
@@ -200,7 +200,7 @@ private:
 		int numcleared;
 		// compact
 		for(int i = cast(int)(chunks.length - 1); i >= 0; i--) {
-			TWaveTable.Chunk chunk = chunks[i];
+			Song.Chunk chunk = chunks[i];
 			if(chunk.used) continue;
 			song.tWave.deleteRow(song, chunk.offset, cast(int)chunk.wave1.length);
 			numcleared++;

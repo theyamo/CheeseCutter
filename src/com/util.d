@@ -6,11 +6,18 @@ module com.util;
 import std.stdio;
 import std.string;
 import std.conv;
-import std.regex;
+//import std.regex;
 
 alias char* PetString;
 
-private auto regexFn = regex("[^a-zA-Z0-9_\\-\\.]");
+//private auto regexFn = regex("[^a-zA-Z0-9_\\-\\.]");
+
+
+string versionInfo() {
+	version(DEV)
+		return " (" ~__DATE__ ~ " git)";
+	return " (" ~__DATE__ ~ ")";
+}
 
 class UserException : Exception {
 	this(string msg) {
@@ -68,7 +75,8 @@ string petscii2D(PetString petstring) {
 
 deprecated string getArgumentValue(string argname, string[] text) {
 	foreach(line; text) {
-		string[] tokens = line.split();
+		string[] tokens = std.array.split(line);
+		//string[] tokens = line.split();
 		if(tokens.length == 0) continue;
 		if(tokens[0] == argname && tokens.length > 2 && tokens[1] == "=")
 			return tokens[2];
@@ -79,8 +87,10 @@ deprecated string getArgumentValue(string argname, string[] text) {
 string setArgumentValue(string argname, string value, string text) {
 	string s;
 	bool found;
+	//foreach(line; text.splitLines()) {
 	foreach(line; text.splitLines()) {
-		string[] tokens = line.split();
+		//string[] tokens = line.split();
+		string[] tokens = std.array.split(line);
 		if(tokens.length == 0) continue;
 		if(tokens[0] == argname && tokens.length > 2 && tokens[1] == "=") {
 			line = tokens[0] ~ tokens[1] ~ " " ~ value;
@@ -174,20 +184,30 @@ int str2Value2(string s) {
 }
 
 string arr2str(ubyte[] arr) {
-	char[] c = new string(arr.length * 2);
+	//char[] c = new string(arr.length * 2);
+	char[] c = (new string(arr.length * 2)).dup;
 	foreach(idx, ubyte byt; arr) {
 		c[idx * 2 .. idx * 2 + 2] = std.string.format("%02x", byt);
 	}
 	return to!string(c);
 }
-
+/*
 string fnClean(string fn) {
 	return replaceAll(fn,regexFn,"_");
 }
 
 bool fnIsSane(string fn) {
 	return matchAll(fn,regexFn).empty;
+}*/
+string fnClean(string fn) 
+{
+	return tr(fn,"a-zA-Z0-9._-","_","c");
 }
+bool fnIsSane(string fn) 
+{
+	return (fn == fnClean(fn));
+}
+
 
 int clamp(int n, int l, int h) { return n > h ? h : n < l ? l : n; }
 int umod(int n, int l, int h) { return n > h ? l : n < l ? h : n; }

@@ -38,7 +38,6 @@ void doPurge(ref Song sng) {
 	p.purgeAll();
 }
 
-
 int main(string[] args) {
 	address relocAddress = 0x1000;
 	int[] speeds, masks;
@@ -52,7 +51,8 @@ int main(string[] args) {
 	speeds.length = 32;
 	masks.length = 32;
 	void printheader() {
-		writefln("CheeseCutter 2.7 2SID utils");
+		enum hdr = "CheeseCutter 2 utilities" ~ com.util.versionInfo;
+		writefln(hdr);
 		writefln("\nUsage: \t%s <command> <options> <infile> <-o outfile>",args[0]);
 		writefln("\t%s import <infile> <infile2> <-o outfile>",args[0]);
 		writefln("\t%s init <binaryfile> <-o outfile>",args[0]);

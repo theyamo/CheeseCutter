@@ -80,7 +80,8 @@ void mainloop() {
 						quit=true;
 				}	
 				
-				if(mainui.keypress(keyinfo) == EXIT)
+				mainui.keypress(keyinfo);
+				if(mainui.exitRequested)
 					quit = true;
 
 				mainui.update();
