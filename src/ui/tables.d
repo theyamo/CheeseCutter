@@ -265,8 +265,13 @@ class InsValueTable : HexTable {
 						UI.statusline.display("Illegal characters in filename!");
 						return;
 					}
-					com.session.song.savePatch(fn, state.activeInstrument);
-					std.stdio.writeln(fn);
+					try {
+						com.session.song.savePatch(fn, state.activeInstrument);
+					}
+					catch(UserException ex) {
+						UI.statusline.display(ex.toString);
+						return;
+					}
 					UI.statusline.display(format("Saved instrument %d", state.activeInstrument));
 				};
 				string fn = fnClean(std.string.stripRight
