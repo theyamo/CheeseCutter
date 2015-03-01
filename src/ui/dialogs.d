@@ -639,7 +639,7 @@ class SaveFileDialog : FileSelectorDialog {
 		if(activeWindow != fsel && activeWindow != sfile)
 			return super.returnPressed(cb);
 
-		if(std.file.exists(fullname)) {
+		if(std.file.exists(fullname) && !std.file.isDir(fullname)) {
 			mainui.activateDialog(new ConfirmationDialog("Overwrite destination file (y/N)? ",
 														 &confirmCallback));
 			return OK;
