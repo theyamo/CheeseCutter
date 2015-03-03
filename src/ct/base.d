@@ -1630,7 +1630,7 @@ class Song {
 
 	void importData(Song insong) {
 		// copy tables
-		foreach(idx, table; [ "wave1", "wave2", "cmd", "instr", "chord",
+		foreach(idx, table; [ "wave", "cmd", "instr", "chord",
 							  "pulse", "filter"]) {
 			tables[table].data[] = insong.tables[table].data;
 		}
