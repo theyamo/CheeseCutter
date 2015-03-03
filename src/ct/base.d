@@ -780,7 +780,12 @@ class Song {
 			}
 			return chunks[0 .. counter];
 		}
-	
+
+		bool isValid(int waveOffset) {
+			auto chunks = getChunks(data);
+			return whichCell(chunks, waveOffset) >= 0;
+		}
+
 		// get program starting at waveOffset
 		// mostly copied from purgeWave
 		WaveProgram getProgram(int waveOffset) {
@@ -933,7 +938,28 @@ class Song {
 			int offset;
 			ubyte[] data;
 		}
-	
+
+		bool isValid(int currentRow) {
+			if(currentRow >= 0x80 && currentRow < 0x90)
+				return true;
+			
+			bool[0x40] visited;
+			for(int row = currentRow; row < 0x40;) {
+				if(visited[row]) return true;
+				visited[row] = true;
+				int jumpValue = data[row * 4 + 3];
+				if(jumpValue > 0x3f && jumpValue != 0x7f) // if illegal, break
+					return false;
+				if(jumpValue == 0x7f)
+					return true;
+				else if(jumpValue == 0) 
+					row++;
+				else row = jumpValue;
+			}
+			return false;
+		}
+		
+		
 		SweepProgram getProgram(int currentRow) {
 			bool[0x40] visited;
 			int topRow = currentRow;
@@ -1694,7 +1720,7 @@ class Song {
 
 	void importData(Song insong) {
 		// copy tables
-		foreach(idx, table; [ "wave1", "wave2", "cmd", "instr", "chord",
+		foreach(idx, table; [ "wave", "cmd", "instr", "chord",
 							  "pulse", "filter"]) {
 			tables[table].data[] = insong.tables[table].data;
 		}
@@ -1734,6 +1760,18 @@ class Song {
 		int waveptr = wavetablePointer(no);
 		int pulseptr = pulsetablePointer(no);
 		int filtptr = filtertablePointer(no);
+
+		if(!tWave.isValid(waveptr)) {
+			throw new UserException("Cannot save; instrument is not valid (wavetable does not wrap).");
+		}
+
+		if(!tPulse.isValid(pulseptr)) {
+			throw new UserException("Cannot save; pulse is not valid.");
+		}
+
+		if(!tFilter.isValid(filtptr)) {
+			throw new UserException("Cannot save; filter is not valid.");
+		}
 
 		auto wp = tWave.getProgram(waveptr);
 		auto pp = tPulse.getProgram(pulseptr);
