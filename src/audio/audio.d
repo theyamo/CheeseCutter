@@ -30,7 +30,6 @@ extern(C) {
 	extern __gshared int sid_init(int, Filterparams*, int, int, int, int, int);
 	extern __gshared int sid_fillbuffer(short *, int, int);
 	extern __gshared int sid_close();
-	extern float* get_sample_buf();
 	__gshared void function() callback;
 
 

@@ -194,8 +194,4 @@ extern "C" {
 //		assert(total <= os);
 		return total;
 	}
-
-	float* get_sample_buf() {
-		return sidfp->sample;
-	}
 }

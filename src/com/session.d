@@ -20,6 +20,11 @@ struct EditorState {
 	string filename;
 }
 
+UI mainui;
+Video video;
+Screen screen;
+EditorState state;
+
 @property song() {
 	return state.song;
 }
@@ -31,11 +36,6 @@ struct EditorState {
 @property fplayPos() {
 	return state.fplayPos;
 }
-
-UI mainui;
-Video video;
-Screen screen;
-EditorState state;
 
 void initSession() {
 	state.song = new Song();
