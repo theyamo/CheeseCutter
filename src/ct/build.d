@@ -94,8 +94,9 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	outstr(title,PSID_TITLE_OFFSET);
 	outstr(author,PSID_TITLE_OFFSET + 0x20);
 	outstr(release,PSID_TITLE_OFFSET + 0x40);
-	int numof = insong.subtunes.numOf / 2;
-	if(numof < 1) numof = 1;
+	int numof = insong.subtunes.numOf / 2 + 1;
+	assert(numof >= 1 && numof < 16);
+	assert(defaultSubtune >= 1 && defaultSubtune < 16);
 	data[PSID_NUM_SONGS + 1] = cast(ubyte)numof;
 	data[PSID_START_SONG + 1] = cast(ubyte)defaultSubtune;
 	if(insong.multiplier > 1) {
@@ -108,7 +109,7 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 		throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9));
 	
 	data[PSID_FLAGS_OFFSET + 1] 
-		= cast(ubyte)(0x04 /+ PAL +/ | (insong.sidModel ? 0x20 : 0x10));
+		= cast(ubyte)(0x04 /+ PAL +/ | (insong.sidModel ? (0x20 | 0x80) : (0x10 | 0x40)));
 
 	data[PSID_SECOND_SID_ADDR] = 0x42; // d420
 	return data;
