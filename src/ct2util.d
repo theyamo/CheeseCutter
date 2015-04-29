@@ -67,10 +67,10 @@ int main(string[] args) {
 		writefln("\nExport options:");
 //		writefln("  -n            Do not purge before exporting/dumping (leaves unused data)");
 		writefln("  -r <addr>     Relocate output to address (default = $1000)");
-		writefln("  -d <num>      Set the default subtune (1-32)");
+		writefln("  -d <num>      Set the default subtune (1-" ~ ct.base.SUBTUNE_MAX ~ ")");
 //		writefln("  -s [subtune]:[speed],...    Set speeds for subtunes");
 //		writefln("  -c [subtune]:[voicemask],...Set voice bitmasks for subtunes");
-		writefln("  -s <num>      Export single subtune (1-32) (disables -d)");
+		writefln("  -s <num>      Export single subtune (1-" ~ ct.base.SUBTUNE_MAX ~ ") (disables -d)");
 		writefln("  -q            Don't output information");
 		writefln("\nPrefix value options with '0x' or '$' to indicate a hexadecimal value.");
 	}
@@ -129,8 +129,8 @@ int main(string[] args) {
 						throw new UserException("Option available only with exporting commands.");
 					//parseList(speeds, nextArg());
 					int value = str2Value2(nextArg());
-					if(value < 1 || value > 32)
-						throw new UserException("Valid range for subtunes is 1 - 32.");
+					if(value < 1 || value > ct.base.SUBTUNE_MAX)
+						throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 					singleSubtune = value - 1;
 					break;
 				case "-c":
@@ -143,8 +143,8 @@ int main(string[] args) {
 					if(command != Command.ExportSID)
 						throw new UserException("Option available only when exporting to SID.");
 					defaultTune = str2Value2(nextArg());
-					if(defaultTune < 1 || defaultTune > 32)
-						throw new UserException("Valid range for subtunes is 1 - 32.");
+					if(defaultTune < 1 || defaultTune > ct.base.SUBTUNE_MAX)
+						throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 					break;
 				case "-o":
 					if(outfnDefined)

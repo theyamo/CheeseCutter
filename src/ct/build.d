@@ -114,8 +114,8 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 ubyte[] doBuild(Song song, int address, bool genPSID,
 				int defaultSubtune, bool verbose) {
 	// Valid range for subtunes is 1 - 32.
-	if(!(defaultSubtune >= 1 && defaultSubtune <= 32))
-		throw new UserException("Valid range for subtunes is 1 - 32.");
+	if(!(defaultSubtune >= 1 && defaultSubtune <= ct.base.SUBTUNE_MAX))
+		throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 
 	string input = dumpOptimized(song, address, genPSID, verbose);
 

@@ -47,6 +47,7 @@ enum {
 	SONG_REVISION = 11,
 	NOTE_KEYOFF = 1,
 	NOTE_KEYON = 2,
+	SUBTUNE_MAX = 32
 }
 
 immutable ubyte[] CLEAR = [0xf0, 0xf0, 0x60, 0x00];
