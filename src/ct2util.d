@@ -70,10 +70,10 @@ int main(string[] args) {
 		writefln("\nExport options:");
 //		writefln("  -n            Do not purge before exporting/dumping (leaves unused data)");
 		writefln("  -r <addr>     Relocate output to address (default = $1000)");
-		writefln("  -d <num>      Set the default subtune (1-" ~ ct.base.SUBTUNE_MAX ~ ")");
+		writefln("  -d <num>      Set the default subtune (1-" ~ to!string(ct.base.SUBTUNE_MAX) ~ ")");
 //		writefln("  -s [subtune]:[speed],...    Set speeds for subtunes");
 //		writefln("  -c [subtune]:[voicemask],...Set voice bitmasks for subtunes");
-		writefln("  -s <num>      Export single subtune (1-" ~ ct.base.SUBTUNE_MAX ~ ") (disables -d)");
+		writefln("  -s <num>      Export single subtune (1-" ~ to!string(ct.base.SUBTUNE_MAX) ~ ") (disables -d)");
 		writefln("  -q            Don't output information");
 		writefln("\nPrefix value options with '0x' or '$' to indicate a hexadecimal value.");
 	}
