@@ -41,7 +41,10 @@ void doPurge(ref Song sng) {
 int main(string[] args) {
 	address relocAddress = 0x1000;
 	int[] speeds, masks;
-	int defaultTune, singleSubtune = -1;
+
+	// these two use PSID ranges (1..32)
+	int defaultTune = 1, singleSubtune = -1;
+	
 	bool outfnDefined = false, infnDefined = false;
 	int command;
 	Song insong;
@@ -64,7 +67,7 @@ int main(string[] args) {
 		writefln("  -o <outfile>  Set output filename (by default gathered from input filename)");
 		writefln("\nExport options:");
 		writefln("  -r <addr>     Relocate output to address (default = $1000)");
-		writefln("  -d <num>      Set the default subtune (1-32)");
+		writefln("  -d <num>      Set the default subtune (1-" ~ ct.base.SUBTUNE_MAX ~ ")");
 		writefln("  -q            Don't output information");
 		writefln("\nPrefix value options with '0x' or '$' to indicate a hexadecimal value.");
 	}
@@ -123,9 +126,9 @@ int main(string[] args) {
 						throw new UserException("Option available only with exporting commands.");
 					//parseList(speeds, nextArg());
 					int value = str2Value2(nextArg());
-					if(value < 1 || value > 32)
-						throw new UserException("Valid range for subtunes is 1 - 32.");
-					singleSubtune = value - 1;
+					if(value < 1 || value > ct.base.SUBTUNE_MAX)
+						throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
+					singleSubtune = value;
 					break;
 				case "-c":
 					if(command != Command.ExportSID &&
@@ -137,8 +140,8 @@ int main(string[] args) {
 					if(command != Command.ExportSID)
 						throw new UserException("Option available only when exporting to SID.");
 					defaultTune = str2Value2(nextArg());
-					if(defaultTune < 1 || defaultTune > 32)
-						throw new UserException("Valid range for subtunes is 1 - 32.");
+					if(defaultTune < 1 || defaultTune > ct.base.SUBTUNE_MAX)
+						throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 					break;
 				case "-o":
 					if(outfnDefined)
@@ -197,14 +200,7 @@ int main(string[] args) {
 			if(insong.ver < 128)
 				throw new UserException("Use this version for StereoSID tunes only");
 			if(singleSubtune >= 0) {
-				//if(insong.isStereo)
-				throw new UserException("-s works only on regular sids");
-				for(int i = 0; i < 32; i++) {
-					if(i == singleSubtune) continue;
-					insong.subtunes.clear(i);
-				}
-				insong.subtunes.swap(0, singleSubtune);
-				defaultTune = 1;
+				throw new UserException("-s currently works only on regular sids");
 			}
 			doPurge(insong);
 			ubyte[] data = doBuild(insong, relocAddress,
