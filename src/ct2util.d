@@ -41,7 +41,10 @@ void doPurge(ref Song sng) {
 int main(string[] args) {
 	address relocAddress = 0x1000;
 	int[] speeds, masks;
+
+	// these two use PSID ranges (1..32)
 	int defaultTune = 1, singleSubtune = -1;
+	
 	bool outfnDefined = false, infnDefined = false;
 	int command;
 	Song insong;
@@ -131,7 +134,7 @@ int main(string[] args) {
 					int value = str2Value2(nextArg());
 					if(value < 1 || value > ct.base.SUBTUNE_MAX)
 						throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
-					singleSubtune = value - 1;
+					singleSubtune = value;
 					break;
 				case "-c":
 					if(command != Command.ExportSID &&
@@ -200,12 +203,12 @@ int main(string[] args) {
 		case Command.ExportPRG, Command.ExportSID:
 			insong = new Song;
 			insong.open(infn);
-			if(singleSubtune >= 0) {
-				for(int i = 0; i < 32; i++) {
-					if(i == singleSubtune) continue;
+			if(singleSubtune >= 1) {
+				for(int i = 0; i < ct.base.SUBTUNE_MAX; i++) {
+					if(i == singleSubtune - 1) continue;
 					insong.subtunes.clear(i);
 				}
-				insong.subtunes.swap(0, singleSubtune);
+				insong.subtunes.swap(0, singleSubtune - 1);
 				defaultTune = 1;
 			}
 			doPurge(insong);
