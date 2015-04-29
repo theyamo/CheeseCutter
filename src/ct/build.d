@@ -95,6 +95,7 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	outstr(release,PSID_TITLE_OFFSET + 0x40); 
 	data[PSID_NUM_SONGS + 1] = cast(ubyte)insong.subtunes.numOf;
 	data[PSID_START_SONG + 1] = cast(ubyte)defaultSubtune;
+	std.stdio.writeln("defsub ", defaultSubtune);
 	if(insong.multiplier > 1) {
 		data[PSID_SPEED_OFFSET .. PSID_SPEED_OFFSET + 4] = 255;
 	}
@@ -112,6 +113,10 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 
 ubyte[] doBuild(Song song, int address, bool genPSID,
 				int defaultSubtune, bool verbose) {
+	// Valid range for subtunes is 1 - 32.
+	if(!(defaultSubtune >= 1 && defaultSubtune <= 32))
+		throw new UserException("Valid range for subtunes is 1 - 32.");
+
 	string input = dumpOptimized(song, address, genPSID, verbose);
 
 	if(verbose)

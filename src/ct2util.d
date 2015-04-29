@@ -41,7 +41,7 @@ void doPurge(ref Song sng) {
 int main(string[] args) {
 	address relocAddress = 0x1000;
 	int[] speeds, masks;
-	int defaultTune, singleSubtune = -1;
+	int defaultTune = 1, singleSubtune = -1;
 	bool outfnDefined = false, infnDefined = false;
 	int command;
 	Song insong;
