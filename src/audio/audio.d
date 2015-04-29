@@ -18,6 +18,7 @@ __gshared bool audioInited = false;
 __gshared int framerate = 50;
 __gshared int multiplier;
 __gshared int freq = 48000, bufferSize = 2048, stereo = 1;
+__gshared bool outputMono = false;
 __gshared private int callbackCounter = 0;
 __gshared private int bufferUsed; // in samples
 __gshared private int callbackInterval;
@@ -161,8 +162,17 @@ extern(C) {
 		short* s;
 		for(i = 0, pi = mixbuf, pi2 = mixbuf2, s = cast(short*)stream;
 			i < len; i += 4) {
-			*(s++) = *(pi++);
-			*(s++) = *(pi2++);
+			short left = *(pi++);
+			short right = *(pi2++);
+			if(outputMono) {
+				short sample = (left + right)/2;
+				*(s++) = sample;
+				*(s++) = sample;
+			}
+			else {
+				*(s++) = left;
+				*(s++) = right;
+			}
 		}
 
 		bufferUsed -= samplesRequested;

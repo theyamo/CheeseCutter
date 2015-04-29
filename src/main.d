@@ -154,6 +154,7 @@ void printheader() {
 	derr.writefln("  -i               Disable resid interpolation (use fast mode instead)");
 	derr.writefln("  -m [0|1]         Specify SID model for reSID (6581/8580) (def=0)");
 	derr.writefln("  -r [value]       Set playback frequency (def=48000)");
+	derr.writefln("  -mono            Set mono output");
 	derr.writef("\n");
 }
 
@@ -226,6 +227,9 @@ int main(char[][] args) {
 			case "-yn":
 				yuvOverlay = true;
 				yuvCenter = false;
+				break;
+			case "-mono":
+				audio.audio.outputMono = true;
 				break;
 			default:
 				version (OSX) {
