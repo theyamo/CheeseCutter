@@ -94,7 +94,7 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	outstr(title,PSID_TITLE_OFFSET);
 	outstr(author,PSID_TITLE_OFFSET + 0x20);
 	outstr(release,PSID_TITLE_OFFSET + 0x40);
-	int numof = insong.subtunes.numOf / 2 + 1;
+	int numof = insong.subtunes.numOf / 2;
 	assert(numof >= 1 && numof < 16);
 	assert(defaultSubtune >= 1 && defaultSubtune < 16);
 	data[PSID_NUM_SONGS + 1] = cast(ubyte)numof;
