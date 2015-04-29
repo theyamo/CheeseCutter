@@ -184,13 +184,14 @@ class VideoYUV : Video {
 		super(scr, fs);
 		correctedHeight = displayHeight;
 		correctedWidth = displayWidth;
-		if(cast(float)displayHeight / displayWidth < 0.75) { // wide screen
-			correctedWidth = cast(int)(correctedHeight / 0.75);
+		float ratio = cast(float)displayHeight / displayWidth;
+		if(cast(float)RES_Y / RES_X < ratio) { // wide screen
+			correctedWidth = cast(int)(correctedHeight / ratio);
 			correctedHeight = displayHeight;
 		}
 		else {
 			correctedWidth = displayWidth;
-			correctedHeight = cast(int)(correctedWidth * 0.75);
+			correctedHeight = cast(int)(correctedWidth * ratio);
 		}
 
 		this.yuvCenter = yuvCenter;
