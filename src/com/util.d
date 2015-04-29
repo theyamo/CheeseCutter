@@ -164,7 +164,7 @@ int str2Value2(string s) {
 	if(s[0] == 'x' || s[0] == '$') {
 		hexUsed = true; idx = 1;
 	}
-	else if(s[0..2] == "0x") {
+	else if(s.length > 2 && s[0..2] == "0x") {
 		hexUsed = true; idx = 2;
 	}
 	if(hexUsed) {
