@@ -1008,7 +1008,7 @@ final class UI {
 				 if(dialog || activeWindow == infobar)
 					 break;
 				 if(++escapecounter > 1) {
-					 activateDialog(new ConfirmationDialog("Really exit? (y/n)", (int param) {
+					 activateDialog(new ConfirmationDialog("Really exit (y/n)? ", (int param) {
 								 if(param != 0) return;
 								 audio.player.stop();
 								 exitRequested = true;
