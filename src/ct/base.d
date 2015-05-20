@@ -629,7 +629,7 @@ class Sequence {
 	}
 	
 	ubyte[] compact() {
-		ubyte[] outarr = new ubyte[256];
+		ubyte[] outarr = new ubyte[257];
 		int i, outp, olddel, oldins = -1, 
 			olddelay = -1, delay;
 		for(i = 0; i < rows;) {
