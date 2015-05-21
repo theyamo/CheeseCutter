@@ -1261,6 +1261,15 @@ class Song {
 	@property int playSpeed() {
 		return memspace[offsets[Offsets.PlaySpeed]];
 	}
+
+	@property int numInstr() {
+		int maxInsno;
+		seqIterator((Sequence s, Element e) { 
+				int insval = e.instr.value;
+				if(insval > 0x2f) return;
+				if(insval > maxInsno) maxInsno = insval; });
+		return maxInsno;
+	}
 	
 	void open(string fn) {
 		ubyte[] inbuf = cast(ubyte[])read(fn);

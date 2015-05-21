@@ -31,11 +31,32 @@ string defineOutfn(int cmd, string infn) {
 	return name ~ "." ~ exts[cmd];
 }
 
-void doPurge(ref Song sng) {
+void doPurge(ref Song song) {
 	if(noPurge) return;
 	explain("Purging data...");
-	Purge p = new Purge(sng, verbose);
+	Purge p = new Purge(song, verbose);
 	p.purgeAll();
+}
+
+void validate(ref Song song) {
+	explain("Checking validity...");
+	for(int i = 0; i < song.numInstr; i++) {
+		//ubyte[] instr = song.getInstrument(i);
+		int waveptr = song.wavetablePointer(i);
+		int pulseptr = song.pulsetablePointer(i);
+		int filtptr = song.filtertablePointer(i);
+		if(!song.tWave.isValid(waveptr)) {
+			throw new UserException(format("Error: instrument %d is not valid (wavetable does not wrap).", i));
+		}
+		
+		if(!song.tPulse.isValid(pulseptr)) {
+			throw new UserException(format("Cannot save; pulse %d is not valid.", pulseptr));
+		}
+		
+		if(!song.tFilter.isValid(filtptr)) {
+			throw new UserException(format("Cannot save; filter %d is not valid.", filtptr));
+		}
+	}
 }
 
 int main(string[] args) {
@@ -212,6 +233,7 @@ int main(string[] args) {
 				defaultTune = 1;
 			}
 			doPurge(insong);
+			validate(insong);
 			ubyte[] data = doBuild(insong, relocAddress,
 								   command == Command.ExportSID,
 								   defaultTune, verbose);

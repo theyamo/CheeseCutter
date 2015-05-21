@@ -95,7 +95,6 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	outstr(release,PSID_TITLE_OFFSET + 0x40); 
 	data[PSID_NUM_SONGS + 1] = cast(ubyte)insong.subtunes.numOf;
 	data[PSID_START_SONG + 1] = cast(ubyte)defaultSubtune;
-	std.stdio.writeln("defsub ", defaultSubtune);
 	if(insong.multiplier > 1) {
 		data[PSID_SPEED_OFFSET .. PSID_SPEED_OFFSET + 4] = 255;
 	}
@@ -117,6 +116,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 	if(!(defaultSubtune >= 1 && defaultSubtune <= ct.base.SUBTUNE_MAX))
 		throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 
+	// Dump data to asm source
 	string input = dumpOptimized(song, address, genPSID, verbose);
 
 	if(verbose)
@@ -135,12 +135,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
 	string input = playerSource;
 	input ~= dumpData(song);
-	int maxInsno;
-	song.seqIterator((Sequence s, Element e) { 
-			int insval = e.instr.value;
-			if(insval > 0x2f) return;
-			if(insval > maxInsno) maxInsno = insval; });
-	input = setArgumentValue("INSNO", format("%d", maxInsno+1), input);
+	input = setArgumentValue("INSNO", format("%d", song.numInstr+1), input);
 	char[] linkedPlayerID = (new Song()).playerID;
 	if(song.playerID[0..6] != linkedPlayerID[0..6] && verbose) {
 		writeln("Warning: your song uses an old version of the player!\n",
