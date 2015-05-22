@@ -846,7 +846,7 @@ final class UI {
 			}
 		}
 		if(vismode == VisMode.Oscilloscope &&
-		   audio.player.isPlaying || audio.player.keyjamEnabled)
+		   (audio.player.isPlaying || audio.player.keyjamEnabled))
 			video.drawVisualizer(n);
 	}
 
