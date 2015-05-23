@@ -2,7 +2,7 @@ COMFLAGS=-m32
 LIBS=-lstdc++
 DLINK=$(COMFLAGS) -Wl,--gc-sections 
 VERSION=$(shell cat Version)
-DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O1 -frelease -fno-bounds-check
+DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O1
 CFLAGS=$(COMFLAGS) -O1
 CXXFLAGS=$(CFLAGS) -I./src -O3
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@
@@ -34,6 +34,7 @@ c64: $(C64OBJS)
 all: c64 $(OBJS) $(CXX_OBJS) ct2util ct $(TARGET)
 
 # release version with additional optimizations
+release: DFLAGS += -frelease -fno-bounds-check
 release: all
 	strip ccutter$(EXE)
 	strip ct2util$(EXE)
