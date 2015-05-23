@@ -723,7 +723,7 @@ class Song {
 		}
 	}
 	
-	static class Table {
+	class Table {
 		ubyte[] data;
 		this(ubyte[] data) {
 			this.data = data;
@@ -741,7 +741,7 @@ class Song {
 		}
 	}
 
-	static class WaveTable : Table {
+	class WaveTable : Table {
 		struct WaveProgram {
 			ubyte[] wave1, wave2;
 			int offset;
@@ -905,18 +905,18 @@ class Song {
 
 		private void arpPointerUpdate(Song song, int pos, int val) {
 			for(int j = 0; j < 48; j++) {
-				ubyte b7 = song.instrumentTable[j + 7 * 48];
+				ubyte b7 = instrumentTable[j + 7 * 48];
 				if(b7 > pos) {
 					int v = b7 + val;
 					if(v < 0) v = 0;
 					// TODO rewrite not to access global..
-					song.instrumentTable[j + 7 * 48] = cast(ubyte)v;
+					instrumentTable[j + 7 * 48] = cast(ubyte)v;
 				}
 			}
 		}
 	}
 
-	static class InstrumentTable : Table {
+	class InstrumentTable : Table {
 		this(ubyte[] data) {
 			super(data);
 		}
@@ -930,7 +930,7 @@ class Song {
 		}
 	}
 
-	static class SweepTable : Table {
+	class SweepTable : Table {
 		this(ubyte[] data) {
 			super(data);
 		}

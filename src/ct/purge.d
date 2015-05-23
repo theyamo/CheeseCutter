@@ -490,6 +490,7 @@ private void genericInsertRow(Song song, ubyte[] table, int row) {
 	int row4 = row * 4;
 	table[row4 + 4 .. $] =
 		table[row4 .. $ - 4].dup;
+	table[row4 .. row4 + 4] = 0;
 
 	for(int j = 0; j < 64; j++) {
 		int fptr = table[j * 4 + 3];
