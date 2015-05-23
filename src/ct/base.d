@@ -628,7 +628,7 @@ class Sequence {
 	}
 	
 	ubyte[] compact() {
-		ubyte[] outarr = new ubyte[256];
+		ubyte[] outarr = new ubyte[257];
 		int i, outp, olddel, oldins = -1, 
 			olddelay = -1, delay;
 		for(i = 0; i < rows;) {
@@ -1289,6 +1289,15 @@ class Song {
 	@property int playSpeed() {
 		return memspace[offsets[Offsets.PlaySpeed]];
 	}
+
+	@property int numInstr() {
+		int maxInsno;
+		seqIterator((Sequence s, Element e) { 
+				int insval = e.instr.value;
+				if(insval > 0x2f) return;
+				if(insval > maxInsno) maxInsno = insval; });
+		return maxInsno;
+	}
 	
 	void open(string fn) {
 		ubyte[] inbuf = cast(ubyte[])read(fn);
@@ -1836,11 +1845,18 @@ class Song {
 
 	private void insertInstrument(Patch patch, int insno) {
 		assert(patch.wave1.length == patch.wave2.length);
+		// check for free space in tables
+		int waveptr = tWave.seekTableEnd();
+		int pulseptr = tPulse.seekTableEnd() * 4;
+		int filterptr = tFilter.seekTableEnd() * 4;
+		if(patch.wave1.length + waveptr > tWave.wave1.length - 1)
+			throw new UserException("Not enough free rows in wavetable");
+		if(patch.pulse.length + pulseptr > tPulse.data.length - 4)
+			throw new UserException("Not enough free rows in pulse table");
+		if(patch.filt.length + filterptr > tFilter.data.length - 4)
+			throw new UserException("Not enough free rows in filter table");
 		
 		// cram loaded data into tables
-		int waveptr = tWave.seekTableEnd();
-		if(patch.wave1.length + waveptr > tWave.wave1.length - 1)
-			throw new Exception("Not enough free rows in wavetable");
 		ubyte[] wave1 = tWave.wave1[waveptr .. waveptr + patch.wave1.length];
 		ubyte[] wave2 = tWave.wave2[waveptr .. waveptr + patch.wave2.length];
 		for(int i = 0; i < wave1.length; i++) {
@@ -1862,10 +1878,6 @@ class Song {
 
 		// insert pulse program if defined
 		if(patch.def[5] > 0) {
-			int pulseptr = tPulse.seekTableEnd() * 4;
-			if(patch.pulse.length + pulseptr > tPulse.data.length - 4)
-				throw new Exception("Not enough free rows in pulse table");
-			
 			ubyte[] pulse = tPulse.data[pulseptr .. $];
 			fixSweepOffsets(pulse, pulseptr + patch.def[5]);
 			
@@ -1882,10 +1894,6 @@ class Song {
 
 		// insert filter if defined
 		if(patch.def[4] > 0) {
-			int filterptr = tFilter.seekTableEnd() * 4;
-			if(patch.filt.length + filterptr > tFilter.data.length - 4)
-				throw new Exception("Not enough free rows in filter table");
-			
 			ubyte[] filt = tFilter.data[filterptr .. $];
 			fixSweepOffsets(filt, filterptr + patch.def[4]);
 			

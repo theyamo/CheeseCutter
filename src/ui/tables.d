@@ -276,6 +276,9 @@ class InsValueTable : HexTable {
 				};
 				string fn = fnClean(std.string.stripRight
 									(std.conv.to!string(song.insLabels[row])));
+				if(fn.length == 0)
+					fn = "unnamed";
+				
 				mainui.activateDialog(new StringDialog("Enter filename: ",
 													   dg,
 													   fn ~ ".cti",

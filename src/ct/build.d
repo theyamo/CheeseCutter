@@ -99,7 +99,6 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	assert(defaultSubtune >= 1 && defaultSubtune < 16);
 	data[PSID_NUM_SONGS + 1] = cast(ubyte)numof;
 	data[PSID_START_SONG + 1] = cast(ubyte)defaultSubtune;
-	std.stdio.writeln("defsub ", defaultSubtune);
 	if(insong.multiplier > 1) {
 		data[PSID_SPEED_OFFSET .. PSID_SPEED_OFFSET + 4] = 255;
 	}
@@ -122,6 +121,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 	if(!(defaultSubtune >= 1 && defaultSubtune <= ct.base.SUBTUNE_MAX))
 		throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 
+	// Dump data to asm source
 	string input = dumpOptimized(song, address, genPSID, verbose);
 
 	if(verbose)
@@ -140,12 +140,7 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
 	string input = playerSource;
 	input ~= dumpData(song);
-	int maxInsno;
-	song.seqIterator((Sequence s, Element e) { 
-			int insval = e.instr.value;
-			if(insval > 0x2f) return;
-			if(insval > maxInsno) maxInsno = insval; });
-	input = setArgumentValue("INSNO", format("%d", maxInsno+1), input);
+	input = setArgumentValue("INSNO", format("%d", song.numInstr+1), input);
 	char[] linkedPlayerID = (new Song()).playerID;
 	if(song.playerID[0..6] != linkedPlayerID[0..6] && verbose) {
 		writeln("Warning: your song uses an old version of the player!\n",
@@ -208,16 +203,28 @@ string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
 			filterUsed = true;
 	}
 
+	if(verbose) {
+		string[] fxdescr =
+			[ "slup", "sldn", "vib", "porta", "adsr",
+			  "8x", "offset", "lovib", "Ax", "Bx", "Cx", "Dx",
+			  "Ex", "Fx", "swing", "filter" ];
+		auto fxused = std.array.appender!string();
+		foreach(idx, used; [slideUpUsed, slideDnUsed, vibratoUsed, portaUsed,
+							setADSRUsed, chordUsed, offsetUsed, lovibUsed,
+							setAttUsed, setDecUsed, setSusUsed, setRelUsed,
+							setVolUsed, setSpeedUsed, swingUsed, filterUsed]) {
+			if(used)
+				fxused.put(fxdescr[idx] ~ " ");
+		}
+		if(fxused.data.length > 0) {
+			writeln("Effects used: " ~ fxused.data);
+		}
+	}
+	
 	void setArgVal(string arg, string val) {
 		input = setArgumentValue(arg, val, input);
-		if(verbose)
-			writeln("  ", arg, " = ", val);
 	}
 
-//	setArgVal("EXPORT", "TRUE");
-	if(verbose)
-		writefln("Setting player flags...");
-	
 	input = setArgumentValue("EXPORT", "TRUE", input);
 	setArgVal("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE");
 	setArgVal("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE");

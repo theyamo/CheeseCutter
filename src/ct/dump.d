@@ -10,11 +10,12 @@ module ct.dump;
 import ct.base;
 import com.util;
 import std.string;
+import std.array;
 
 private const string byteOp = "!byte", wordOp = "!word";
 
 string dumpData(Song sng) {
-	string output;
+	auto app = appender!string();
 
 	int getHighestUsed(ubyte[] array) {
 		for(size_t i = array.length - 1; i >= 0; i--) {
@@ -25,7 +26,7 @@ string dumpData(Song sng) {
 	}
 
 	void append(string s) {
-		output ~= s;
+		app.put(s);
 	}
 	
 	void hexdump(ubyte[] buf, int rowlen) {
@@ -147,5 +148,5 @@ string dumpData(Song sng) {
 				highestChord = e.cmd.value & 0x1f;
 		});
 	hexdump(sng.chordIndexTable[0..highestChord+1], 16);
-	return output;
+	return app.data;
 }
