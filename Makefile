@@ -40,7 +40,7 @@ release: all
 # development release pulled from git master
 devrelease: DFLAGS += -fversion=DEV
 devrelease: all
-	tar --transform 's,^\.,cheesecutter-devbuild,' -cvf cheesecutter-devbuild-linux-x86.tar.gz $(DIST_FILES)
+	tar --transform 's,^\.,cheesecutter-2sid-dev,' -cvf cheesecutter-2sid-dev-linux-x86.tar.gz $(DIST_FILES)
 
 # tarred release
 dist:	release
