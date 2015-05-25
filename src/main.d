@@ -255,7 +255,7 @@ int main(char[][] args) {
 		}
 	}
 	catch(UserException e) {
-		writeln(e);
+		std.stdio.stderr.writeln(e);
 		return -1;
 	}
 	
