@@ -450,7 +450,7 @@ void filterInsertRow(Song song, int row) {
 	song.seqIterator((Sequence s, Element e) {
 			if(row > 0x1f) return;
 			if(e.cmd.value == 0) return;
-			if(e.cmd.value() >= (0x60 + (row & 0x1f) + 1) && e.cmd.value() < 0x80)
+			if(e.cmd.value() >= (0x60 + (row & 0x1f)) && e.cmd.value() < 0x80)
 				e.cmd = cast(ubyte)(e.cmd.value + 1);
 		});
 
@@ -469,7 +469,7 @@ void pulseInsertRow(Song song, int row) {
 	song.seqIterator((Sequence s, Element e) {
 			if(row > 0x1f) return;
 			if(e.cmd.value == 0) return;
-			if(e.cmd.value() >= (0x40 + (row & 0x1f) + 1) && e.cmd.value() < 0x60)
+			if(e.cmd.value() >= (0x40 + (row & 0x1f)) && e.cmd.value() < 0x60)
 				e.cmd = cast(ubyte)(e.cmd.value + 1);
 		});
 
