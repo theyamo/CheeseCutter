@@ -1281,7 +1281,7 @@ class Song {
 	@property void speed(int spd) {
 		memspace[offsets[Offsets.Songsets] + 6] = cast(ubyte)spd;
 		memspace[offsets[Offsets.SPEED]] = cast(ubyte)spd;
-		songspeeds[subtune] = cast(ubyte)spd;
+		songspeeds[subtune * 2] = cast(ubyte)spd;
 		if(ver >= 5 && spd >= 2)
 			memspace[offsets[Offsets.PlaySpeed]] = cast(ubyte)spd;
 	}
