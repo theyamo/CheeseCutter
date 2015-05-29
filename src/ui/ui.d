@@ -584,7 +584,7 @@ final private class Toplevel : WindowSwitcher {
 			version(OSX) {
 				if(key.raw == SDLK_EQUALS) {
 					instable.stepRow(1);
-					activeInstrument = instable.row;
+					state.activeInstrument = instable.row;
 				}
 			}
 		}
