@@ -2,7 +2,10 @@
 ;;; CCUTTER 2.x musicplayer by abad
 ;;; Based on JCH NP 21.G4 by Laxity/VIB
 ;;; ----------------------------------------
+!ifdef ZREG {
+} else {
 ZREG		= $fb
+}
 FALSE		= 0
 TRUE		= 1
 EXPORT		= FALSE				; if TRUE, editor specific code will be left out

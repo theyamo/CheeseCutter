@@ -110,14 +110,16 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 	return data;
 }
 
-ubyte[] doBuild(Song song, int address, bool genPSID,
-				int defaultSubtune, bool verbose) {
+ubyte[] doBuild(Song song, int address, int zpAddress,
+				bool genPSID, int defaultSubtune,
+				bool verbose) {
 	// Valid range for subtunes is 1 - 32.
 	if(!(defaultSubtune >= 1 && defaultSubtune <= ct.base.SUBTUNE_MAX))
 		throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 
 	// Dump data to asm source
-	string input = dumpOptimized(song, address, genPSID, verbose);
+	string input = dumpOptimized(song, address, zpAddress,
+								 genPSID, verbose);
 
 	if(verbose)
 		writeln("Assembling...");
@@ -132,7 +134,8 @@ ubyte[] doBuild(Song song, int address, bool genPSID,
 										defaultSubtune) : assembled;
 }
 
-string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
+string dumpOptimized(Song song, int address, int zpAddress,
+					 bool genPSID, bool verbose) {
 	string input = playerSource;
 	input ~= dumpData(song);
 	input = setArgumentValue("INSNO", format("%d", song.numInstr+1), input);
@@ -221,6 +224,8 @@ string dumpOptimized(Song song, int address, bool genPSID, bool verbose) {
 	}
 
 	input = setArgumentValue("EXPORT", "TRUE", input);
+	if(zpAddress > 0)
+		setArgVal("ZREG", format("$%02X", zpAddress));
 	setArgVal("INCLUDE_CMD_SLUP", slideUpUsed ? "TRUE" : "FALSE");
 	setArgVal("INCLUDE_CMD_SLDOWN", slideDnUsed ? "TRUE" : "FALSE");
 	setArgVal("INCLUDE_CMD_VIBR", vibratoUsed ? "TRUE" : "FALSE");

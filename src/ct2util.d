@@ -60,7 +60,7 @@ void validate(ref Song song) {
 }
 
 int main(string[] args) {
-	address relocAddress = 0x1000;
+	int relocAddress = 0x1000, zpAddress = 0;
 	int[] speeds, masks;
 
 	// these two use PSID ranges (1..32)
@@ -95,6 +95,7 @@ int main(string[] args) {
 //		writefln("  -s [subtune]:[speed],...    Set speeds for subtunes");
 //		writefln("  -c [subtune]:[voicemask],...Set voice bitmasks for subtunes");
 		writefln("  -s <num>      Export single subtune (1-" ~ to!string(ct.base.SUBTUNE_MAX) ~ ") (disables -d)");
+		writefln("  -zp <num>     Relocate zero page (valid range 2-$fe)");
 		writefln("  -q            Don't output information");
 		writefln("\nPrefix value options with '0x' or '$' to indicate a hexadecimal value.");
 	}
@@ -170,6 +171,15 @@ int main(string[] args) {
 					if(defaultTune < 1 || defaultTune > ct.base.SUBTUNE_MAX)
 						throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 					break;
+				case "-z", "-zp":
+					if(command != Command.ExportSID &&
+					   command != Command.ExportPRG)
+						throw new UserException("Option available only with exporting commands.");
+					zpAddress = str2Value2(nextArg());
+					if(zpAddress < 2 || zpAddress > 0xfe) {
+						throw new UserException("Valid range for zero page is 2 - $fe");
+					}
+					break;
 				case "-o":
 					if(outfnDefined)
 						throw new UserException("Output file already defined.");
@@ -234,7 +244,7 @@ int main(string[] args) {
 			}
 			doPurge(insong);
 			validate(insong);
-			ubyte[] data = doBuild(insong, relocAddress,
+			ubyte[] data = doBuild(insong, relocAddress, zpAddress,
 								   command == Command.ExportSID,
 								   defaultTune, verbose);
 			std.file.write(outfn, data);
@@ -254,7 +264,7 @@ int main(string[] args) {
 			insong = new Song;
 			insong.open(infn);
 			doPurge(insong);
-			string dumped = dumpOptimized(insong, 0x1000, true,
+			string dumped = dumpOptimized(insong, 0x1000, 0, true,
 										  verbose);
 			string header = format(";;; ACME dump for %s\n\n", infn);
 			std.file.write(outfn, header ~ dumped);
