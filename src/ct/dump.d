@@ -18,11 +18,11 @@ string dumpData(Song sng) {
 	auto app = appender!string();
 
 	int getHighestUsed(ubyte[] array) {
-		for(size_t i = array.length - 1; i >= 0; i--) {
+		for(int i = cast(int)array.length - 1; i >= 0; i--) {
 			if(array[i] > 0)
 				return cast(int)i;
 		}
-		return -1;
+		return 0;
 	}
 
 	void append(string s) {
