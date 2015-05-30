@@ -230,7 +230,7 @@ class Infobar : Window {
 	  
 		screen.clrtoeol(0, headerColor);
 
-		enum hdr = "CheeseCutter 2.7.1" ~ com.util.versionInfo;
+		enum hdr = "CheeseCutter 2.8" ~ com.util.versionInfo;
 		screen.cprint(4, 0, 1, headerColor, hdr);
 		screen.cprint(screen.width - 14, 0, 1, headerColor, "F12 = Help");
 		int c1 = audio.player.isPlaying ? 13 : 12;
