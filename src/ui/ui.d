@@ -231,7 +231,7 @@ class Infobar : Window {
 	  
 		screen.clrtoeol(0, headerColor);
 
-		enum hdr = "CheeseCutter 2.7.1" ~ com.util.versionInfo;
+		enum hdr = "CheeseCutter 2.8" ~ com.util.versionInfo;
 		screen.cprint(4, 0, 1, headerColor, hdr);
 		screen.cprint(screen.width - 14, 0, 1, headerColor, "F12 = Help");
 		int c1 = audio.player.isPlaying ? 13 : 12;
@@ -1148,15 +1148,25 @@ final class UI {
 			song.save(s);
 		}
 		catch(FileException e) {
+			stderr.writeln(e.toString);
 			statusline.display("Could not save file! Check your filename.");
 			return;
 		}
-		// sync load filesel to save filesel
-		loaddialog.fsel.fpos = savedialog.fsel.fpos;
+
 		string fn = s.strip();
 		auto ind = 1 + fn.lastIndexOf(DIR_SEPARATOR);
 		fn = fn[ind..$];
 		state.filename = fn;
+
+		// sync load filesel to save filesel
+		if(loaddialog.directory != savedialog.directory) {
+			foreach(d; [loaddialog, savedialog]) {
+				d.setFilename(fn);
+				d.setDirectory(getcwd());
+			}
+			loaddialog.fsel.fpos.reset();
+			writeln("reset loaddialog");
+		}
 	}
 
 	void importCallback(string s) {
@@ -1188,8 +1198,8 @@ final class UI {
 			}
 		}
 		catch(Exception e) {
+			stderr.writeln(e.toString);	
 			statusline.display("Could not load file!");
-			writeln("Error: " ~ e.toString());	
 			return;
 		}
 		

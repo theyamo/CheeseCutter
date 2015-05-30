@@ -12,6 +12,7 @@ import com.util;
 import ct.purge;
 import derelict.sdl.sdl;
 import std.string;
+import std.stdio : stderr;
 
 abstract class Table : Window {
 	const int columns, rows, visibleRows;
@@ -268,8 +269,9 @@ class InsValueTable : HexTable {
 					try {
 						com.session.song.savePatch(fn, state.activeInstrument);
 					}
-					catch(UserException ex) {
-						UI.statusline.display(ex.toString);
+					catch(UserException e) {
+						stderr.writeln(e.toString);
+						UI.statusline.display(e.toString);
 						return;
 					}
 					UI.statusline.display(format("Saved instrument %d", state.activeInstrument));
@@ -323,6 +325,7 @@ class InsValueTable : HexTable {
 			song.insertPatch(fn, state.activeInstrument);
 		}
 		catch(Exception e) {
+			stderr.writeln(e.toString);
 			UI.statusline.display("Error in parsing instrument data!");
 		}
 	}

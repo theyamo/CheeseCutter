@@ -261,6 +261,7 @@ class AboutDialog : Window {
 class FileSelector : Window {
 	struct FileSelPos {
 		int offset, pos;
+		void reset() { offset = pos = 0; }
 	}
 	
 	struct File {
@@ -533,6 +534,10 @@ class FileSelectorDialog : WindowSwitcher {
 
 	@property string fullname() {
 		return getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
+	}
+
+	@property string directory() {
+		return fsel.directory;
 	}
 	
 	override void activate() {

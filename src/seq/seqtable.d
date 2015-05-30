@@ -160,17 +160,10 @@ protected class SeqVoice : Voice {
 					printEmpty();
 					if(scry < area.y + 1) break;
 					Element d = seq.data[i];
-					if(trkofs == activeRow.trkOffset) {
-						screen.fprint(area.x + 4, scry, d.toString(wseq.element.transpose));
-					}
-					else {
-						screen.cprint(area.x + 4, scry, 11, 0, d.toPlainString());
-					}
-					
+					screen.fprint(area.x + 4, scry, d.toString(wseq.element.transpose));
 					if(i == 0) printTrack();
 					else {
-						if(.seq.sequencer.displaySequenceRowcounter == true &&
-							trkofs == activeRow.trkOffset) {
+						if(.seq.sequencer.displaySequenceRowcounter == true) {
 							int c = (hcount - song.highlightOffset) %
 								song.highlight ? 11 : 12;
 							screen.cprint(area.x, scry, c, 0, format(" %02X ", i));

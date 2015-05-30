@@ -424,7 +424,7 @@ void filterDeleteRow(Song song, int row) {
 			
 	for(int j = 0; j < 48; j++) {
 		int fptr = song.instrumentTable[4 * 48 + j];
-		if(fptr >= row && fptr < 0x40)
+		if(fptr >= row && fptr < 0x40 && fptr > 0)
 			song.instrumentTable[4 * 48 + j]--;
 	}
 }
@@ -442,7 +442,7 @@ void pulseDeleteRow(Song song, int row) {
 
 	for(int j = 0; j < 48; j++) {
 		int pptr = song.instrumentTable[5 * 48 + j];
-		if(pptr >= row && pptr < 0x40)
+		if(pptr >= row && pptr < 0x40 && pptr > 0)
 			song.instrumentTable[5 * 48 + j]--;
 	}
 }
@@ -450,11 +450,38 @@ void pulseDeleteRow(Song song, int row) {
 // TODO: move to tFilter
 void filterInsertRow(Song song, int row) {
 	genericInsertRow(song, song.filterTable, row);
+
+	song.seqIterator((Sequence s, Element e) {
+			if(row > 0x1f) return;
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() >= (0x60 + (row & 0x1f)) && e.cmd.value() < 0x80)
+				e.cmd = cast(ubyte)(e.cmd.value + 1);
+		});
+
+	for(int j = 0; j < 48; j++) {
+		int fptr = song.instrumentTable[4 * 48 + j];
+		if(fptr >= row && fptr < 0x40)
+			song.instrumentTable[4 * 48 + j]++;
+	}
+	
 }
 
 // TODO: move to tPulse
 void pulseInsertRow(Song song, int row) {
 	genericInsertRow(song, song.pulseTable, row);
+
+	song.seqIterator((Sequence s, Element e) {
+			if(row > 0x1f) return;
+			if(e.cmd.value == 0) return;
+			if(e.cmd.value() >= (0x40 + (row & 0x1f)) && e.cmd.value() < 0x60)
+				e.cmd = cast(ubyte)(e.cmd.value + 1);
+		});
+
+	for(int j = 0; j < 48; j++) {
+		int pptr = song.instrumentTable[5 * 48 + j];
+		if(pptr >= row && pptr < 0x40 && pptr > 0)
+			song.instrumentTable[5 * 48 + j]++;
+	}
 }
 
 private void replaceCmdColumnvalue(Song song, int seek, int repl) {
@@ -491,6 +518,8 @@ private void genericInsertRow(Song song, ubyte[] table, int row) {
 	table[row4 + 4 .. $] =
 		table[row4 .. $ - 4].dup;
 	table[row4 .. row4 + 4] = 0;
+
+	table[row4 .. row4+4] = 0;
 
 	for(int j = 0; j < 64; j++) {
 		int fptr = table[j * 4 + 3];
