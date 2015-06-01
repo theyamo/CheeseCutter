@@ -142,6 +142,15 @@ Ctrl-Alt-2..............Swap voice's track with voice 2's tracks from crsr down
 Ctrl-Alt-3..............Swap voice's track with voice 3's tracks from crsr down
 "]);
 
+ContextHelp HELPINSTABLE = ContextHelp("Instrument table help",
+["										
+Ctrl-L..................Load current insturment from disk
+Ctrl-S..................Save current instrument to disk
+Ctrl-D..................Delete current instrument
+Ctrl-C..................Copy instrument to clipboard
+Ctrl-V..................Paste instrument from clipboard
+"]);
+
 ContextHelp genPlayerContextHelp(string title, char*[] descriptions) {
 	string text;
 	text = "`+1Press F12 again to see the global help.\n\n`+d" ~ title ~ "\n";

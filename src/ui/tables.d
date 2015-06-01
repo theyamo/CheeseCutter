@@ -235,6 +235,7 @@ class InsValueTable : HexTable {
 		loadDialog = new FileSelectorDialog(Rectangle(),
 											"Load Instrument",
 											&loadCallback);
+		help = ui.help.HELPINSTABLE;
 	}
 
 	override void refresh() {
