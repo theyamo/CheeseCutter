@@ -11,7 +11,6 @@ import ct.base;
 import seq.sequencer;
 import audio.player;
 import ui.ui;
-import main;
 import std.string;
 import std.utf;
 import std.stdio : stderr;

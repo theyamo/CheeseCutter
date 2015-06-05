@@ -26,9 +26,8 @@ immutable SDL_Color[] PALETTE = [
 
 immutable FONT_X = 8, FONT_Y = 14;
 __gshared ubyte[] font;
-int mode;
-bool isDirty = false;
-int border = 1;
+immutable int mode, border = 1;
+private bool isDirty = false;
 
 immutable CHECKX = "assert(x >= 0 && x < width);";
 immutable CHECKY = "assert(y >= 0 && y < height);";
@@ -521,7 +520,7 @@ private class Oscilloscope : Visualizer {
 
 class DisplayError : Error {
 	this(string msg) {
-		super(msg ~ "SDL Error");
+		super("SDL Error: " ~ msg);
 	}
 }
 
@@ -531,7 +530,6 @@ void enableKeyRepeat() {
 
 void disableKeyRepeat() {
 	SDL_EnableKeyRepeat(0, 0);
-
 }
 
 Uint16 readkey() {

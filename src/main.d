@@ -37,8 +37,6 @@ void initVideo(bool useFullscreen, int m, bool useyuv, bool yuvcenter) {
 	if( SDL_Init(SDL_INIT_VIDEO) < 0) {
 		throw new DisplayError("Couldn't initialize framebuffer.");
 	}
-	// not in use
-	mode = m;
 	mx = 800; my = 600;
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
