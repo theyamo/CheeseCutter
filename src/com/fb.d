@@ -175,9 +175,8 @@ class VideoStandard : Video {
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
 	int correctedHeight, correctedWidth;
-	immutable bool yuvCenter;
 	
-	this(Screen scr, int fs, bool yuvCenter) {
+	this(Screen scr, int fs) {
 		super(scr, fs);
 		correctedHeight = displayHeight;
 		correctedWidth = displayWidth;
@@ -190,7 +189,6 @@ class VideoYUV : Video {
 			correctedHeight = cast(int)(correctedWidth * 0.75);
 		}
 
-		this.yuvCenter = yuvCenter;
 		enableFullscreen(fs > 0);
 	}
 
@@ -329,7 +327,7 @@ class VideoYUV : Video {
 		rect.h = cast(ushort)scrRes[1];
 		rect.x = rect.y = 0;
 
-		if(yuvCenter && useFullscreen) {
+		if(useFullscreen) {
 			rect.x = cast(short)(displayWidth/2 - scrRes[0]/2);
 			rect.y = cast(short)(displayHeight/2 - scrRes[1]/2);
 		}

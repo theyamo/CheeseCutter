@@ -31,7 +31,7 @@ version(Win32) {
 	const DIR_SEPARATOR = '\\';
 }
 
-void initVideo(bool useFullscreen, int m, bool useyuv, bool yuvcenter) {
+void initVideo(bool useFullscreen, bool useyuv) {
 	int mx, my;
 
 	if( SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -41,14 +41,13 @@ void initVideo(bool useFullscreen, int m, bool useyuv, bool yuvcenter) {
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
-	video = useyuv ? new VideoYUV(screen, useFullscreen, yuvcenter) :
+	video = useyuv ? new VideoYUV(screen, useFullscreen) :
 		new VideoStandard(screen, useFullscreen);
 
 	SDL_EnableKeyRepeat(200, 10);
 	SDL_EnableUNICODE(1);
 	SDL_WM_SetCaption("CheeseCutter".toStringz(),"CheeseCutter".toStringz());
 }
-
 
 void mainloop() {
 	int mods, key, unicode;
@@ -161,7 +160,7 @@ void printheader() {
 int main(char[][] args) {
 	int i;
 	bool fs = false;
-	bool yuvOverlay, yuvCenter = true, display;
+	bool yuvOverlay;
 	string filename;
 	bool fnDefined = false;
 
@@ -227,10 +226,6 @@ int main(char[][] args) {
 			case "-y", "-ya", "-yuv":	
 				yuvOverlay = true;
 				break;
-			case "-yn":
-				yuvOverlay = true;
-				yuvCenter = false;
-				break;
 			default:
 				version (OSX) {
 					if (args[i].length > 3 && args[i][0..4] == "-psn"){
@@ -258,7 +253,7 @@ int main(char[][] args) {
 	}
 	
 	audio.player.init();
-	initVideo(fs, display, yuvOverlay, yuvCenter);
+	initVideo(fs, yuvOverlay);
 	initSession();
 	mainui = new UI();
 	loadFile(filename);
@@ -271,7 +266,6 @@ int main(char[][] args) {
 }
 
 void openFile(char* filename){
-	
 	string str = to!(string)(filename);
 	loadFile(str);
 
