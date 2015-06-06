@@ -273,7 +273,7 @@ class InputSingleChar : InputValue {
 	}
 
 	override int keypress(Keyinfo key) {
-		auto v = keys.indexOf(key.unicode);
+		auto v = keys.indexOf(key.raw);
 		if(key.mods & KMOD_CTRL) return 0;
 		else if(key.raw == SDLK_ESCAPE) {
 			return CANCEL;
