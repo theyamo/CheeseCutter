@@ -13,6 +13,7 @@ import ct.purge;
 import derelict.sdl.sdl;
 import std.string;
 import std.stdio : stderr;
+import std.file;
 
 abstract class Table : Window {
 	const int columns, rows, visibleRows;
@@ -280,6 +281,14 @@ class InsValueTable : HexTable {
 									(std.conv.to!string(song.insLabels[row])));
 				if(fn.length == 0)
 					fn = "unnamed";
+				try {
+					chdir(loadDialog.directory);
+				}
+				catch(FileException e) {
+					stderr.writeln(e);
+					UI.statusline.display(format("Could not change to directory %40s",loadDialog.directory));
+					break;
+				}
 				
 				mainui.activateDialog(new StringDialog("Enter filename: ",
 													   dg,
