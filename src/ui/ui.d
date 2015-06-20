@@ -568,13 +568,17 @@ final private class Toplevel : WindowSwitcher {
 				 break;
 			case SDLK_PLUS:
 			case SDLK_KP_PLUS:
-				instable.stepRow(1);
-				state.activeInstrument = instable.row;
+				if(state.allowInstabNavigation) {
+					instable.stepRow(1);
+					state.activeInstrument = instable.row;
+				}
 				break;
 			case SDLK_MINUS:
 			case SDLK_KP_MINUS:
-				instable.stepRow(-1);
-				state.activeInstrument = instable.row;
+				if(state.allowInstabNavigation) {
+					instable.stepRow(-1);
+					state.activeInstrument = instable.row;
+				}
 				break;
 			 default:
 				 break;
@@ -582,7 +586,7 @@ final private class Toplevel : WindowSwitcher {
 		}
 		else if(key.mods & KMOD_SHIFT) {
 			version(OSX) {
-				if(key.raw == SDLK_EQUALS) {
+				if(key.raw == SDLK_EQUALS && state.allowInstabNavigation) {
 					instable.stepRow(1);
 					state.activeInstrument = instable.row;
 				}

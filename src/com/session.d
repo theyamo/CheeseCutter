@@ -17,6 +17,7 @@ struct EditorState {
 	bool shortTitles = true;
 	bool displayHelp = true;
 	bool keyjamStatus = false;
+	bool allowInstabNavigation = true;
 	string filename;
 }
 

@@ -451,6 +451,7 @@ class InsTable : Window {
 		}
 		activateInsValueTable();
 		active.update();
+		state.allowInstabNavigation = true;
 	}
 	
 	void activateDescInput() {
@@ -460,6 +461,7 @@ class InsTable : Window {
 		input.setCoord(area.x + 9 * 3, 1 + area.y + insinput.cursorOffset);
 		insdesc.setString(format(song.insLabels[insinput.row]));
 		initializeInput();
+		state.allowInstabNavigation = false;
 	}
 
 	void activateInsValueTable() {
@@ -467,6 +469,7 @@ class InsTable : Window {
 		input = insinput.input;
 		active.activate();
 		initializeInput();
+		state.allowInstabNavigation = true;
 	}
 
 	override int keypress(Keyinfo key) {
