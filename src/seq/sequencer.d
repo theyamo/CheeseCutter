@@ -429,7 +429,7 @@ protected abstract class VoiceTable : Window {
 		}
 		else switch(key.raw)
 			 {
-			 case SDLK_KP0, SDLK_BACKSPACE, SDLK_PLUS:
+			 case SDLK_BACKSPACE, SDLK_PLUS:
 				 setPositionMark();
 				 break;
 			 default:
@@ -462,6 +462,10 @@ protected abstract class VoiceTable : Window {
 			break;
 		case SDLK_PAGEDOWN:
 			step(PAGESTEP * song.highlight);
+			break;
+		case SDLK_KP0:
+			audio.player.playRow(voices);
+			step(1);
 			break;
 		case SDLK_TAB:
 			foreach(v; voices) { v.input.nibble = 0; }

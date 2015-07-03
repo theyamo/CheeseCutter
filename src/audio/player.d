@@ -93,11 +93,59 @@ void playNote(Element emt) {
 	playstatus = Status.Keyjam;
 }
 
+void playRow(Voice[] v) {
+	if(playstatus == Status.Play) return;
+	/*
+	std.stdio.writeln(emt);
+	song.cpu.reset();
+
+	foreach(int v, e; emt) {
+		song.cpu.regs.a = e.note.value;
+		song.cpu.regs.x = cast(ubyte)v;
+		song.cpu.regs.y = e.instr.value;
+		ushort call = 0x1009;
+		if(song.ver > 7) {
+			call = song.offsets[Offsets.Subnoteplay];
+		}
+		cpuCall(call,true);
+		
+	}
+	/*
+	playstatus = Status.Keyjam;
+	*/
+
+
+	auto d1 = v[0].activeRow;
+	auto d2 = v[1].activeRow;
+	auto d3 = v[2].activeRow;
+
+	SDL_PauseAudio(1);
+	if(SDL_GetAudioStatus() == SDL_AUDIO_PLAYING)
+		std.stdio.writefln("Audio thread not finished!");
+	SDL_Delay(20);
+	stop();
+	
+	initPlayOffset([d1.trkOffset,d2.trkOffset,d3.trkOffset],
+				   [d1.seqOffset,d2.seqOffset,d3.seqOffset]);
+
+	song.cpu.reset();
+
+	cpuCall(0x1003,true);
+	cpuCall(0x1003,true);
+	cpuCall(0x1003,true);
+
+	playstatus = Status.Keyjam;
+
+	SDL_PauseAudio(0);
+}
+
+
 void start(int[3] trk, int[3] seq) {
 	SDL_PauseAudio(1);
 	if(SDL_GetAudioStatus() == SDL_AUDIO_PLAYING)
 		std.stdio.writefln("Audio thread not finished!");
 	SDL_Delay(20);
+	stop();
 	initPlayOffset(trk,seq);
 	audio.timer.start();
 	audio.callback.reset();
