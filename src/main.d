@@ -41,8 +41,8 @@ void initVideo(bool useFullscreen, bool useyuv) {
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
-	video = useyuv ? new VideoYUV(screen, useFullscreen) :
-		new VideoStandard(screen, useFullscreen);
+	video = useyuv ? new VideoYUV(800, 600, screen, useFullscreen) :
+		new VideoStandard(800, 600, screen, useFullscreen);
 
 	SDL_EnableKeyRepeat(200, 10);
 	SDL_EnableUNICODE(1);
@@ -97,10 +97,7 @@ void mainloop() {
 				case 1, 3:
 					int x, y;
 					SDL_GetMouseState(&x, &y);
-					x -= video.rect.x;
-					y -= video.rect.y;
-					x *= video.scalex;
-					y *= video.scaley;
+					video.scalePosition(x, y);
 					int cx = (x + 4) / 8, cy = y / 14;
 					mainui.clickedAt(cx, cy, evt.button.button);
 					break;
@@ -119,6 +116,9 @@ void mainloop() {
 			case SDL_MOUSEMOTION:
 				break;
 			case SDL_ACTIVEEVENT:
+				break;
+			case SDL_VIDEORESIZE:
+				video.resizeEvent(evt.resize.w, evt.resize.h);
 				break;
 			case SDL_VIDEOEXPOSE:
 				mainui.update();

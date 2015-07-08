@@ -43,24 +43,25 @@ static this() {
 	}
 }
 
-
 abstract class Video {
 	protected {
 		SDL_Surface* surface;
 		int useFullscreen;
 		Screen screen;
 		Visualizer vis;
+		const int requestedWidth, requestedHeight;
+		int height, width; // resolution of window
+		int displayHeight, displayWidth; // resolution of the monitor
+		SDL_Rect rect;
 	}
-	int height = 800, width = 600;
-	float scalex, scaley;
-	immutable int displayHeight, displayWidth;
-	SDL_Rect rect;
 	
-	this(Screen scr, int fs) {
+	this(int wx, int wy, Screen scr, int fs) {
 		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 		screen = scr;
 		displayHeight = vidinfo.current_h;
 		displayWidth = vidinfo.current_w;
+		requestedHeight = wy;
+		requestedWidth = wx;
 		useFullscreen = fs;
 	}
 
@@ -69,38 +70,34 @@ abstract class Video {
 			SDL_FreeSurface(surface);
 	}
 
-	void drawVisualizer(int n) {
-		vis.draw(n);
-	}
+	abstract void drawVisualizer(int);
 
-	void clearVisualizer() {
-		vis.clear();
-	}
-	
+	abstract void clearVisualizer();
+
 	abstract void enableFullscreen(bool fs);
 
-	protected void resize(bool maxres) {
-		scalex = 800.0 / width;
-		scaley = 600.0 / height;
+	void resizeEvent(int nw, int nh) {
 	}
-	
+
+	void scalePosition(ref int x, ref int y) {
+		x -= rect.x;
+		y -= rect.y;
+		x *= cast(float)requestedWidth / width;
+		y *= cast(float)requestedHeight / height;
+	}
+		
 	abstract void updateFrame();
 }
 
 class VideoStandard : Video {
-	this(Screen scr, int fs) {
-		super(scr, fs);
+	this(int wx, int wy, Screen scr, int fs) {
+		super(wx, wy, scr, fs);
 		enableFullscreen(fs > 0);
 	}
 
-	override protected void resize(bool maxres) {
-		width = 800;
-		height = 600;
-		super.resize(maxres);
-	}
-
 	override void enableFullscreen(bool fs) {
-		resize(fs);
+		width = requestedWidth;
+		height = requestedHeight;
 		useFullscreen = fs ? SDL_FULLSCREEN : 0;
 		int sdlflags = SDL_SWSURFACE;
 		sdlflags |= useFullscreen;
@@ -114,6 +111,18 @@ class VideoStandard : Video {
 		screen.refresh();
 	}
 
+	override void drawVisualizer(int n) {
+		SDL_LockSurface(surface);
+		vis.draw(n);
+		SDL_UnlockSurface(surface);
+	}
+
+	override void clearVisualizer() {
+		SDL_LockSurface(surface);
+		vis.clear();
+		SDL_UnlockSurface(surface);
+	}
+	
 	override void updateFrame() {
 		int x, y;
 		int a,b,c;
@@ -174,10 +183,20 @@ class VideoStandard : Video {
 
 class VideoYUV : Video {
 	private SDL_Overlay* overlay;
-	int correctedHeight, correctedWidth;
+	private int correctedHeight, correctedWidth;
 	
-	this(Screen scr, int fs) {
-		super(scr, fs);
+	this(int wx, int wy, Screen scr, int fs) {
+		super(wx, wy, scr, fs);
+		calcAspect();
+		enableFullscreen(fs > 0);
+	}
+
+	~this() {
+		if(overlay !is null)
+			SDL_FreeYUVOverlay(overlay);
+	}
+
+	private void calcAspect() {
 		correctedHeight = displayHeight;
 		correctedWidth = displayWidth;
 		if(cast(float)displayHeight / displayWidth < 0.75) { // wide screen
@@ -188,34 +207,54 @@ class VideoYUV : Video {
 			correctedWidth = displayWidth;
 			correctedHeight = cast(int)(correctedWidth * 0.75);
 		}
-
-		enableFullscreen(fs > 0);
 	}
 
-	~this() {
-		if(overlay !is null)
-			SDL_FreeYUVOverlay(overlay);
+	override void drawVisualizer(int n) {
+		SDL_LockSurface(surface);
+		vis.draw(n);
+		SDL_UnlockSurface(surface);
 	}
 
-	override protected void resize(bool maxres) {
-		if(maxres) {
+	override void clearVisualizer() {
+		SDL_LockSurface(surface);
+		vis.clear();
+		SDL_UnlockSurface(surface);
+	}
+	
+	override void resizeEvent(int nw, int nh) {
+		if(useFullscreen > 0)
+			return;
+
+		width = nw; height = nh;
+		// calcAspect(nw, nh); // maybe unnecessary
+		
+
+		if(surface !is null)
+			SDL_FreeSurface(surface);
+
+		surface = SDL_SetVideoMode(nw, nh, 0, SDL_SWSURFACE | SDL_RESIZABLE);
+		if(surface is null) {
+			throw new DisplayError("Unable to initialize graphics mode.");
+		}
+		
+		createOverlay(nw, nh);
+		screen.refresh();
+	}
+
+	override void enableFullscreen(bool fs) {
+		if(fs) { // enable aspect corr. if in fullscreen
 			width = correctedWidth;
 			height = correctedHeight;
 		}
 		else {
-			width = 800;
-			height = 600;
+			width = requestedWidth;
+			height = requestedHeight;
 		}
-
-		super.resize(maxres);
-	}
-
-	override void enableFullscreen(bool fs) {
-		resize(fs);
+		
 		useFullscreen = fs ? SDL_FULLSCREEN : 0;
-		int sdlflags = SDL_SWSURFACE | useFullscreen;
+		int sdlflags = SDL_SWSURFACE | SDL_RESIZABLE | useFullscreen;
 		if(!useFullscreen)
-			surface = SDL_SetVideoMode(800, 600, 0, sdlflags); 
+			surface = SDL_SetVideoMode(requestedWidth, requestedHeight, 0, sdlflags); 
 		else surface = SDL_SetVideoMode(displayWidth, displayHeight, 0, sdlflags); 
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
@@ -223,7 +262,7 @@ class VideoYUV : Video {
 		vis = new Oscilloscope(surface, 500, 14);
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
-		makeOverlay([width, height]);
+		createOverlay(width, height);
 		screen.refresh();
 	}
 
@@ -316,20 +355,20 @@ class VideoYUV : Video {
 		}
 	}
 
-	private void makeOverlay(int[] scrRes) {
+	private void createOverlay(int scaledx, int scaledy) {
 		if(overlay !is null)
 			SDL_FreeYUVOverlay(overlay);
-		overlay = SDL_CreateYUVOverlay(800, 600, SDL_YV12_OVERLAY, surface);
+		overlay = SDL_CreateYUVOverlay(requestedWidth, requestedHeight, SDL_YV12_OVERLAY, surface);
 		if(overlay is null) {
 			throw new DisplayError("Couldn't initialize YUV overlay.");
 		}
-		rect.w = cast(ushort)scrRes[0];
-		rect.h = cast(ushort)scrRes[1];
+		rect.w = cast(ushort)scaledx;
+		rect.h = cast(ushort)scaledy;
 		rect.x = rect.y = 0;
 
 		if(useFullscreen) {
-			rect.x = cast(short)(displayWidth/2 - scrRes[0]/2);
-			rect.y = cast(short)(displayHeight/2 - scrRes[1]/2);
+			rect.x = cast(short)(displayWidth/2 - scaledx/2);
+			rect.y = cast(short)(displayHeight/2 - scaledy/2);
 		}
 	}
 }
