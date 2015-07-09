@@ -834,7 +834,7 @@ final class UI {
 
 			if(audio.player.isPlaying || audio.player.keyjamEnabled) {
 				if(vismode == VisMode.Regs) {
-					int x = screen.width - 42;
+					int x = screen.width - 42 * 2;
 					screen.cprint(x, 1, 15, 0, "V1:");
 					screen.cprint(x, 2, 15, 0, "V2:");
 					screen.cprint(x, 3, 15, 0, "V3:");
@@ -852,9 +852,9 @@ final class UI {
 
 					x += 42;
 
-					screen.cprint(x, 1, 15, 0, "V1:");
-					screen.cprint(x, 2, 15, 0, "V2:");
-					screen.cprint(x, 3, 15, 0, "V3:");
+					screen.cprint(x, 1, 15, 0, "V4:");
+					screen.cprint(x, 2, 15, 0, "V5:");
+					screen.cprint(x, 3, 15, 0, "V6:");
 					screen.cprint(x+26, 1, 15, 0, "$D435 36 37 38");
 					
 					for(int i = 0; i < 7; i++) {
