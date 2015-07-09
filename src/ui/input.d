@@ -11,7 +11,6 @@ import ct.base;
 import seq.sequencer;
 import audio.player;
 import ui.ui;
-import main;
 import std.string;
 import std.utf;
 import std.stdio : stderr;
@@ -274,7 +273,7 @@ class InputSingleChar : InputValue {
 	}
 
 	override int keypress(Keyinfo key) {
-		auto v = keys.indexOf(key.unicode);
+		auto v = keys.indexOf(key.raw);
 		if(key.mods & KMOD_CTRL) return 0;
 		else if(key.raw == SDLK_ESCAPE) {
 			return CANCEL;

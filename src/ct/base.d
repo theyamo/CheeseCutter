@@ -1814,7 +1814,7 @@ class Song {
 	}
 
 	void insertPatch(string filename, int insno) {
-		import std.csv;
+		import std.csv : csvReader;
 		auto conv(string s) {
 			ubyte[] arr = new ubyte[s.length / 2];
 			for(int i = 0, j = 0; i < s.length; i += 2, j++) {

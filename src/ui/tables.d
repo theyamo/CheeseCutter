@@ -13,6 +13,7 @@ import ct.purge;
 import derelict.sdl.sdl;
 import std.string;
 import std.stdio : stderr;
+import std.file;
 
 abstract class Table : Window {
 	const int columns, rows, visibleRows;
@@ -280,6 +281,14 @@ class InsValueTable : HexTable {
 									(std.conv.to!string(song.insLabels[row])));
 				if(fn.length == 0)
 					fn = "unnamed";
+				try {
+					chdir(loadDialog.directory);
+				}
+				catch(FileException e) {
+					stderr.writeln(e);
+					UI.statusline.display(format("Could not change to directory %40s",loadDialog.directory));
+					break;
+				}
 				
 				mainui.activateDialog(new StringDialog("Enter filename: ",
 													   dg,
@@ -442,6 +451,7 @@ class InsTable : Window {
 		}
 		activateInsValueTable();
 		active.update();
+		state.allowInstabNavigation = true;
 	}
 	
 	void activateDescInput() {
@@ -451,6 +461,7 @@ class InsTable : Window {
 		input.setCoord(area.x + 9 * 3, 1 + area.y + insinput.cursorOffset);
 		insdesc.setString(format(song.insLabels[insinput.row]));
 		initializeInput();
+		state.allowInstabNavigation = false;
 	}
 
 	void activateInsValueTable() {
@@ -458,6 +469,7 @@ class InsTable : Window {
 		input = insinput.input;
 		active.activate();
 		initializeInput();
+		state.allowInstabNavigation = true;
 	}
 
 	override int keypress(Keyinfo key) {

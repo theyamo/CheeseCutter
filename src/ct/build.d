@@ -122,6 +122,9 @@ ubyte[] doBuild(Song song, int address, int zpAddress,
 	if(!(defaultSubtune >= 1 && defaultSubtune <= ct.base.SUBTUNE_MAX))
 		throw new UserException(format("Valid range for subtunes is 1 - %d.", ct.base.SUBTUNE_MAX));
 
+	if(song.subtunes.numOf == 0) {
+		throw new UserException("No subtunes found");
+	}
 	// Dump data to asm source
 	string input = dumpOptimized(song, address, zpAddress,
 								 genPSID, verbose);

@@ -573,13 +573,17 @@ final private class Toplevel : WindowSwitcher {
 				 break;
 			case SDLK_PLUS:
 			case SDLK_KP_PLUS:
-				instable.stepRow(1);
-				state.activeInstrument = instable.row;
+				if(state.allowInstabNavigation) {
+					instable.stepRow(1);
+					state.activeInstrument = instable.row;
+				}
 				break;
 			case SDLK_MINUS:
 			case SDLK_KP_MINUS:
-				instable.stepRow(-1);
-				state.activeInstrument = instable.row;
+				if(state.allowInstabNavigation) {
+					instable.stepRow(-1);
+					state.activeInstrument = instable.row;
+				}
 				break;
 			 default:
 				 break;
@@ -587,7 +591,7 @@ final private class Toplevel : WindowSwitcher {
 		}
 		else if(key.mods & KMOD_SHIFT) {
 			version(OSX) {
-				if(key.raw == SDLK_EQUALS) {
+				if(key.raw == SDLK_EQUALS && state.allowInstabNavigation) {
 					instable.stepRow(1);
 					state.activeInstrument = instable.row;
 				}
@@ -754,7 +758,6 @@ final private class Toplevel : WindowSwitcher {
 final class UI {
 	private {
 		Window dialog = null;
-		int fullscreen;
 		//bool printSIDDump = false;
 		enum VisMode { None, Regs, Oscilloscope }
 		int vismode;
@@ -947,9 +950,8 @@ final class UI {
 			switch(key.raw) 
 			{
 			case SDLK_RETURN:
-				fullscreen ^= 1;
-				video.enableFullscreen(fullscreen > 0 ? true : false);
-				update();
+				video.toggleFullscreen();
+				//update();
 				break;
 			case SDLK_KP_PLUS:
 				audio.player.setMultiplier(song.multiplier + 1);
@@ -1247,8 +1249,8 @@ final class UI {
 
 	void enableKeyjamMode(bool doEnable) {
 		if(audio.player.isPlaying) return;
-		doEnable ? com.fb.disableKeyRepeat() :
-			com.fb.enableKeyRepeat();
+/+		doEnable ? com.fb.disableKeyRepeat() :
+			com.fb.enableKeyRepeat();+/
 		state.keyjamStatus = doEnable;
 	}
 

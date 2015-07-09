@@ -31,26 +31,24 @@ version(Win32) {
 	const DIR_SEPARATOR = '\\';
 }
 
-void initVideo(bool useFullscreen, int m, bool useyuv, bool yuvcenter) {
+void initVideo(bool useFullscreen, bool useyuv) {
 	int mx, my;
 
 	if( SDL_Init(SDL_INIT_VIDEO) < 0) {
 		throw new DisplayError("Couldn't initialize framebuffer.");
 	}
 	// not in use
-	mode = m;
 	mx = RES_X; my = RES_Y;
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
-	video = useyuv ? new VideoYUV(screen, useFullscreen, yuvcenter) :
-		new VideoStandard(screen, useFullscreen);
+	video = useyuv ? new VideoYUV(RES_X, RES_Y, screen, useFullscreen ? 1 : 0) :
+		new VideoStandard(RES_X, RES_Y, screen, useFullscreen ? 1 : 0);
 
 	SDL_EnableKeyRepeat(200, 10);
 	SDL_EnableUNICODE(1);
 	SDL_WM_SetCaption("CheeseCutter".toStringz(),"CheeseCutter".toStringz());
 }
-
 
 void mainloop() {
 	int mods, key, unicode;
@@ -100,10 +98,7 @@ void mainloop() {
 				case 1, 3:
 					int x, y;
 					SDL_GetMouseState(&x, &y);
-					x -= video.rect.x;
-					y -= video.rect.y;
-					x *= video.scalex;
-					y *= video.scaley;
+					video.scalePosition(x, y);
 					int cx = (x + 4) / 8, cy = y / 14;
 					mainui.clickedAt(cx, cy, evt.button.button);
 					break;
@@ -122,6 +117,9 @@ void mainloop() {
 			case SDL_MOUSEMOTION:
 				break;
 			case SDL_ACTIVEEVENT:
+				break;
+			case SDL_VIDEORESIZE:
+				video.resizeEvent(evt.resize.w, evt.resize.h);
 				break;
 			case SDL_VIDEOEXPOSE:
 				mainui.update();
@@ -161,7 +159,7 @@ void printheader() {
 int main(char[][] args) {
 	int i;
 	bool fs = false;
-	bool yuvOverlay = true, yuvCenter = true, display;
+	bool yuvOverlay;
 	string filename;
 	bool fnDefined = false;
 
@@ -224,10 +222,6 @@ int main(char[][] args) {
 			case "-y", "-ya", "-yuv":	
 				yuvOverlay = true;
 				break;
-			case "-yn":
-				yuvOverlay = true;
-				yuvCenter = false;
-				break;
 			case "-mono":
 				audio.audio.outputMono = true;
 				break;
@@ -258,7 +252,7 @@ int main(char[][] args) {
 	}
 	
 	audio.player.init();
-	initVideo(fs, display, yuvOverlay, yuvCenter);
+	initVideo(fs, yuvOverlay);
 	initSession();
 	mainui = new UI();
 	loadFile(filename);
@@ -271,7 +265,6 @@ int main(char[][] args) {
 }
 
 void openFile(char* filename){
-	
 	string str = to!(string)(filename);
 	loadFile(str);
 

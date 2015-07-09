@@ -84,7 +84,7 @@ class ConfirmationDialog : QueryDialogBase!int {
 		if(r == CANCEL)
 			return CANCEL; // just close dialog
 		if(r == RETURN) { // received legal key
-			callback(input.toInt());
+			callback(input.toInt);
 			return RETURN;
 		}
 		return OK;

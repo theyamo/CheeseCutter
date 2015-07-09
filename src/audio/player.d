@@ -96,12 +96,39 @@ void playNote(Element emt) {
 	playstatus = Status.Keyjam;
 }
 
+void playRow(Voice[] voices) {
+	if(playstatus == Status.Play) return;
+	int[] trk, seq;
+	foreach(v; voices) {
+		auto r = v.activeRow;
+		trk ~= r.trkOffset;
+		seq ~= r.seqOffset;
+	}
+	SDL_PauseAudio(1);
+	if(SDL_GetAudioStatus() == SDL_AUDIO_PLAYING)
+		std.stdio.writefln("Audio thread not finished!");
+	SDL_Delay(20);
+	stop();
+
+	initPlayOffset(trk, seq);
+
+	song.cpu.reset();
+
+	cpuCall(0x1003,true);
+	cpuCall(0x1003,true);
+	cpuCall(0x1003,true);
+
+	playstatus = Status.Keyjam;
+
+	SDL_PauseAudio(0);
+}
+
 void start(int[] trk, int[] seq) {
 	SDL_PauseAudio(1);
 	if(SDL_GetAudioStatus() == SDL_AUDIO_PLAYING)
 		std.stdio.writefln("Audio thread not finished!");
 	SDL_Delay(20);
-
+	stop();
 	initPlayOffset(trk,seq);
 
 	audio.timer.start();
