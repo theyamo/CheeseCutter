@@ -62,7 +62,6 @@ abstract class Video {
 		displayWidth = vidinfo.current_w;
 		requestedHeight = wy;
 		requestedWidth = wx;
-		useFullscreen = fs;
 	}
 
 	~this() {
@@ -77,6 +76,11 @@ abstract class Video {
 	abstract void enableFullscreen(bool fs);
 
 	void resizeEvent(int nw, int nh) {
+	}
+
+	void toggleFullscreen() {
+		useFullscreen ^= SDL_FULLSCREEN;
+		enableFullscreen(useFullscreen > 0);
 	}
 
 	void scalePosition(ref int x, ref int y) {
@@ -226,8 +230,6 @@ class VideoYUV : Video {
 			return;
 
 		width = nw; height = nh;
-		// calcAspect(nw, nh); // maybe unnecessary
-		
 
 		if(surface !is null)
 			SDL_FreeSurface(surface);
@@ -254,8 +256,8 @@ class VideoYUV : Video {
 		useFullscreen = fs ? SDL_FULLSCREEN : 0;
 		int sdlflags = SDL_SWSURFACE | SDL_RESIZABLE | useFullscreen;
 		if(!useFullscreen)
-			surface = SDL_SetVideoMode(requestedWidth, requestedHeight, 0, sdlflags); 
-		else surface = SDL_SetVideoMode(displayWidth, displayHeight, 0, sdlflags); 
+			surface = SDL_SetVideoMode(requestedWidth, requestedHeight, 0, sdlflags);
+		else surface = SDL_SetVideoMode(displayWidth, displayHeight, 0, sdlflags);
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
 		}

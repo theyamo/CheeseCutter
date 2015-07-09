@@ -753,7 +753,6 @@ final private class Toplevel : WindowSwitcher {
 final class UI {
 	private {
 		Window dialog = null;
-		int fullscreen;
 		//bool printSIDDump = false;
 		enum VisMode { None, Regs, Oscilloscope }
 		int vismode;
@@ -923,9 +922,8 @@ final class UI {
 			switch(key.raw) 
 			{
 			case SDLK_RETURN:
-				fullscreen ^= 1;
-				video.enableFullscreen(fullscreen > 0 ? true : false);
-				update();
+				video.toggleFullscreen();
+				//update();
 				break;
 			case SDLK_KP_PLUS:
 				audio.player.setMultiplier(song.multiplier + 1);
