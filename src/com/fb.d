@@ -48,7 +48,7 @@ static this() {
 abstract class Video {
 	protected {
 		SDL_Surface* surface;
-		int useFullscreen;
+		bool useFullscreen;
 		Screen screen;
 		Visualizer vis;
 		const int requestedWidth, requestedHeight;
@@ -81,8 +81,8 @@ abstract class Video {
 	}
 
 	void toggleFullscreen() {
-		useFullscreen ^= SDL_FULLSCREEN;
-		enableFullscreen(useFullscreen > 0);
+		useFullscreen ^= 1; 
+		enableFullscreen(useFullscreen);
 	}
 
 	void scalePosition(ref int x, ref int y) {
@@ -104,9 +104,9 @@ class VideoStandard : Video {
 	override void enableFullscreen(bool fs) {
 		width = requestedWidth;
 		height = requestedHeight;
-		useFullscreen = fs ? SDL_FULLSCREEN : 0;
+		useFullscreen = fs;
 		int sdlflags = SDL_SWSURFACE;
-		sdlflags |= useFullscreen;
+		sdlflags |= fs ? SDL_FULLSCREEN : 0;
 		surface = SDL_SetVideoMode(width, height, 0, sdlflags); 
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
@@ -229,7 +229,7 @@ class VideoYUV : Video {
 	}
 	
 	override void resizeEvent(int nw, int nh) {
-		if(useFullscreen > 0)
+		if(useFullscreen)
 			return;
 
 		width = nw; height = nh;
@@ -255,10 +255,11 @@ class VideoYUV : Video {
 			width = requestedWidth;
 			height = requestedHeight;
 		}
-		
-		useFullscreen = fs ? SDL_FULLSCREEN : 0;
-		int sdlflags = SDL_SWSURFACE | SDL_RESIZABLE | useFullscreen;
-		if(!useFullscreen)
+
+		int sdlflags = SDL_SWSURFACE;
+		useFullscreen = fs; 
+		sdlflags |= fs ? SDL_FULLSCREEN : SDL_RESIZABLE;
+		if(!fs)
 			surface = SDL_SetVideoMode(requestedWidth, requestedHeight, 0, sdlflags);
 		else surface = SDL_SetVideoMode(displayWidth, displayHeight, 0, sdlflags);
 		if(surface is null) {
