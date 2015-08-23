@@ -38,7 +38,7 @@ bool doPurge(ref Song song) {
 	try {
 		p.purgeAll();
 	}
-	catch(Exception e) {
+	catch(PurgeException e) {
 		writeln(e);
 		return false;
 	}
