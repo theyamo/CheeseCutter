@@ -1573,6 +1573,15 @@ class Song {
 		}
 	}
 
+	void seqIterator(void delegate(int seqno, Sequence s, Element e) dg) {
+		foreach(int i, s; seqs) {
+			for(int j = 0; j < s.rows; j++) {
+				Element e = s.data[j];
+				dg(i, s, e);
+			}
+		}
+	}
+
 	void trackIterator(void delegate(Track t) dg) {
 		for(int sidx = 0; sidx < 32; sidx++) {
 			Tracklist[] subtune = subtunes[sidx];

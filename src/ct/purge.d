@@ -279,9 +279,10 @@ private:
 	
 	private void purgeChordtable() {
 		bool chordsUsed[0x20];
-		song.seqIterator((Sequence s, Element e) { 				
-				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f)
+		song.seqIterator((Sequence s, Element e) {
+				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f) {
 					chordsUsed[e.cmd.value & 0x1f] = true;
+				}
 			});
 
 		struct Chunk {
@@ -293,7 +294,7 @@ private:
 			for(int i = idx; i < 128; i++) {
 				if(song.chordTable[i] >= 0x80) return i;
 			}
-			assert(0);
+			assert(0, format("could not find end for index %d", idx));
 		}
 
 		song.generateChordIndex();
