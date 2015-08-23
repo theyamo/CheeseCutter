@@ -271,6 +271,10 @@ int main(string[] args) {
 				insong.subtunes.swap(0, singleSubtune - 1);
 				defaultTune = 1;
 			}
+			if(!doPurge(insong)) {
+				writeln("Aborting");
+				return -1;
+			}
 			try {
 				validate(insong);
 			}
@@ -280,10 +284,6 @@ int main(string[] args) {
 				return -1;
 			}
 				
-			if(!doPurge(insong)) {
-				writeln("Aborting");
-				return -1;
-			}
 				
 			ubyte[] data = doBuild(insong, relocAddress, zpAddress,
 								   command == Command.ExportSID,
