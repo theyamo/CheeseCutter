@@ -58,6 +58,13 @@ Alt-1, 2, 3.............Jump to voice 1, 2 or 3
 Alt-4-8 can also move between tables (in the aforementioned order,
 so Alt-4 = Sequencer, Alt-5 = Ins, ...)
 
+`+dInstrument table functions\n
+Ctrl-L..................Load current insturment from disk
+Ctrl-S..................Save current instrument to disk
+Ctrl-D..................Delete current instrument
+Ctrl-C..................Copy instrument to clipboard
+Ctrl-V..................Paste instrument from clipboard
+
 `+dPlayer reference\n
 Check out the player reference guide from the CheeseCutter homepage.
 
@@ -142,14 +149,6 @@ Ctrl-Alt-2..............Swap voice's track with voice 2's tracks from crsr down
 Ctrl-Alt-3..............Swap voice's track with voice 3's tracks from crsr down
 "]);
 
-ContextHelp HELPINSTABLE = ContextHelp("Instrument table help",
-["										
-Ctrl-L..................Load current insturment from disk
-Ctrl-S..................Save current instrument to disk
-Ctrl-D..................Delete current instrument
-Ctrl-C..................Copy instrument to clipboard
-Ctrl-V..................Paste instrument from clipboard
-"]);
 
 ContextHelp genPlayerContextHelp(string title, char*[] descriptions) {
 	string text;

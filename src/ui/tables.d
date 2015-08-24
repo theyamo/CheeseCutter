@@ -235,7 +235,6 @@ class InsValueTable : HexTable {
 		loadDialog = new FileSelectorDialog(Rectangle(),
 											"Load Instrument",
 											&loadCallback);
-		help = ui.help.HELPINSTABLE;
 	}
 
 	override void refresh() {
@@ -828,6 +827,7 @@ class WaveTable : HexTable {
 			return genPlayerContextHelp("Wave table", 
 										song.waveDescriptions);
 		return ui.help.HELPMAIN;
+		
 	}		
 }
 
