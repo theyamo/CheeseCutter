@@ -104,9 +104,9 @@ Ctrl-M/N................Increase/decrease row highlight value
 Ctrl-0(zero)............Reset highlighting to current row
 Ctrl-R..................Show/hide row counters for sequences
 Ctrl-T..................Toggle notes relative to current transpose
+Keypad 0................Play notes for all voices in current row
 Ctrl-P..................Split current sequence into two from cursor pos.
                         `+dUse with caution.
-
 `+dIn the note column (F6)
 
  2 3   5 6 7   9 0
