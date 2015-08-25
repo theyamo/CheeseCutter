@@ -463,10 +463,6 @@ protected abstract class VoiceTable : Window {
 		case SDLK_PAGEDOWN:
 			step(PAGESTEP * song.highlight);
 			break;
-		case SDLK_KP0:
-			audio.player.playRow(voices);
-			step(1);
-			break;
 		case SDLK_TAB:
 			foreach(v; voices) { v.input.nibble = 0; }
 			if(key.mods & KMOD_SHIFT)
