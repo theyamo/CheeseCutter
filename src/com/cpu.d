@@ -543,21 +543,24 @@ protected:
 			int t;
 			t = regs.a - value - !(regs.st & St.C);
 			regs.st &= 255 - St.C;
-			regs.st |= value > regs.a ? 0 : St.C;
+			//regs.st |= value > regs.a ? 0 : St.C;
+			regs.st |= t < 0 ? 0 : St.C;			
 			set(regs.a,t & 255);
 			break;
 	    case Op.CMP:
 			int t;
 			t = regs.a - value;
 			regs.st &= 255 - St.C;
-			regs.st |= value > regs.a ? 0 : St.C;
+			//regs.st |= value > regs.a ? 0 : St.C;
+			regs.st |= t < 0 ? 0 : St.C;
 			setST(t & 255);
 			break;
 	    case Op.CPX:
 			int t;
 			t = regs.x - value;
 			regs.st &= 255 - St.C;
-			regs.st |= value > regs.x ? 0 : St.C;
+			//regs.st |= value > regs.x ? 0 : St.C;
+			regs.st |= t < 0 ? 0 : St.C;
 			setST(t & 255);
 			break;
 	    case Op.CPY:
@@ -565,7 +568,9 @@ protected:
 			t = regs.y - value;
 			regs.st &= 255 - St.C;
 			regs.st |= value > regs.y ? 0 : St.C;
-			setST(t & 255);
+			//regs.st |= value > regs.y ? 0 : St.C;
+			regs.st |= t < 0 ? 0 : St.C;
+			setST(t & 255);			
 			break;
 	    case Op.INC:
 			write(stat,am,arg,(value + 1) & 255);
