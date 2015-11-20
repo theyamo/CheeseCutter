@@ -30,24 +30,18 @@ class Cursor {
 		int bg2, fg2;
 		int bg, fg;
 	}
-
+	
 	void set() { set(x,y); }
-
-	void refresh() {
-		if(x < 0 || y < 0) return;
-
-		ushort col = screen.getChar(x, y);
-//		counter = BLINK_VAL;
-//		bg = fg2 = (col >> 8) & 15;
-		fg = bg2 = (col >> 12) & 15;
-		
-	}
-
+	alias set refresh;
+  
 	void set(int nx, int ny) {
 		if(nx < 0 || ny < 0) return;
 		if(x != nx || y != ny) {
 			x = nx; y = ny;
-			swapColors();
+			ushort col = screen.getChar(x, y);
+			counter = BLINK_VAL;
+			bg = fg2 = (col >> 8) & 15;
+			fg = bg2 = (col >> 12) & 15;
 		}
 		screen.setColor(x,y,bg2,fg2);
 	}
@@ -64,13 +58,6 @@ class Cursor {
 			counter = BLINK_VAL;
 			t = bg2; bg2 = fg2; fg2 = t;
 		}
-	}
-
-	private void swapColors() {
-		ushort col = screen.getChar(x, y);
-		counter = BLINK_VAL;
-		bg = fg2 = (col >> 8) & 15;
-		fg = bg2 = (col >> 12) & 15;
 	}
 }
 

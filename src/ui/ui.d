@@ -673,7 +673,6 @@ final private class Toplevel : WindowSwitcher {
 
 	void startFp() {
 		followplay = true;
-//		sequencer.deactivate();
 		windows[0] = fplay;
 		if(activeWindow == sequencer)
 			activateWindow(0);
@@ -693,7 +692,6 @@ final private class Toplevel : WindowSwitcher {
 		followplay = false;
 		windows[0] = sequencer;
 		activateWindow(activeWindowNum);
-		sequencer.activeView.refresh();
 	}
 
 	void stopPlayback() {
