@@ -291,11 +291,11 @@ private:
 			int oldOffset;
 		}
 
-		int getidx2(int idx) {
+		int getidx2(int cmdidx, int idx) {
 			for(int i = idx; i < 128; i++) {
 				if(song.chordTable[i] >= 0x80) return i;
 			}
-			assert(0);
+			throw new PurgeException(format("Could not find valid chord for value %x", cmdidx));
 		}
 
 		song.generateChordIndex();
@@ -307,7 +307,7 @@ private:
 		for(int i = tablestart; i < 0x20; i++) {
 			if(chordsUsed[i]) {
 				int idx = song.chordIndexTable[i];
-				int idx2 = getidx2(idx)+1; // FIX: check... might cause problems
+				int idx2 = getidx2(i,idx)+1; // FIX: check... might cause problems
 				//int idx2 = song.chordIndexTable[i+1];
 				assert(idx != 0);
 				if(idx2 == 0) break;
@@ -318,7 +318,7 @@ private:
 				for(int j = i + 1; j < 0x20; j++) {
 					if(chordsUsed[j]) {
 						int idx = song.chordIndexTable[j];
-						int idx2 = getidx2(idx)+1;
+						int idx2 = getidx2(j, idx)+1;
 						
 						replaceCmdColumnvalue(song, 0x80 + j, 0x80 + i);
 						ubyte[] chord = song.chordTable[idx .. idx2].dup;
@@ -528,4 +528,13 @@ private void genericInsertRow(Song song, ubyte[] table, int row) {
 		}
 	}
 }
-	
+
+class PurgeException : Exception {
+	this(string msg) {
+		super(msg);
+	}
+
+	override string toString() {
+		return "Purge error: " ~ msg;
+	}
+}

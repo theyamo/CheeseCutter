@@ -302,6 +302,10 @@ protected class SequenceTable : VoiceTable {
 					toSeqEnd();
 				}
 				break;
+			case SDLK_KP0:
+				audio.player.playRow(voices);
+				step(1);
+				break;
 			default:
 				break;
 			}

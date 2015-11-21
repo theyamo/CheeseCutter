@@ -31,11 +31,18 @@ string defineOutfn(int cmd, string infn) {
 	return name ~ "." ~ exts[cmd];
 }
 
-void doPurge(ref Song song) {
-	if(noPurge) return;
+bool doPurge(ref Song song) {
+	if(noPurge) return true;
 	explain("Purging data...");
 	Purge p = new Purge(song, verbose);
-	p.purgeAll();
+	try {
+		p.purgeAll();
+	}
+	catch(PurgeException e) {
+		writeln(e);
+		return false;
+	}
+	return true;
 }
 
 void validate(ref Song song) {
@@ -46,16 +53,38 @@ void validate(ref Song song) {
 		int pulseptr = song.pulsetablePointer(i);
 		int filtptr = song.filtertablePointer(i);
 		if(!song.tWave.isValid(waveptr)) {
-			throw new UserException(format("Error: instrument %d is not valid (wavetable does not wrap).", i));
+			throw new ValidateException(format("Error: instrument %d is not valid (wavetable does not wrap).", i));
 		}
 		
 		if(!song.tPulse.isValid(pulseptr)) {
-			throw new UserException(format("Cannot save; pulse %d is not valid.", pulseptr));
+			throw new ValidateException(format("Cannot save; pulse %d is not valid.", pulseptr));
 		}
 		
 		if(!song.tFilter.isValid(filtptr)) {
-			throw new UserException(format("Cannot save; filter %d is not valid.", filtptr));
+			throw new ValidateException(format("Cannot save; filter %d is not valid.", filtptr));
 		}
+
+		song.seqIterator((int seqno, Sequence s, Element e) {
+				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f) {
+					int idx = song.chordIndexTable[e.cmd.value & 0x1f];
+					for(int i = idx; i < 128; i++) {
+						if(song.chordTable[i] >= 0x80) return;
+					}
+					throw new ValidateException(format("sequence $%02x, could not find end for chord %x. The song has a 8x command pointing to nonexistant chord program.", seqno, e.cmd.value & 0x1f));
+					
+				}
+			});
+		
+	}
+}
+
+class ValidateException : Exception {
+	this(string msg) {
+		super(msg);
+	}
+
+	override string toString() {
+		return "Validation error: " ~ msg;
 	}
 }
 
@@ -236,8 +265,20 @@ int main(string[] args) {
 			if(singleSubtune >= 0) {
 				throw new UserException("-s currently works only on regular sids");
 			}
-			doPurge(insong);
-			validate(insong);
+			if(!doPurge(insong)) {
+				writeln("Aborting");
+				return -1;
+			}
+			try {
+				validate(insong);
+			}
+			catch(ValidateException e) {
+				writeln(e);
+				writeln("Aborting");
+				return -1;
+			}
+				
+				
 			ubyte[] data = doBuild(insong, relocAddress, zpAddress,
 								   command == Command.ExportSID,
 								   defaultTune, verbose);

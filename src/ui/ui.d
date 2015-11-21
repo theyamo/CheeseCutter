@@ -678,7 +678,6 @@ final private class Toplevel : WindowSwitcher {
 
 	void startFp() {
 		followplay = true;
-//		sequencer.deactivate();
 		windows[0] = fplay;
 		if(activeWindow == sequencer)
 			activateWindow(0);
@@ -698,7 +697,6 @@ final private class Toplevel : WindowSwitcher {
 		followplay = false;
 		windows[0] = sequencer;
 		activateWindow(activeWindowNum);
-		sequencer.activeView.refresh();
 	}
 
 	void stopPlayback() {
@@ -714,7 +712,17 @@ final private class Toplevel : WindowSwitcher {
 	private void optimizeSong() {
 		if(++optimizecounter > 1) {
 			refresh();
-			(new Purge(song,true)).purgeAll();
+			// TODO: VALIDATION HERE BEFORE PURGING... PurgeExpception should be useless if validate covers all errorcases
+			try {
+				(new Purge(song,true)).purgeAll();
+			}
+			catch(PurgeException e) {
+				UI.statusline.display(e.toString);
+				optimizecounter = 0;
+				return;
+				
+			}
+			
 			refresh();
 			UI.statusline.display("Song data optimized.");
 			optimizecounter = 0;

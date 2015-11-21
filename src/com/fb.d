@@ -75,7 +75,7 @@ abstract class Video {
 
 	abstract void clearVisualizer();
 
-	abstract void enableFullscreen(bool fs);
+	abstract protected void enableFullscreen(bool fs);
 
 	void resizeEvent(int nw, int nh) {
 	}
@@ -101,7 +101,7 @@ class VideoStandard : Video {
 		enableFullscreen(fs > 0);
 	}
 
-	override void enableFullscreen(bool fs) {
+	override protected void enableFullscreen(bool fs) {
 		width = requestedWidth;
 		height = requestedHeight;
 		useFullscreen = fs;
@@ -246,7 +246,7 @@ class VideoYUV : Video {
 		screen.refresh();
 	}
 
-	override void enableFullscreen(bool fs) {
+	override protected void enableFullscreen(bool fs) {
 		if(fs) { // enable aspect corr. if in fullscreen
 			width = correctedWidth;
 			height = correctedHeight;

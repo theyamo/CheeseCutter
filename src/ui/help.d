@@ -58,6 +58,13 @@ Alt-1, 2, 3.............Jump to voice 1, 2 or 3
 Alt-4-8 can also move between tables (in the aforementioned order,
 so Alt-4 = Sequencer, Alt-5 = Ins, ...)
 
+`+dInstrument table functions\n
+Ctrl-L..................Load current insturment from disk
+Ctrl-S..................Save current instrument to disk
+Ctrl-D..................Delete current instrument
+Ctrl-C..................Copy instrument to clipboard
+Ctrl-V..................Paste instrument from clipboard
+
 `+dPlayer reference\n
 Check out the player reference guide from the CheeseCutter homepage.
 
@@ -104,9 +111,9 @@ Ctrl-M/N................Increase/decrease row highlight value
 Ctrl-0(zero)............Reset highlighting to current row
 Ctrl-R..................Show/hide row counters for sequences
 Ctrl-T..................Toggle notes relative to current transpose
+Keypad 0................Play notes for all voices in current row
 Ctrl-P..................Split current sequence into two from cursor pos.
                         `+dUse with caution.
-
 `+dIn the note column (F6)
 
  2 3   5 6 7   9 0
@@ -141,6 +148,7 @@ Ctrl-Alt-1..............Swap voice's track with voice 1's tracks from crsr down
 Ctrl-Alt-2..............Swap voice's track with voice 2's tracks from crsr down
 Ctrl-Alt-3..............Swap voice's track with voice 3's tracks from crsr down
 "]);
+
 
 ContextHelp genPlayerContextHelp(string title, char*[] descriptions) {
 	string text;

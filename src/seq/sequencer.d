@@ -346,7 +346,6 @@ protected abstract class VoiceTable : Window {
 		super(a);
 		posTable = pi;
 		activeVoice = voices[0];
-		activate();
 	}
 
 	override void activate() {
@@ -363,7 +362,6 @@ protected abstract class VoiceTable : Window {
 		foreach(v; voices) {
 			v.refresh(); 
 		}
-		input.cursor.refresh();
 	}
 
 	void centralize() {
@@ -462,10 +460,6 @@ protected abstract class VoiceTable : Window {
 			break;
 		case SDLK_PAGEDOWN:
 			step(PAGESTEP * song.highlight);
-			break;
-		case SDLK_KP0:
-			audio.player.playRow(voices);
-			step(1);
 			break;
 		case SDLK_TAB:
 			foreach(v; voices) { v.input.nibble = 0; }
@@ -946,8 +940,8 @@ protected:
 	}
 
 	override void refresh() {
-	  foreach(vt; voiceTables) {
-		  vt.refresh();
+	  foreach(b; voiceTables) {
+	    b.refresh();
 	  }
 	}
 
