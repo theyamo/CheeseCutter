@@ -138,7 +138,7 @@ ofe8		!16 track5
 ofea		!16 track6
 ofec		!16 dummy
 ofee		!16 newseq
-version		!pet "cc4.03s"
+version		!pet "cc4.04s"
 }
 ;;; ----------------------------------------
 ;;; editor specific player routines, will be 
@@ -221,7 +221,7 @@ subnoteplay
 		tya
 		sta shinst,x
 
-		lda #2
+		lda #3
 		sta tsync,x
 		lda #0
 		sta synccnt,x
