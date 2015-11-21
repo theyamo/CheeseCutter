@@ -70,7 +70,7 @@ void toggleSIDModel() {
 	setSidModel(sidtype ^ 1);
 }
 
-void playNote(Element emt) {
+deprecated void playNote(Element emt) {
 	if(playstatus == Status.Play) return;
 	int v = seq.sequencer.activeVoiceNum;
 

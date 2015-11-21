@@ -506,18 +506,20 @@ class InputString : Input {
 	}
 }
 
-abstract class Newinput : Input {
+abstract class ExtendedInput : Input {
 	protected {
 		int nibble, memvalue;
 		Element element;
+		Voice[] voices;
+		int voice;
 	}
 	int invalue;
 
-	this() {
+	protected this() {
 		super(1);
 	}
-
-	this(int w) {
+	
+	protected this(int w) {
 		super(w);
 	}
 
@@ -613,7 +615,7 @@ protected:
 	}
 }
 
-class InputOctave : Newinput {
+class InputOctave : ExtendedInput {
 	override int keypress(Keyinfo key) {
 		return super.keypress(key,"012345678");
 	}	
@@ -628,7 +630,7 @@ class InputOctave : Newinput {
 	}
 }
 
-class InputInstrument : Newinput {
+class InputInstrument : ExtendedInput {
 	this() { super(2); }
 	override void clearRow() {
 		super.clearRow();
@@ -661,7 +663,7 @@ class InputInstrument : Newinput {
 	}
 }
 
-class InputCmd : Newinput {
+class InputCmd : ExtendedInput {
 	this() { super(2); }
 
 	override void clearRow() {
@@ -679,9 +681,9 @@ class InputCmd : Newinput {
 	}
 }
 
-class InputNote : Newinput {
+class InputNote : ExtendedInput {
 	InputKeyjam keyjam;
-
+	
 	this() {
 		super();
 		keyjam = new InputKeyjam();
@@ -775,7 +777,7 @@ class InputNote : Newinput {
 	}
 }
 
-class InputKeyjam : Newinput {
+class InputKeyjam : ExtendedInput {
 	ubyte[4] dummy;
 	this() {
 		element = Element(dummy);
@@ -819,13 +821,13 @@ class InputKeyjam : Newinput {
 	}
 }
 
-final class InputSeq : Newinput {
+final class InputSeq : ExtendedInput {
 	Element element;
 	private {
-		Newinput inputNote, inputInstrument, inputCmd, inputOctave;
+		ExtendedInput inputNote, inputInstrument, inputCmd, inputOctave;
 	}
-	Newinput[] inputters;
-	Newinput activeInput;
+	ExtendedInput[] inputters;
+	ExtendedInput activeInput;
 	int activeInputNo;
 	alias activeInputNo activeColumn;
 	enum columns = 3;
