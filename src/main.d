@@ -15,7 +15,6 @@ import audio.resid.filter;
 import audio.audio;
 import std.stdio;
 import std.string;
-import std.cstream;
 import std.conv;
 import std.file;
 
@@ -139,22 +138,22 @@ void mainloop() {
 }
 
 void printheader() {
-	derr.writefln("CheeseCutter (C) 2009-15 Abaddon");
-	derr.writefln("Released under GNU GPL.");
-	derr.writef("\n");
-	derr.writefln("Usage: ccutter [OPTION]... [FILE]");
-	derr.writef("\n");
-	derr.writefln("Options:");
-	derr.writefln("  -b [value]       Set playback buffer size (def=%d)", audio.audio.bufferSize);
-	derr.writefln("  -f               Start in fullscreen mode");
-	derr.writefln("  -nofp            Do not use resid-fp emulation");
-	derr.writefln("  -fpr [x]         Specify filter preset. x = 0..16 for 6581 and 0..1 for 8580");
-	derr.writefln("  -i               Disable resid interpolation (use fast mode instead)");
-	derr.writefln("  -m [0|1]         Specify SID model for reSID (6581/8580) (def=0)");
-	derr.writefln("  -n               Enable NTSC mode");
-	derr.writefln("  -r [value]       Set playback frequency (def=48000)");
-	derr.writefln("  -y               Use YUV video overlay");
-	derr.writef("\n");
+	stderr.writefln("CheeseCutter (C) 2009-15 Abaddon");
+	stderr.writefln("Released under GNU GPL.");
+	stderr.writef("\n");
+	stderr.writefln("Usage: ccutter [OPTION]... [FILE]");
+	stderr.writef("\n");
+	stderr.writefln("Options:");
+	stderr.writefln("  -b [value]       Set playback buffer size (def=%d)", audio.audio.bufferSize);
+	stderr.writefln("  -f               Start in fullscreen mode");
+	stderr.writefln("  -nofp            Do not use resid-fp emulation");
+	stderr.writefln("  -fpr [x]         Specify filter preset. x = 0..16 for 6581 and 0..1 for 8580");
+	stderr.writefln("  -i               Disable resid interpolation (use fast mode instead)");
+	stderr.writefln("  -m [0|1]         Specify SID model for reSID (6581/8580) (def=0)");
+	stderr.writefln("  -n               Enable NTSC mode");
+	stderr.writefln("  -r [value]       Set playback frequency (def=48000)");
+	stderr.writefln("  -y               Use YUV video overlay");
+	stderr.writef("\n");
 }
 
 int main(char[][] args) {
@@ -174,7 +173,7 @@ int main(char[][] args) {
 	
 	scope(failure) {
 		if(song !is null) {
-			derr.writefln("Crashed! Saving backup...");
+			stderr.writefln("Crashed! Saving backup...");
 			song.save("_backup.ct");
 		}
 	}
