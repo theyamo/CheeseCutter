@@ -236,7 +236,7 @@ class Infobar : Window {
 		int c1 = audio.player.isPlaying ? 13 : 12;
 		screen.fprint(x1,area.y,format("`05Time: `0%x%02d:%02d / $%02x",
 									   c1,audio.timer.min, audio.timer.sec,
-									   audio.callback.linesPerFrame));
+									   audio.callback.linesPerFrame & 255));
 		
 		screen.fprint(x1 + 19,area.y,
 				   format("`05Oct: `0d%d  `05Spd: `0d%X  `05St: `0d%d ",
