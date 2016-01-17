@@ -73,11 +73,15 @@ class QueryDialog : QueryDialogBase!int {
 }
 
 class ConfirmationDialog : QueryDialogBase!int {
-	this(string s, Callback fp) {
-		super(s, fp);
-		input = new InputSingleChar(byt, "yn", 1);
+	this(string title, Callback fp, string keys) {
+		super(title, fp);
+		input = new InputSingleChar(byt, keys, 1);
 	}
 
+	this(string title, Callback fp) {
+		this(title, fp, "yn");
+	}
+	
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_ALT) return OK;
 		int r = input.keypress(key);

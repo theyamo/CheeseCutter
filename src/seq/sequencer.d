@@ -734,11 +734,6 @@ protected abstract class VoiceTable : Window {
 	Tracklist getTracklist(Voice v) {
 		return v.tracks[v.activeRow.trkOffset .. v.tracks.length];
 	}
-
-	@property Tracklist tracklist() {
-		return getTracklist(activeVoice);
-	}
-
 }
 
 // -------------------------------------------------------------------
@@ -749,11 +744,11 @@ final class Sequencer : Window {
 		TrackmapTable trackmapTable;
 		SequenceTable sequenceTable;
 		TrackTable trackTable;
-		QueryDialog queryCopy, queryClip, queryAppend;
+		QueryDialog queryCopy, queryAppend;
 		PosDataTable[] postables;
 	}
 	VoiceTable activeView;
-	private Clip[] clip;
+	//private Clip[] clip;
 	
 	this(Rectangle a) {
 		int h = screen.height - 10;
@@ -771,9 +766,6 @@ final class Sequencer : Window {
 								  
 		queryCopy = new QueryDialog("Copy this sequence to cursor seq: $",
 								&copyCallback, 0x80);
-		
-		queryClip = new QueryDialog("Copy number of tracks to clipboard: $",
-								&clipCallback, 0x80);
 		
 		// top & bottom
 		tableBot = -area.height / 2;
@@ -834,12 +826,6 @@ public:
 				break;
 			case SDLK_c:
 				mainui.activateDialog(queryCopy);
-				break;
-			case SDLK_z:
-				mainui.activateDialog(queryClip);
-				break;
-			case SDLK_b:
-				pasteCallback();
 				break;
 			case SDLK_RIGHT:
 				changeSubtune(1);
@@ -982,34 +968,6 @@ private:
 		Sequence fr = song.seqs[param];
 		Sequence to = s.seq; 
 		to.copyFrom(fr);
-		activeView.step(0);
-	}
-
-	void clipCallback(int num) {
-		const int trackLength = activeView.activeVoice.tracks.trackLength;
-		int curTrkOffset = activeView.activeVoice.activeRow.trkOffset;
-		Tracklist tl = activeView.tracklist[0..num];
-		int length = tl.length;
-		
-		if(curTrkOffset + num >= trackLength)
-			length = trackLength - curTrkOffset;
-		assert(length >= 0);
-		clip.length = length;
-		for(int i = 0; i < length; i++) {
-			clip[i].trans = tl[i].trans;
-			clip[i].no = tl[i].number;
-		}
-	}
-  
-	void pasteCallback() {
-		// FIX: ADD .dup operator to Tracklist
-		Tracklist vtr = activeView.tracklist[0..clip.length];
-		for(int i = 0; i < clip.length; i++) {
-			vtr[i].setValue(clip[i].trans,clip[i].no);
-		}
-		// reinitialize trackinput for voices
-		refresh();
-		// make sure cursor not past track end
 		activeView.step(0);
 	}
 }

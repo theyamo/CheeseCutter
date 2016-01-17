@@ -9,9 +9,9 @@ import seq.seqtable;
 import com.fb;
 import com.session;
 import ui.ui;
+import ui.dialogs;
 import ui.input;
 import derelict.sdl.sdl;
-//import std.string;
 import ct.base;
 
 
@@ -126,9 +126,8 @@ protected:
 		refreshPointer(po);
 	}
 
-	void trackInsert() { trackInsert(false); }
 	void trackInsert(bool doInsert) {
-		Track trk = activeRow.track; // FIX
+		Track trk = activeRow.track; 
 		trackinput.flush();
 		{
 			if(!doInsert) {
@@ -187,7 +186,19 @@ protected:
 }
 
 protected abstract class BaseTrackTable : VoiceTable {
-	this(Rectangle a, PosDataTable pi) { super(a, pi); }
+	QueryDialog queryClip;
+	
+	protected struct Clip {
+		int trans, no;
+	}
+	protected Clip[] clip;
+	
+	this(Rectangle a, PosDataTable pi) {
+		super(a, pi);
+		queryClip = new QueryDialog("Copy number of tracks to clipboard: $",
+									&clipCallback, 0x80);
+		
+	}
 
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL) {
@@ -210,9 +221,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 				if(key.mods & KMOD_SHIFT) {
 					for(int i = 0; i < voices.length; i++) {
 						auto v = cast(TrackVoice)voices[i];
-	
-//					if(v.pos.trkOffset < v.tracks.trackLength-1)
-							v.trackDelete((key.mods & KMOD_SHIFT) > 0);
+						v.trackDelete((key.mods & KMOD_SHIFT) > 0);
 					} 
 				}
 				else { 
@@ -226,7 +235,20 @@ protected abstract class BaseTrackTable : VoiceTable {
 			case SDLK_a:
 				(cast(TrackVoice)activeVoice).trackTrans(-1);
 				break;
-					
+			case SDLK_c:
+				mainui.activateDialog(queryClip);
+				return OK;
+			case SDLK_v:
+				mainui.activateDialog(new ConfirmationDialog("Paste tracks; insert or overwrite? (i/o) ",
+															 &pasteCallback,
+															 "oi"));
+				return OK;
+			case SDLK_i:
+				pasteCallback(false);
+				return OK;
+			case SDLK_o:
+				pasteCallback(true);
+				return OK;
 			default:
 				break;
 			}	
@@ -344,6 +366,46 @@ protected abstract class BaseTrackTable : VoiceTable {
 		}
 		refresh();
 	}
+
+	void clipCallback(int num) {
+		const int trackLength = activeVoice.tracks.trackLength;
+		int curTrkOffset = activeVoice.activeRow.trkOffset;
+		Tracklist tl = getTracklist(activeVoice)[0..num];
+		int length = tl.length;
+		
+		if(curTrkOffset + num >= trackLength)
+			length = trackLength - curTrkOffset;
+		assert(length >= 0);
+		clip.length = length;
+		for(int i = 0; i < length; i++) {
+			clip[i].trans = tl[i].trans;
+			clip[i].no = tl[i].number;
+		}
+	}
+
+	void pasteCallback(int value) {
+		pasteTracks(value > 0);
+	}
+	
+	private void pasteTracks(bool doInsert) {
+		if(doInsert) {
+			for(int i = 0; i < clip.length; i++) {
+				auto v = cast(TrackVoice)activeVoice;
+				v.trackInsert(true);
+			}
+		}
+		Tracklist vtr = getTracklist(activeVoice)[0..clip.length];
+		// FIX: ADD .dup operator to Tracklist
+		for(int i = 0; i < clip.length; i++) {
+			vtr[i].setValue(clip[i].trans,clip[i].no);
+		}
+		// reinitialize trackinput for voices
+		refresh();
+		// make sure cursor not past track end
+		step(0,0,0);
+
+		clip.length = 0;
+	}
 }
 
 
@@ -375,6 +437,13 @@ protected class TrackTable : BaseTrackTable {
 	}
 
 	override int keypress(Keyinfo key) {
+		if(key.mods & KMOD_CTRL) {
+			switch(key.raw)
+			{
+			default:
+				break;
+			}
+		}
 		switch(key.raw)
 		{
 		case SDLK_DOWN, SDLK_PAGEDOWN:

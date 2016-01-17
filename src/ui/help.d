@@ -100,8 +100,6 @@ Ctrl-Home/Ctrl-H........Jump to playback mark position (also realigns the voices
 
 Alt-C...................Ask for a SEQ number and copy contents over current SEQ
 Alt-A...................Ask for a SEQ number and insert contents to cursor pos
-Alt-Z...................Ask for a number and copy the N of tracks into clipboard
-Alt-B...................Paste copied tracks from the clipboard (overwrite)
 (Shift-)Insert/Delete...Insert/delete a row (Shift=w/ sequence expand/shrink)
 Ctrl-Insert/Delete......Expand/shrink the sequence
 Shift-Enter.............Quick expand sequence (expands by highlight value * 4)
@@ -114,6 +112,8 @@ Ctrl-T..................Toggle notes relative to current transpose
 Keypad 0................Play notes for all voices in current row
 Ctrl-P..................Split current sequence into two from cursor pos.
                         `+dUse with caution.
+
+
 `+dIn the note column (F6)
 
  2 3   5 6 7   9 0
@@ -136,11 +136,13 @@ Enter...................Grab the instrument value in the current row
 Ctrl-F..................Find next unused sequence starting from current value
 < >.....................Select previous/next sequence
 Ctrl-Q/A................Transpose all tracks up/down from cursor down
+", "`+dIn the track column (F5) (cont.)
+
+Ctrl-C..................Ask for a number and copy the N of tracks into clipboard
+Ctrl-V..................Paste copied tracks from the clipboard
 Space...................Write the cached sequence number to the track value
 Shift-Insert/Delete.....Insert empty track (A000) or delete track from cursor
                         pos down
-", "`+dIn the track column (F5) (cont.)
-
 Ctrl-Enter..............Insert a track to end of voice and move cursor there
 Ctrl-Insert/Delete......Insert/delete track to end of voice and move cursor there
 Ctrl-Shift-Insert/Del...Insert/delete a track for all voices

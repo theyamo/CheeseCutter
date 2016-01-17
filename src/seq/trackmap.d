@@ -113,6 +113,21 @@ protected class TrackmapTable : BaseTrackTable {
 		centralize();
 	}
 
+	override int keypress(Keyinfo key) {
+		switch(key.raw)
+		{
+		case SDLK_z:
+			mainui.activateDialog(queryClip);
+			return OK;
+		case SDLK_i:
+			pasteCallback(true);
+			return OK;
+		default:
+			return super.keypress(key);
+		}
+	}
+
+	
 	// centerTo() & jump() (?) do not work with this!
 	override void step(int st) { step(st,0); }
 	override void step(int st, int extra) {
