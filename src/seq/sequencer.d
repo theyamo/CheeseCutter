@@ -19,6 +19,7 @@ private {
 }
 import derelict.sdl.sdl;
 import std.string;
+import std.stdio;
 
 enum PAGESTEP = 2;
 enum Jump { toBeginning = 0, toMark = -1, toEnd = -2, toWrapMark = -3 };
@@ -62,7 +63,7 @@ private struct Clip {
 }
 
 protected class PosData {
-	int pointerOffsetValue = 0;
+	int pointerOffsetValue = anchor;
 	int trkOffset = 0;
 	int seqOffset;
 	int mark; 
@@ -72,6 +73,7 @@ protected class PosData {
 	@property int pointerOffset() {
 		return pointerOffsetValue - anchor;
 	}
+	
 	@property int pointerOffset(int i) {
 		return pointerOffsetValue = i + anchor;
 	}
@@ -135,10 +137,12 @@ protected class PosDataTable {
 			p.trkOffset = t.trkOffset;
 			p.rowCounter = t.rowCounter;
 			p.mark = t.mark;
+			//writeln(p.seqOffset);
 		}
 	}
 }
 
+// ------------------------------------------------------------------------
 // ------------------------------------------------------------------------
 
 abstract protected class Voice : Window {
@@ -746,6 +750,7 @@ final class Sequencer : Window {
 		SequenceTable sequenceTable;
 		TrackTable trackTable;
 		QueryDialog queryCopy, queryClip, queryAppend;
+		PosDataTable[] postables;
 	}
 	VoiceTable activeView;
 	private Clip[] clip;
@@ -774,10 +779,15 @@ final class Sequencer : Window {
 		tableBot = -area.height / 2;
 		tableTop = area.height / 2;
 		sequenceTable.centerTo(0);
+
+		postables.length = 32;
+		foreach(ref p; postables) {
+			p = new PosDataTable;
+		}
+		
 	}
 
 public:
-	
 	void activateVoice(int n) {
 		activeView.jumpToVoice(n);
 		input = activeView.input;
@@ -788,10 +798,15 @@ public:
 	void reset(bool tostart) {
 		activeView.deactivate();
 		if(tostart) {
+			writeln("HARD RESET");
 			foreach(b; voiceTables) {
 				b.toSeqStart();
 			}
 			sequenceTable.jump(Jump.toBeginning,true);
+
+			foreach(ref p; postables) {
+				p = new PosDataTable;
+			}
 		}
 		activeView = sequenceTable;
 		activeView.activate();
@@ -827,20 +842,10 @@ public:
 				pasteCallback();
 				break;
 			case SDLK_RIGHT:
-				refresh();
-				mainui.stop();
-				activeView.jump(0,false);
-				resetMark();
-				song.incSubtune();
-				refresh();
+				changeSubtune(1);
 				break;
 			case SDLK_LEFT:
-				refresh();
-				mainui.stop();
-				activeView.jump(0,false);
-				resetMark();
-				song.decSubtune();
-				refresh();
+				changeSubtune(0);
 				break;
 			default:
 				return activeView.keypress(key);
@@ -927,6 +932,21 @@ public:
 	}
 
 protected:
+	void changeSubtune(int direction) {
+		postables[song.subtune].dup(activeView.posTable);
+		
+		refresh();
+		mainui.stop();
+		activeView.jump(0,false);
+		resetMark();
+
+		direction > 0 ?
+			song.incSubtune() :
+			song.decSubtune();
+
+		activeView.posTable.dup(postables[song.subtune]);
+		refresh();
+	}
 	
 	override void update() {
 		activeView.update();

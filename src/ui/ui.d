@@ -1138,7 +1138,6 @@ final class UI {
 				d.setDirectory(getcwd());
 			}
 			loaddialog.fsel.fpos.reset();
-			writeln("reset loaddialog");
 		}
 	}
 
@@ -1152,7 +1151,6 @@ final class UI {
 
 	private void loadCallback(string s, bool doImport) {
 		stop();
-		toplevel.reset();
 		
 		if(std.file.exists(s) == 0 || std.file.isDir(s)) {
 			statusline.display("File not found or not accessible: " ~ s);
@@ -1197,6 +1195,8 @@ final class UI {
 		
 		enableKeyjamMode(false);
 
+		toplevel.reset();
+		
 		if(doImport) {
 			statusline.display("Song data imported.");
 		}
