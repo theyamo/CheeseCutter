@@ -244,10 +244,10 @@ protected abstract class BaseTrackTable : VoiceTable {
 															 "oi"));
 				return OK;
 			case SDLK_i:
-				pasteCallback(false);
+				pasteTracks(true);
 				return OK;
 			case SDLK_o:
-				pasteCallback(true);
+				pasteTracks(false);
 				return OK;
 			default:
 				break;
