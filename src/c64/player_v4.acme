@@ -49,6 +49,7 @@ INCLUDE_VIBRAFEEL	= TRUE
 INCLUDE_BREAKSPEED	= TRUE
 INCLUDE_CHORD		= TRUE
 INCLUDE_FILTER		= TRUE
+INCLUDE_SYNC		= TRUE
 USE_MDRIVER		= FALSE
 ;;; ----------------------------------------
 ;;; new effect commands
@@ -140,10 +141,10 @@ ofe8		!16 dummy
 ofea		!16 dummy
 ofec		!16 dummy
 ofee		!16 newseq
-version		!pet "cc4.04"
+version		!pet "cc4.07"
 }
 ;;; ----------------------------------------
-;;; editor specific player routines, will be 
+;;; editor specific player routines, will be
 ;;; left out from a finalized tune
 ;;; ----------------------------------------
 !if EXPORT = FALSE {
@@ -257,6 +258,7 @@ play
 !if MULTISPEED = TRUE {
 mplay		jmp submplay
 }
+sync		!8 0
 ;---------------------------------------
 subinit		asl
 		asl
@@ -266,11 +268,14 @@ subinit		asl
 !if INCLUDE_BREAKSPEED = TRUE {
 		stx speedsub
 }
-subinit0	lda songsets,y			
+!if INCLUDE_SYNC = TRUE {
+		stx sync
+}
+subinit0	lda songsets,y
 		sta twraplo,x
 		iny
 		lda songsets,y
-		sta twraphi,x			
+		sta twraphi,x
 		iny
 		inx
 		cpx #3
@@ -280,10 +285,7 @@ subinit0	lda songsets,y
 !if EXPORT = FALSE {
 		cmp #2
 		bcs subinit00
-		sty inittemp
-		tay
-		lda chord,y
-		ldy inittemp
+		lda chord
 subinit00	sta playspeed
 
 		lda editorflag	
@@ -362,21 +364,17 @@ run		dec speedcnt
 		bpl speedok
 speedalt	ldy speedsub
 		lda chord,y
+                bpl nowrap
+                ldy #0
+                sty speedsub
+                lda chord,y
+nowrap          inc speedsub
 		sta playspeed
 		cmp #2
 		bpl speedok
 		lda #2
 }
 speedok		sta speedcnt
-		
-!if INCLUDE_BREAKSPEED = TRUE {
-		iny
-		lda chord,y
-		bpl speednowrap
-		and #$7f
-		tay
-speednowrap	sty speedsub
-}
 speeddone
 ;---------------------------------------
 		ldx #2
@@ -1148,14 +1146,23 @@ notrel
 		sta volume
 		jmp superdone
 }
-notvol		
-!if INCLUDE_SEQ_SET_SPEED = TRUE {			
+notvol
+!if INCLUDE_SEQ_SET_SPEED = TRUE {
 		and #$0f
+!if INCLUDE_SYNC = TRUE {
+		bne notsync
+		inc sync
+		jmp superdone
+notsync
+}
 		sta speed
+!if INCLUDE_BREAKSPEED = TRUE {                
 		cmp #2
 		bcs notvol2
-		tay
-		lda chord,y
+                lda #1
+                sta speedsub
+		lda chord
+}                
 notvol2		sta playspeed
 		sta speedcnt
 		dec speedcnt
@@ -1534,7 +1541,6 @@ voicon		!8 1,1,1			;flags channels on and off
 editorflag	!8 0				; set to >0 from packer
 }		
 state		!8 0
-inittemp	= state		; real state value overrides temp at the end of init
 
 bits		!8 %00000001
 		!8 %00000010
