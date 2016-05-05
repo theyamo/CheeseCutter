@@ -696,7 +696,7 @@ class ChordTable : HexTable {
 	override void deleteRow() {
 		ubyte[] tmp = data[row + 1 .. $].dup;
 		foreach(i, c; tmp) {
-			if(c >= (0x80 + row) && --c >= 0x80)
+			if(c > (0x80 + row) && --c >= 0x80)
 				tmp[i] = c;
 		}
 		data[row .. $ - 1] = tmp;
