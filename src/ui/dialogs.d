@@ -291,6 +291,8 @@ class FileSelector : Window {
 		else {
 			chdir(directory);
 			getdir(directory);
+			if(num >= filelist.length)
+				cursorEnd();
 		}
 	}
 

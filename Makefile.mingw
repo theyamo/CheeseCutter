@@ -7,9 +7,9 @@ CFLAGS=$(COMFLAGS) -O1
 CXXFLAGS=$(CFLAGS) -I./src -O3
 COMPILE.d = $(DC) $(DFLAGS) -c -o $@
 COMPILE.c = $(CC) $(CFLAGS) -c -o $@
-DC=gdc
-CXX=g++
-CC=gcc
+DC=gdc-win
+CXX=g++-win
+CC=gcc-win
 EXE=.exe
 TARGET=ccutter
 
