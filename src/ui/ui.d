@@ -1200,6 +1200,10 @@ final class UI {
 		if(doImport) {
 			statusline.display("Song data imported.");
 		}
+
+		import com.session;
+		com.session.state.undoQueue.clear();
+		com.session.state.redoQueue.clear();
 	}
 
 	void activateDialog(Window d) {

@@ -514,6 +514,8 @@ abstract class ExtendedInput : Input {
 		int voice;
 	}
 	int invalue;
+	bool changed;
+	bool valueChanged() { return changed; }
 
 	protected this() {
 		super(1);
@@ -557,7 +559,10 @@ abstract class ExtendedInput : Input {
 		default: 
 			if(keytab == null) return WRAP;
 			int value = valueKeyReader(key, keytab);
-			if(value < 0) return OK;
+			if(value < 0) {
+				changed = false;
+				return OK;
+			}
 			return valuekeyHandler(value);
 		}
 		//not reached
@@ -578,6 +583,7 @@ protected:
 			}
 		}
 		setRowValue(invalue);
+		changed = true;
 		memvalue = invalue;
 		if(++nibble >= width) {
 			nibble = 0;
@@ -825,7 +831,7 @@ class InputKeyjam : ExtendedInput {
 	}
 }
 
-final class InputSeq : ExtendedInput {
+final class InputSeq : ExtendedInput, Undoable {
 	Element element;
 	private {
 		ExtendedInput inputNote, inputInstrument, inputCmd, inputOctave;
@@ -878,8 +884,25 @@ final class InputSeq : ExtendedInput {
 		default:
 			break;
 		}
+
+		UndoValue v;
+		import std.typecons;
+		v.dump = Tuple!(ubyte[],ubyte[])(activeInput.element.data.dup,
+												element.data);
+
+		int r = activeInput.keypress(key); 
+
+		if(activeInput.valueChanged) {
+			com.session.insertUndo(this, v);
+		}
 		
-		return activeInput.keypress(key);
+		return r;
+	}
+
+	void undo(UndoValue entry) {
+		ubyte[] data = entry.dump[0];
+		ubyte[] target = entry.dump[1];
+		target[] = data;
 	}
 
 	void columnReset(int foo) {

@@ -19,6 +19,47 @@ string versionInfo() {
 	return " (" ~__DATE__ ~ ")";
 }
 
+interface Undoable {
+	void undo(UndoValue);
+}
+
+struct UndoValue {
+	import ct.base;
+	import std.typecons;
+
+	Tuple!(ubyte[], ubyte[]) dump;
+	Sequence seq;
+}
+
+struct Queue(T) {
+	enum NUM_UNDO_STAGES = 200;
+	import std.container.dlist;
+	auto stages = DList!T();
+
+	void insert(T t) {
+		import std.range;
+		auto r = stages[];
+		if(r.walkLength >= NUM_UNDO_STAGES)
+			stages.removeBack();
+		stages.insertFront(t);
+	}
+
+	bool empty() {
+		return stages.empty;
+	}
+
+	T pop() {
+		if(stages.empty) assert(0);
+		auto t = stages.front;
+		stages.removeFront();
+		return t;
+	}
+
+	void clear() {
+		stages.clear;
+	}
+}
+
 class UserException : Exception {
 	this(string msg) {
 		super(msg);

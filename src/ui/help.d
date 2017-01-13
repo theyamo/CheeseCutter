@@ -98,6 +98,8 @@ Shift-Home/End..........Move cursor to song start/end
 Backspace...............Set playback start mark (the blue bar) to current position
 Ctrl-Home/Ctrl-H........Jump to playback mark position (also realigns the voices)
 
+Ctrl-Z..................Undo
+Ctrl-R..................Redo
 Alt-C...................Ask for a SEQ number and copy contents over current SEQ
 Alt-A...................Ask for a SEQ number and insert contents to cursor pos
 (Shift-)Insert/Delete...Insert/delete a row (Shift=w/ sequence expand/shrink)

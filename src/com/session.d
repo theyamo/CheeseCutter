@@ -5,8 +5,14 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 module com.session;
 import ct.base;
 import com.fb;
+import com.util;
 import ui.ui;
 import seq.sequencer;
+
+struct UndoState {
+	Undoable func;
+	UndoValue value;
+}
 
 struct EditorState {
 	__gshared Song song;
@@ -19,12 +25,38 @@ struct EditorState {
 	bool keyjamStatus = false;
 	bool allowInstabNavigation = true;
 	string filename;
+	auto undoQueue = Queue!UndoState();
+	auto redoQueue = Queue!UndoState();
 }
 
 UI mainui;
 Video video;
 Screen screen;
 EditorState state;
+
+void insertUndo(Undoable u, UndoValue value) {
+	state.undoQueue.insert(UndoState(u, value));
+}
+
+void executeUndo() {
+	if(state.undoQueue.empty) return;
+	auto u = state.undoQueue.pop();
+	// make entry for redo (copy current state)
+	auto redo = u;
+	redo.value.dump[0] = redo.value.dump[1].dup;
+	state.redoQueue.insert(redo);
+	u.func.undo(u.value);
+}
+
+void executeRedo() {
+	if(state.redoQueue.empty) return;
+	auto r = state.redoQueue.pop();
+	// make entry for undo (copy current state)
+	auto undo = r;
+	undo.value.dump[0] = undo.value.dump[1].dup;
+	state.undoQueue.insert(undo);
+	r.func.undo(r.value);
+}
 
 @property song() {
 	return state.song;

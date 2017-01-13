@@ -56,6 +56,7 @@ struct VoiceInitParams {
 	Tracklist t;
 	Rectangle a;
 	PosData p;
+	VoiceTable voiceTable;
 }
 
 private struct Clip {
@@ -145,20 +146,40 @@ protected class PosDataTable {
 // ------------------------------------------------------------------------
 // ------------------------------------------------------------------------
 
-abstract protected class Voice : Window {
+abstract protected class Voice : Window, Undoable {
 	Tracklist tracks;
 	PosData pos;
 	RowData activeRow;
 	Input input;
 	alias input activeInput;
+	VoiceTable parent;
 	
 	this(ref VoiceInitParams v) {
 		super(v.a);
 		tracks = v.t; pos = v.p;
-		assert(pos !is null);
+		parent = v.voiceTable;
 	}
 
 public:
+
+	void undo(UndoValue entry) {
+		ubyte[] data = entry.dump[0];
+		ubyte[] target = entry.dump[1];
+		target[] = data;
+		assert(parent !is null);
+		entry.seq.refresh();
+		parent.step(0);
+	}
+
+	void saveState() {
+		UndoValue v;
+		import std.typecons;
+		v.dump = Tuple!(ubyte[],ubyte[])(activeRow.seq.data.raw.dup,
+										 activeRow.seq.data.raw);
+		//v.rows = activeRow.seq.rows;
+		v.seq = activeRow.seq;
+		com.session.insertUndo(this, v);
+	}
 
 	bool atBeg() { 
 		return pos.trkOffset <= 0
@@ -412,7 +433,7 @@ protected abstract class VoiceTable : Window {
 			case SDLK_0:
 				song.highlightOffset = posTable.rowCounter+posTable.pointerOffset;
 				break;
-			case SDLK_r:
+			case SDLK_e:
 				displaySequenceRowcounter ^= 1;
 				break;
 			case SDLK_t:
@@ -842,6 +863,12 @@ public:
 			case SDLK_F12:
 				mainui.activateDialog(
 					new DebugDialog(activeView.activeVoice.activeRow.seq));
+				break;
+			case SDLK_z:
+				com.session.executeUndo();
+				break;
+			case SDLK_r:
+				com.session.executeRedo();
 				break;
 			default:
 				return activeView.keypress(key);

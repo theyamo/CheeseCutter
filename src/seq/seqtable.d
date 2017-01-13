@@ -32,15 +32,18 @@ protected class SeqVoice : Voice {
 			switch(key.raw)
 			{
 			case SDLK_RETURN:
+				saveState();
 				int r = activeRow.seq.rows;
 				int t = 4 * song.highlight;
 				activeRow.seq.expand(activeRow.seqOffset,
 								   (t - (r + t) % t));
 				break;
 			case SDLK_INSERT:
+				saveState();
 				activeRow.seq.expand(activeRow.seqOffset, 1);
 				break;
 			case SDLK_DELETE:
+				saveState();
 				activeRow.seq.shrink(activeRow.seqOffset, 1, true);
 				break;
 			default:
@@ -51,22 +54,28 @@ protected class SeqVoice : Voice {
 			switch(key.raw)
 			{
 			case SDLK_INSERT:
+				saveState();
 				activeRow.seq.expand(0, 1, false);
 				break;
 			case SDLK_DELETE:
+				saveState();
 				if(activeRow.seqOffset < activeRow.seq.rows - 1)
 					activeRow.seq.shrink(0, 1, false);
 				break;	
 			case SDLK_q:
+				saveState();
 				activeRow.seq.transpose(activeRow.seqOffset, 1);
 				break;
 			case SDLK_a:
+				saveState();
 				activeRow.seq.transpose(activeRow.seqOffset, -1);
 				break;
 			case SDLK_w:
+				saveState();
 				activeRow.seq.transpose(activeRow.seqOffset, 12);
 				break;
 			case SDLK_s:
+				saveState();
 				activeRow.seq.transpose(activeRow.seqOffset, -12);
 				break;
 				
@@ -81,9 +90,11 @@ protected class SeqVoice : Voice {
 			 case SDLK_RIGHT:
 				 return seqinput.step(1);
 			 case SDLK_INSERT:
+				 saveState();
 				 activeRow.seq.insert(activeRow.seqOffset);
 				 break;
 			 case SDLK_DELETE:
+				 saveState();
 				 activeRow.seq.remove(activeRow.seqOffset);
 				 break;
 			 default:
@@ -190,7 +201,7 @@ protected class SequenceTable : VoiceTable {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 			voices[v] = new SeqVoice(VoiceInitParams(song.tracks[v],
-													 na, pi[v]));
+													 na, pi[v], this));
 		}
 		super(a, pi); 
 	}

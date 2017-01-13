@@ -221,7 +221,7 @@ struct Element {
 	Cmd cmd;
 	Note note;
 	int transpose;
-	private ubyte[] data;
+	ubyte[] data;
 
 	static Element opCall(ubyte[] chunk) {
 		static Element e;
