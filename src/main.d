@@ -124,7 +124,6 @@ void mainloop() {
 				mainui.update();
 				break;
 			default:
-				//writeln("Unknown SDL event ",evt.type);
 				break;
 			}
 		}
