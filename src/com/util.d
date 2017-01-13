@@ -146,13 +146,10 @@ string setArgumentValue(string argname, string value, string text) {
 ubyte[] table2Array(string table) {
 	static ubyte[4096] arr;
 	int idx;
-	writeln(table);
-	
 	foreach(strvalue; std.array.split(table)) {
 		munch(strvalue, "\r\n\t");
 		
 		arr[idx] = cast(ubyte)str2Value(strvalue);
-		writeln(arr[idx]);
 		idx++;
 	}
 	return arr[0..idx];

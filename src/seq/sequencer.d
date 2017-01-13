@@ -138,7 +138,6 @@ protected class PosDataTable {
 			p.trkOffset = t.trkOffset;
 			p.rowCounter = t.rowCounter;
 			p.mark = t.mark;
-			//writeln(p.seqOffset);
 		}
 	}
 }
@@ -811,7 +810,6 @@ public:
 	void reset(bool tostart) {
 		activeView.deactivate();
 		if(tostart) {
-			writeln("HARD RESET");
 			foreach(b; voiceTables) {
 				b.toSeqStart();
 			}
