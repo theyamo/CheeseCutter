@@ -958,6 +958,7 @@ protected:
 		activeView.posTable.dup(postables[song.subtune]);
 		activeView.activate();
 		refresh();
+		activeView.step(0);
 	}
 	
 	override void update() {
