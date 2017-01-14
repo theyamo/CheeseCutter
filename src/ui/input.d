@@ -300,7 +300,7 @@ class InputTrack : InputWord {
 	this(RowData s) {
 		super(buf);
 		init(s);
-		flush();
+ 		trk.setValue(buf[0], buf[1]);		
 	}
 	
 	void init(RowData s) {
@@ -368,8 +368,9 @@ class InputTrack : InputWord {
 		default:
 			break;
 		}
-		if(buf[0] < 0xc0)
+		if(buf[0] < 0xc0) {
 			return super.keypress(key);
+		}
 		return OK;
 	}
 
@@ -830,7 +831,7 @@ class InputKeyjam : ExtendedInput {
 	}
 }
 
-final class InputSeq : ExtendedInput, Undoable {
+final class InputSeq : ExtendedInput {
 	Element element;
 	private {
 		ExtendedInput inputNote, inputInstrument, inputCmd, inputOctave;
@@ -892,7 +893,7 @@ final class InputSeq : ExtendedInput, Undoable {
 		int r = activeInput.keypress(key); 
 
 		if(activeInput.valueChanged) {
-			com.session.insertUndo(this, v);
+			com.session.insertUndo(&undo, v);
 		}
 		
 		return r;

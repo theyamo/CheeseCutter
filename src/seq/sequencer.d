@@ -33,6 +33,7 @@ int activeVoiceNum;
 private int stepCounter;
 int tableTop = 15, tableBot = -16;
 enum anchor = 16;
+Clip[] clip;
 
 private {
 	bool useRelativeNotes = true;
@@ -57,10 +58,6 @@ struct VoiceInitParams {
 	Rectangle a;
 	PosData p;
 	VoiceTable voiceTable;
-}
-
-private struct Clip {
-	int trans, no;
 }
 
 class PosData {
@@ -129,7 +126,13 @@ class PosDataTable {
 		return 0;
 	}
 
-	void dup(PosDataTable pt) {
+	PosDataTable dup() {
+		auto pt = new PosDataTable();
+		pt.copyFrom(this);
+		return pt;
+	}
+	
+	void copyFrom(PosDataTable pt) {
 		for(int i = 0 ; i < 3; i++) {
 			PosData p = pos[i];
 			PosData t = pt[i];
@@ -145,7 +148,7 @@ class PosDataTable {
 // ------------------------------------------------------------------------
 // ------------------------------------------------------------------------
 
-abstract class Voice : Window, Undoable {
+abstract class Voice : Window {
 	Tracklist tracks;
 	PosData pos;
 	RowData activeRow;
@@ -160,25 +163,6 @@ abstract class Voice : Window, Undoable {
 	}
 
 public:
-
-	void undo(UndoValue entry) {
-		ubyte[] data = entry.dump[0];
-		ubyte[] target = entry.dump[1];
-		target[] = data;
-		assert(parent !is null);
-		entry.seq.refresh();
-		parent.step(0);
-	}
-
-	void saveState() {
-		UndoValue v;
-		import std.typecons;
-		v.dump = Tuple!(ubyte[],ubyte[])(activeRow.seq.data.raw.dup,
-										 activeRow.seq.data.raw);
-		//v.rows = activeRow.seq.rows;
-		v.seq = activeRow.seq;
-		com.session.insertUndo(this, v);
-	}
 
 	bool atBeg() { 
 		return pos.trkOffset <= 0
@@ -944,7 +928,7 @@ public:
 
 protected:
 	void changeSubtune(int direction) {
-		postables[song.subtune].dup(activeView.posTable);
+		postables[song.subtune].copyFrom(activeView.posTable);
 		
 		refresh();
 		mainui.stop();
@@ -955,7 +939,7 @@ protected:
 			song.incSubtune() :
 			song.decSubtune();
 
-		activeView.posTable.dup(postables[song.subtune]);
+		activeView.posTable.copyFrom(postables[song.subtune]);
 		activeView.activate();
 		refresh();
 		activeView.step(0);

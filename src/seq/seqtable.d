@@ -26,6 +26,26 @@ class SeqVoice : Voice {
 		(cast(InputSeq)seqinput).setPointer(area.x + 4, 0);
 		activeInput = seqinput;
 	}
+
+	void undo(UndoValue entry) {
+		ubyte[] data = entry.dump[0];
+		ubyte[] target = entry.dump[1];
+		target[] = data;
+		assert(parent !is null);
+		entry.seq.refresh();
+		parent.step(0);
+	}
+
+	void saveState() {
+		UndoValue v;
+		import std.typecons;
+		v.dump = Tuple!(ubyte[],ubyte[])(activeRow.seq.data.raw.dup,
+										 activeRow.seq.data.raw);
+		//v.rows = activeRow.seq.rows;
+		v.seq = activeRow.seq;
+		com.session.insertUndo(&undo, v);
+	}
+
 	
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_SHIFT) {

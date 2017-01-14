@@ -10,7 +10,7 @@ import ui.ui;
 import seq.sequencer;
 
 struct UndoState {
-	Undoable func;
+	UndoFunc func;
 	UndoValue value;
 }
 
@@ -34,8 +34,8 @@ Video video;
 Screen screen;
 EditorState state;
 
-void insertUndo(Undoable u, UndoValue value) {
-	state.undoQueue.insert(UndoState(u, value));
+void insertUndo(UndoFunc fun, UndoValue value) {
+	state.undoQueue.insert(UndoState(fun, value));
 }
 
 void executeUndo() {
@@ -45,7 +45,7 @@ void executeUndo() {
 	auto redo = u;
 	redo.value.dump[0] = redo.value.dump[1].dup;
 	state.redoQueue.insert(redo);
-	u.func.undo(u.value);
+	u.func(u.value);
 }
 
 void executeRedo() {
@@ -55,7 +55,7 @@ void executeRedo() {
 	auto undo = r;
 	undo.value.dump[0] = undo.value.dump[1].dup;
 	state.undoQueue.insert(undo);
-	r.func.undo(r.value);
+	r.func(r.value);
 }
 
 @property song() {

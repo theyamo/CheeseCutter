@@ -19,16 +19,8 @@ string versionInfo() {
 	return " (" ~__DATE__ ~ ")";
 }
 
-interface Undoable {
-	void undo(UndoValue);
-}
-
-struct UndoValue {
-	import ct.base;
-	import std.typecons;
-
-	Tuple!(ubyte[], ubyte[]) dump;
-	Sequence seq;
+struct Clip {
+	int trans, no;
 }
 
 struct Queue(T) {

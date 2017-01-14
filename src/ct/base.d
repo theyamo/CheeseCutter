@@ -248,7 +248,7 @@ struct Element {
 }
 
 struct Tracklist {
-	private Track[] list; // rename
+	private Track[] list; 
 
 	Track opIndex(int i) {
 		if(i >= 0x400) i = 0;
@@ -268,6 +268,26 @@ struct Tracklist {
 		return tl;
 	}
 
+	Tracklist deepcopy() {
+		auto copy = new Track[](list.length);
+		foreach(idx, t; list) {
+			auto tr = cast(ubyte)t.trans;
+			auto number = cast(ubyte)t.number;
+			
+			copy[idx] = Track([tr, number]);
+		}
+		return Tracklist(copy);
+	}
+
+	void overwriteFrom(Tracklist tl) {
+		for(int idx = 0; idx < tl.length; idx++) {
+			auto tr = cast(ubyte)tl[idx].trans;
+			auto number = cast(ubyte)tl[idx].number;
+			list[idx].trans = tr;
+			list[idx].number = number;
+		}
+	}
+	
 	void opIndexAssign(Track t, size_t il) {
 		list[il] = t;
 	}
