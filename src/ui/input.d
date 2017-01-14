@@ -548,6 +548,7 @@ abstract class ExtendedInput : Input {
 		switch(key.unicode) {
 		case ' ':
 			if(memvalue >= 0) {
+				changed = (invalue != memvalue);
 				invalue = memvalue;
 				setRowValue(memvalue);
 				return WRAP;
@@ -555,6 +556,8 @@ abstract class ExtendedInput : Input {
 			goto case '.';
 		case '.':
 			clearRow();
+			// TODO: find a way to check if anything actually changed
+			changed = true;
 			return WRAP;
 		default: 
 			if(keytab == null) return WRAP;
