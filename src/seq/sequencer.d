@@ -11,12 +11,12 @@ import com.session;
 import com.util;
 import ui.input;
 import ui.dialogs;
-private {
+
 	import seq.fplay;
 	import seq.tracktable;
 	import seq.seqtable;
 	import seq.trackmap;
-}
+
 import derelict.sdl.sdl;
 import std.string;
 import std.stdio;
@@ -63,7 +63,7 @@ private struct Clip {
 	int trans, no;
 }
 
-protected class PosData {
+class PosData {
 	int pointerOffsetValue = anchor;
 	int trkOffset = 0;
 	int seqOffset;
@@ -94,7 +94,7 @@ protected class PosData {
 	
 }
 
-protected class PosDataTable {
+class PosDataTable {
 	PosData[] pos;
 
 	PosData opIndex(int idx) {
@@ -145,7 +145,7 @@ protected class PosDataTable {
 // ------------------------------------------------------------------------
 // ------------------------------------------------------------------------
 
-abstract protected class Voice : Window, Undoable {
+abstract class Voice : Window, Undoable {
 	Tracklist tracks;
 	PosData pos;
 	RowData activeRow;
@@ -360,7 +360,7 @@ protected:
 	}
 }
 
-protected abstract class VoiceTable : Window {
+abstract class VoiceTable : Window {
 	Voice[3] voices;
 	Voice active;
 	alias active activeVoice;

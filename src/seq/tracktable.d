@@ -185,7 +185,7 @@ protected:
 	}
 }
 
-protected abstract class BaseTrackTable : VoiceTable {
+abstract class BaseTrackTable : VoiceTable {
 	QueryDialog queryClip;
 	
 	protected struct Clip {
@@ -409,7 +409,7 @@ protected abstract class BaseTrackTable : VoiceTable {
 }
 
 
-protected class TrackTable : BaseTrackTable {
+class TrackTable : BaseTrackTable {
 	this(Rectangle a, PosDataTable pi) {
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0;v<3;v++) {

@@ -1687,8 +1687,9 @@ class Song {
 	}
 
 	void savePatch(string filename, int no) {
+		import std.conv;
 		string insname = std.string.stripRight
-			(std.conv.to!string(insLabels[no]));
+			(to!string(insLabels[no]));
 		int waveptr = wavetablePointer(no);
 		int pulseptr = pulsetablePointer(no);
 		int filtptr = filtertablePointer(no);
@@ -1719,7 +1720,7 @@ class Song {
 			instr[4] = cast(ubyte)fp.offset;
 
 		string csv =
-			std.conv.to!string(playerID[0..6]) ~ "`" ~
+			to!string(playerID[0..6]) ~ "`" ~
 			insname ~
 			"`" ~ com.util.arr2str(instr) ~
 			"`" ~ com.util.arr2str(wp.wave1) ~

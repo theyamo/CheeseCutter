@@ -14,7 +14,7 @@ import ui.input;
 import derelict.sdl.sdl;
 import std.string;
 
-protected class SeqVoice : Voice {
+class SeqVoice : Voice {
 	InputSeq seqinput;
 
 	this(VoiceInitParams v) {		
@@ -126,8 +126,10 @@ protected class SeqVoice : Voice {
 		seqofs = wseq.seqOffset;
 		seq = new Sequence(wseq.seq.data.raw[0 .. $], seqofs);
 		void printEmpty() {
+			import std.array;
+			
 			screen.cprint(area.x - 1, scry, 1, 0, 
-						  std.array.replicate(" ", 16));
+						  replicate(" ", 16));
 		}
 		
 		void printTrack() {
@@ -194,7 +196,7 @@ protected class SeqVoice : Voice {
 	}
 }
 
-protected class SequenceTable : VoiceTable {
+class SequenceTable : VoiceTable {
 	this(Rectangle a, PosDataTable pi) { 
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0;v<3;v++) {

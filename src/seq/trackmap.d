@@ -15,7 +15,7 @@ import std.string : format;
 import ct.base;
 
 
-protected class TrackmapVoice : TrackVoice {
+class TrackmapVoice : TrackVoice {
 	this(VoiceInitParams v) {		
 		super(v);
 	}
@@ -95,7 +95,7 @@ protected class TrackmapVoice : TrackVoice {
 	}
 }
 
-protected class TrackmapTable : BaseTrackTable {
+class TrackmapTable : BaseTrackTable {
 	this(Rectangle a, PosDataTable pi) {
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0;v<3;v++) {

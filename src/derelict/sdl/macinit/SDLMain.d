@@ -26,8 +26,8 @@ private
     else
     {
         import std.c.linux.linux;
-        import std.c.stdlib;
-        import std.c.string;
+        import core.stdc.stdlib;
+        import core.stdc.string;
 
         static import std.string;
     }

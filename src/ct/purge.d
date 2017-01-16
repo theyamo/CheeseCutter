@@ -278,7 +278,7 @@ private:
 	}
 	
 	private void purgeChordtable() {
-		bool chordsUsed[0x20];
+		bool[0x20] chordsUsed;
 		song.seqIterator((Sequence s, Element e) {
 				if(e.cmd.value >= 0x80 && e.cmd.value <= 0x9f) {
 					chordsUsed[e.cmd.value & 0x1f] = true;
