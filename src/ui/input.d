@@ -710,12 +710,8 @@ class InputNote : ExtendedInput {
 
 		switch(key.unicode) {
 		case SDLK_RETURN:
-			if(element.instr.value < 0x30) {
+			if(element.instr.value < 0x30)
 				UI.activateInstrument(element.instr.value);
-			}
-			if(element.note.value >= 3 && element.note.value < 0x5f) {
-				state.octave = clamp((element.note.value + element.transpose) / 12, 0, 6);
-			}
 			break;
 		case SDLK_COMMA:
 			if(element.note.value >= 3 && element.note.value < 0x5f) {
