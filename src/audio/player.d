@@ -74,9 +74,14 @@ void playNote(Element emt) {
 	if(playstatus == Status.Play) return;
 	int v = seq.sequencer.activeVoiceNum;
 
+	// no audio reset if already inited
+	if(playstatus != Status.Keyjam) {
+		audio.callback.reset();
+		audio.audio.reset();
+	}
+
 	playstatus = Status.Stop;
-	audio.callback.reset();
-	audio.audio.reset();
+
 	song.setVoicon([v == 0 ? 0 : 1, v == 1 ? 0 : 1, v == 2 ? 0 : 1]);
 	muteSID(1,1,1);
 	song.cpu.reset();

@@ -90,8 +90,10 @@ class Input {
 	}
 	alias setCoord set;
 
-	int keypress(Keyinfo key) { assert(0); }
+	int keypress(Keyinfo key) { return 0 ;}
 	
+	int keyrelease(Keyinfo key) { return 0; }
+
 	int setValue(int v) { assert(0); }
 
 	int step(int st) {
@@ -693,12 +695,22 @@ class InputCmd : ExtendedInput {
 
 class InputNote : ExtendedInput {
 	InputKeyjam keyjam;
-	
+	private bool noteStarted = false;
 	this() {
 		super();
 		keyjam = new InputKeyjam();
 	}
 
+	override int keyrelease(Keyinfo key) {
+		import audio.player;
+		if(!noteStarted || audio.player.getPlaystatus() == Status.Play)
+			return OK;
+		noteStarted = false;
+		Element emt = Element([0x00,cast(ubyte)(0xc0+state.activeInstrument),1]);
+		audio.player.playNote(emt);
+		return OK;
+	}
+	
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL || key.mods & KMOD_ALT) {
 			switch(key.raw) {
@@ -733,11 +745,14 @@ class InputNote : ExtendedInput {
 			break;
 		}
 		
-		if(song.ver >= 7) {
+		int r = super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p");
+		// r will be > 0 (in 'wrap') if valid data was entered
+		if(r) {
 			keyjam.element.transpose = element.transpose;
-			keyjam.keypress(key); 
+			keyjam.keypress(key);
+
+			noteStarted = true;
 		}
-		int r = super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p"); 
 		// no cache for notecolumn
 		memvalue = -1;
 		return r;
@@ -826,7 +841,7 @@ class InputKeyjam : ExtendedInput {
 		return super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p");
 	}
 
-	int keyrelease(Keyinfo key) {
+	override int keyrelease(Keyinfo key) {
 		return OK;
 	}
 }
@@ -866,6 +881,10 @@ final class InputSeq : ExtendedInput {
 	override void setElement(Element e) {
 		element = e;
 		activeInput.setElement(e);
+	}
+
+	override int keyrelease(Keyinfo key) {
+		return activeInput.keyrelease(key);
 	}
 
 	override int keypress(Keyinfo key) {

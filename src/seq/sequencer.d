@@ -914,6 +914,8 @@ public:
 
 	override int keyrelease(Keyinfo key) {
 		stepCounter = 0;
+		// lazily skipping the "view" layer (so no keyrelease event ever gets there at the moment)
+		activeView.activeVoice.keyrelease(key);
 		return OK;
 	}
 

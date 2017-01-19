@@ -46,6 +46,10 @@ class SeqVoice : Voice {
 		com.session.insertUndo(&undo, v);
 	}
 
+
+	override int keyrelease(Keyinfo key) {
+		return seqinput.keyrelease(key);
+	}
 	
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_SHIFT) {
