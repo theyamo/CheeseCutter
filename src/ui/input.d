@@ -90,8 +90,10 @@ class Input {
 	}
 	alias setCoord set;
 
-	int keypress(Keyinfo key) { assert(0); }
+	int keypress(Keyinfo key) { return 0 ;}
 	
+	int keyrelease(Keyinfo key) { return 0; }
+
 	int setValue(int v) { assert(0); }
 
 	int step(int st) {
@@ -300,7 +302,7 @@ class InputTrack : InputWord {
 	this(RowData s) {
 		super(buf);
 		init(s);
-		flush();
+ 		trk.setValue(buf[0], buf[1]);		
 	}
 	
 	void init(RowData s) {
@@ -368,8 +370,9 @@ class InputTrack : InputWord {
 		default:
 			break;
 		}
-		if(buf[0] < 0xc0)
+		if(buf[0] < 0xc0) {
 			return super.keypress(key);
+		}
 		return OK;
 	}
 
@@ -548,6 +551,7 @@ abstract class ExtendedInput : Input {
 		switch(key.unicode) {
 		case ' ':
 			if(memvalue >= 0) {
+				changed = (invalue != memvalue);
 				invalue = memvalue;
 				setRowValue(memvalue);
 				return WRAP;
@@ -555,6 +559,8 @@ abstract class ExtendedInput : Input {
 			goto case '.';
 		case '.':
 			clearRow();
+			// TODO: find a way to check if anything actually changed
+			changed = true;
 			return WRAP;
 		default: 
 			if(keytab == null) return WRAP;
@@ -689,12 +695,22 @@ class InputCmd : ExtendedInput {
 
 class InputNote : ExtendedInput {
 	InputKeyjam keyjam;
-	
+	private bool noteStarted = false;
 	this() {
 		super();
 		keyjam = new InputKeyjam();
 	}
 
+	override int keyrelease(Keyinfo key) {
+		import audio.player;
+		if(!noteStarted || audio.player.getPlaystatus() == Status.Play)
+			return OK;
+		noteStarted = false;
+		Element emt = Element([0x00,cast(ubyte)(0xc0+state.activeInstrument),1]);
+		audio.player.playNote(emt);
+		return OK;
+	}
+	
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL || key.mods & KMOD_ALT) {
 			switch(key.raw) {
@@ -710,12 +726,8 @@ class InputNote : ExtendedInput {
 
 		switch(key.unicode) {
 		case SDLK_RETURN:
-			if(element.instr.value < 0x30) {
+			if(element.instr.value < 0x30)
 				UI.activateInstrument(element.instr.value);
-			}
-			if(element.note.value >= 3 && element.note.value < 0x5f) {
-				state.octave = clamp((element.note.value + element.transpose) / 12, 0, 6);
-			}
 			break;
 		case SDLK_COMMA:
 			if(element.note.value >= 3 && element.note.value < 0x5f) {
@@ -733,11 +745,14 @@ class InputNote : ExtendedInput {
 			break;
 		}
 		
-		if(song.ver >= 7) {
+		int r = super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p");
+		// r will be > 0 (in 'wrap') if valid data was entered
+		if(r) {
 			keyjam.element.transpose = element.transpose;
-			keyjam.keypress(key); 
+			keyjam.keypress(key);
+
+			noteStarted = true;
 		}
-		int r = super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p"); 
 		// no cache for notecolumn
 		memvalue = -1;
 		return r;
@@ -826,12 +841,12 @@ class InputKeyjam : ExtendedInput {
 		return super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p");
 	}
 
-	int keyrelease(Keyinfo key) {
+	override int keyrelease(Keyinfo key) {
 		return OK;
 	}
 }
 
-final class InputSeq : ExtendedInput, Undoable {
+final class InputSeq : ExtendedInput {
 	Element element;
 	private {
 		ExtendedInput inputNote, inputInstrument, inputCmd, inputOctave;
@@ -868,6 +883,10 @@ final class InputSeq : ExtendedInput, Undoable {
 		activeInput.setElement(e);
 	}
 
+	override int keyrelease(Keyinfo key) {
+		return activeInput.keyrelease(key);
+	}
+
 	override int keypress(Keyinfo key) {
 		switch(key.unicode) {
 		case SDLK_SEMICOLON:
@@ -893,7 +912,7 @@ final class InputSeq : ExtendedInput, Undoable {
 		int r = activeInput.keypress(key); 
 
 		if(activeInput.valueChanged) {
-			com.session.insertUndo(this, v);
+			com.session.insertUndo(&undo, v);
 		}
 		
 		return r;

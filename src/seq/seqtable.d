@@ -14,7 +14,7 @@ import ui.input;
 import derelict.sdl.sdl;
 import std.string;
 
-protected class SeqVoice : Voice {
+class SeqVoice : Voice {
 	InputSeq seqinput;
 
 	this(VoiceInitParams v) {		
@@ -25,6 +25,30 @@ protected class SeqVoice : Voice {
 		seqinput.setCoord(area.x + 4, 0);
 		(cast(InputSeq)seqinput).setPointer(area.x + 4, 0);
 		activeInput = seqinput;
+	}
+
+	void undo(UndoValue entry) {
+		ubyte[] data = entry.dump[0];
+		ubyte[] target = entry.dump[1];
+		target[] = data;
+		assert(parent !is null);
+		entry.seq.refresh();
+		parent.step(0);
+	}
+
+	void saveState() {
+		UndoValue v;
+		import std.typecons;
+		v.dump = Tuple!(ubyte[],ubyte[])(activeRow.seq.data.raw.dup,
+										 activeRow.seq.data.raw);
+		//v.rows = activeRow.seq.rows;
+		v.seq = activeRow.seq;
+		com.session.insertUndo(&undo, v);
+	}
+
+
+	override int keyrelease(Keyinfo key) {
+		return seqinput.keyrelease(key);
 	}
 	
 	override int keypress(Keyinfo key) {
@@ -126,8 +150,10 @@ protected class SeqVoice : Voice {
 		seqofs = wseq.seqOffset;
 		seq = new Sequence(wseq.seq.data.raw[0 .. $], seqofs);
 		void printEmpty() {
+			import std.array;
+			
 			screen.cprint(area.x - 1, scry, 1, 0, 
-						  std.array.replicate(" ", 16));
+						  replicate(" ", 16));
 		}
 		
 		void printTrack() {
@@ -194,7 +220,7 @@ protected class SeqVoice : Voice {
 	}
 }
 
-protected class SequenceTable : VoiceTable {
+class SequenceTable : VoiceTable {
 	this(Rectangle a, PosDataTable pi) { 
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0; v < 6; v++) {

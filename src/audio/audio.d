@@ -7,9 +7,10 @@ import derelict.sdl.sdl;
 import audio.resid.filter;
 import audio.player;
 import audio.callback;
+import audio.timer;
 import std.stdio;
-import std.c.stdlib;
-import std.c.string;
+import core.stdc.stdlib; 
+import core.stdc.string;
 import std.conv;
 
 enum MIXBUF_MUL = 2;

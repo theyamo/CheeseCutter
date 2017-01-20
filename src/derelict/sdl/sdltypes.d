@@ -35,7 +35,7 @@ private
     }
     else
     {
-        import std.c.stdio;
+        import core.stdc.stdio;
     }
 }
 

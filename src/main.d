@@ -138,7 +138,7 @@ void mainloop() {
 }
 
 void printheader() {
-	stderr.writefln("CheeseCutter (C) 2009-15 Abaddon");
+	stderr.writefln("CheeseCutter (C) 2009-17 Abaddon");
 	stderr.writefln("Released under GNU GPL.");
 	stderr.writef("\n");
 	stderr.writefln("Usage: ccutter [OPTION]... [FILE]");

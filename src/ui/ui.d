@@ -22,6 +22,7 @@ import audio.audio;
 import std.string;
 import std.file;
 import std.stdio;
+import std.typecons;
 
 enum PAGESTEP = 16;
 enum CONFIRM_TIMEOUT = 90;
@@ -29,6 +30,24 @@ enum UPDATE_RATE = 2; // 50 / n times per second
 
 private int tickcounter1, tickcounter3 = -1;
 private int clearcounter, optimizecounter, escapecounter, restartcounter;
+
+alias UndoFunc = void delegate(UndoValue);
+//alias TracklistStore = Tuple!(Tracklist, Tracklist)[3];
+struct TracklistStore {
+	Tracklist store, source;
+}
+
+struct UndoValue {
+	import ct.base;
+
+	// undo data needed by sequencer
+	Tuple!(ubyte[], ubyte[]) dump;
+	Sequence seq;
+	// undo data needed by track editor
+	TracklistStore[] track;
+	int subtuneNum;
+	PosDataTable posTable;
+}
 
 struct Rectangle {
 	int x, y;
@@ -231,7 +250,7 @@ class Infobar : Window {
 	  
 		screen.clrtoeol(0, headerColor);
 
-		enum hdr = "CheeseCutter 2.8" ~ com.util.versionInfo;
+		enum hdr = "CheeseCutter 2.9" ~ com.util.versionInfo;
 		screen.cprint(4, 0, 1, headerColor, hdr);
 		screen.cprint(screen.width - 14, 0, 1, headerColor, "F12 = Help");
 		int c1 = audio.player.isPlaying ? 13 : 12;
@@ -900,7 +919,7 @@ final class UI {
 			}
 			else if(toplevel.fplayEnabled()) { // drop tracking
 				stop(false);
-				seqPos.dup(fplayPos);
+				seqPos.copyFrom(fplayPos);
 				toplevel.stopFp();
 				return;
 			}
@@ -1080,7 +1099,7 @@ final class UI {
 				 if(!audio.player.isPlaying) break;
 				 if(toplevel.fplayEnabled()) {
 					 stop(false);
-					 seqPos.dup(fplayPos);
+					 seqPos.copyFrom(fplayPos);
 					 toplevel.stopFp();
 					 statusline.display("Tracking off.");
 				 }
@@ -1092,7 +1111,7 @@ final class UI {
 				 break;
 			 case SDLK_F4:
 				 if(toplevel.fplayEnabled()) 
-					 seqPos.dup(fplayPos);
+					 seqPos.copyFrom(fplayPos);
 				 stop();
 				 if(toplevel.fplayEnabled())
 					 toplevel.stopFp();

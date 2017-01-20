@@ -247,12 +247,12 @@ struct Element {
 }
 
 struct Tracklist {
-	private Track[] trackList; // rename
+	private Track[] list; 
 
 	Track opIndex(int i) {
 		if(i >= 0x400) i = 0;
 		assert(i >= 0 && i < length);
-		return trackList[i];
+		return list[i];
 	}
 
 	static Tracklist opCall(Tracklist tl) {
@@ -263,24 +263,44 @@ struct Tracklist {
 
 	static Tracklist opCall(Track[] t) {
 		Tracklist tl;
-		tl.trackList = t;
+		tl.list = t;
 		return tl;
 	}
 
-	void opIndexAssign(Track t, size_t il) {
-		trackList[il] = t;
+	Tracklist deepcopy() {
+		auto copy = new Track[](list.length);
+		foreach(idx, t; list) {
+			auto tr = cast(ubyte)t.trans;
+			auto number = cast(ubyte)t.number;
+			
+			copy[idx] = Track([tr, number]);
+		}
+		return Tracklist(copy);
 	}
 
-	Track[] opSlice() { return trackList; }
+	void overwriteFrom(Tracklist tl) {
+		for(int idx = 0; idx < tl.length; idx++) {
+			auto tr = cast(ubyte)tl[idx].trans;
+			auto number = cast(ubyte)tl[idx].number;
+			list[idx].trans = tr;
+			list[idx].number = number;
+		}
+	}
+	
+	void opIndexAssign(Track t, size_t il) {
+		list[il] = t;
+	}
+
+	Track[] opSlice() { return list; }
 
 	Tracklist opSlice(size_t x, size_t y) {
-		return Tracklist(trackList[x .. y]);
+		return Tracklist(list[x .. y]);
 	}
 
 	int opApply(int delegate(ref Track) dg) {
 		int result;
 		for(int i = 0; i < trackLength; i++) {
-			result = dg(trackList[i]);
+			result = dg(list[i]);
 			if(result) break;
 		}
 		return result;
@@ -289,26 +309,28 @@ struct Tracklist {
 	int opApplyReverse(int delegate(ref Track) dg) {
 		int result;
 		for(int i = cast(int)(length - 1); i >= 0; i--) {
-			result = dg(trackList[i]);
+			result = dg(list[i]);
 			if(result) break;
 		}
 		return result;
 	}
 
-	@property int length() { return cast(int) trackList.length; }
+	@property int length() {
+		return cast(int) list.length;
+	}
 	
 	@property void length(size_t il) {
-		trackList.length = il;
+		list.length = il;
 	}
 
 	@property Track lastTrack() {
-		return trackList[trackLength];
+		return list[trackLength];
 	}
 	
 	@property int trackLength() {
 		int i;
 		for(i = 0; i < length; i++) {
-			Track t = trackList[i];
+			Track t = list[i];
 			if(t.trans >= 0xf0) return i;
 		}
 		assert(0);
@@ -340,38 +362,38 @@ struct Tracklist {
 	ubyte getTransAt(int idx) {
 		if(idx > 0) {
 			do {
-				if(trackList[idx].trans > 0x80 &&
-				   trackList[idx].trans < 0xc0)
-					return trackList[idx].trans;
+				if(list[idx].trans > 0x80 &&
+				   list[idx].trans < 0xc0)
+					return list[idx].trans;
 			} while(idx-- > 0);
 		}
 		else if(idx == 0) {
 			do {
-				if(trackList[idx].trans > 0x80 &&
-				   trackList[idx].trans < 0xc0)
-					return trackList[idx].trans;
+				if(list[idx].trans > 0x80 &&
+				   list[idx].trans < 0xc0)
+					return list[idx].trans;
 			} while(idx++ < trackLength);
 		}
 		return 0xa0;
 	}
 
 	void insertAt(int offset) {
-		if(offset > trackList.length - 2) return;
-		assert(offset >= 0 && offset < trackList.length);
-		for(int i = cast(int)(trackList.length - 2); i >= offset; i--) {
-			trackList[i+1] = trackList[i].dup;
+		if(offset > list.length - 2) return;
+		assert(offset >= 0 && offset < list.length);
+		for(int i = cast(int)(list.length - 2); i >= offset; i--) {
+			list[i+1] = list[i].dup;
 		}
-		trackList[offset].trans = getTransAt(offset);
-		trackList[offset].number = 0;
+		list[offset].trans = getTransAt(offset);
+		list[offset].number = 0;
 		if(wrapOffset() >= offset) {
 			wrapOffset = cast(address)(wrapOffset + 1);
 		}
 	}
 
 	void deleteAt(int offset) {
-		if(trackList[1].trans >= 0xf0) return;
-		for(int i = offset; i < trackList.length - 2; i++) {
-			trackList[i] = trackList[i+1].dup;
+		if(list[1].trans >= 0xf0) return;
+		for(int i = offset; i < list.length - 2; i++) {
+			list[i] = list[i+1].dup;
 		}		
 		if(wrapOffset() >= offset) {
 			wrapOffset = cast(address)(wrapOffset - 1);
@@ -379,14 +401,15 @@ struct Tracklist {
 	}
 
 	void transposeAt(int s, int e, int t) {
-		foreach(trk; trackList[s .. e]) trk.transpose(t);
+		foreach(trk; list[s .. e])
+			trk.transpose(t);
 	}
 
 	auto compact() {
 		ubyte[] arr = new ubyte[1024];
 		int p, trans = -1, wrapptr = wrapOffset * 2;
 
-		foreach(idx, track; trackList) {
+		foreach(idx, track; list) {
 			if(track.trans >= 0xf0) {
 				wrapptr |= 0xf000;
 				arr[p .. p + 2] = [(wrapptr & 0xff00) >> 8, wrapptr & 0x00ff];
@@ -1774,8 +1797,9 @@ class Song {
 	}
 
 	void savePatch(string filename, int no) {
+		import std.conv;
 		string insname = std.string.stripRight
-			(std.conv.to!string(insLabels[no]));
+			(to!string(insLabels[no]));
 		int waveptr = wavetablePointer(no);
 		int pulseptr = pulsetablePointer(no);
 		int filtptr = filtertablePointer(no);
@@ -1806,7 +1830,7 @@ class Song {
 			instr[4] = cast(ubyte)fp.offset;
 
 		string csv =
-			std.conv.to!string(playerID[0..6]) ~ "`" ~
+			to!string(playerID[0..6]) ~ "`" ~
 			insname ~
 			"`" ~ com.util.arr2str(instr) ~
 			"`" ~ com.util.arr2str(wp.wave1) ~
