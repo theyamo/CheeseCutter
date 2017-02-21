@@ -41,11 +41,16 @@ protected:
 	void adjustView();
 }
 
-class HexTable : Table {
+private class HexTable : Table {
 	this(Rectangle a, ubyte[] tbl, int c, int r) {
 		super(a,tbl,c,r);
+		(cast(InputValue)input).setValueChangedCallback(&valueChangedCallback);
 	}
 
+	void valueChangedCallback() {
+		saveState(false);
+	}
+	
 	override void activate() {
 		initializeInput();
 	}
@@ -242,6 +247,7 @@ protected:
 					t.data[0..$] = v.tableData[idx++][0..$];
 				});
 		}
+		initializeInput();
 	}
 	
 }
@@ -707,6 +713,7 @@ class ChordTable : HexTable {
 	}
 
 	override void insertRow() {
+		saveState(false);
 		ubyte[] tmp = data[row .. $-1].dup;
 		foreach(i, c; tmp) {
 			if(/+row > 0  && +/ c >= (0x80 + row) && ++c < 0x100) {
@@ -719,6 +726,7 @@ class ChordTable : HexTable {
 	}
 
 	override void deleteRow() {
+		saveState(false);		
 		ubyte[] tmp = data[row + 1 .. $].dup;
 		foreach(i, c; tmp) {
 			if(c > (0x80 + row) && --c >= 0x80)

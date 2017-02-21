@@ -573,11 +573,11 @@ final private class Toplevel : WindowSwitcher {
 				return OK;
 			case SDLK_z:
 				com.session.executeUndo();
-				break;
+				return OK;
 			case SDLK_r:
 				com.session.executeRedo();
 				refresh();
-				break;
+				return OK;
 			default:
 				break;
 			}

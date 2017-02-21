@@ -77,6 +77,8 @@ class Cursor {
 }
 
 class Input {
+	mixin ValueChangedHandler;
+
 	Cursor cursor;
 	const int width;
 	int x, y, nibble;
@@ -199,6 +201,7 @@ class InputValue : Input {
 	}
 
 	override int setValue(int v) {
+		valueChanged();
 		inarray[nibble] = cast(ubyte)v;
 		int c = toInt();
 		for(int i = cast(int)(inputLength/2-1); i >= 0; i--) {
@@ -312,7 +315,6 @@ class InputWord : InputValue {
 }
 
 class InputTrack : InputWord {
-	mixin ValueChangedHandler;
 	Track trk;
 	ubyte[2] buf;
 	this(RowData s, ValueChangedCallback cb) {
@@ -392,7 +394,6 @@ class InputTrack : InputWord {
 		}
 		if(buf[0] < 0xc0) {
 			int r = super.keypress(key);
-			import std.stdio;writeln(r);
 			return r;
 		}
 		return OK;
@@ -532,7 +533,6 @@ class InputString : Input {
 }
 
 abstract class ExtendedInput : Input {
-	mixin ValueChangedHandler;
 	protected {
 		int nibble, memvalue;
 		Element element;
