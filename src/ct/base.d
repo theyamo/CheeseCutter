@@ -1616,6 +1616,14 @@ class Song {
 		}
 	}
 
+	void tableIterator(void delegate(Table t) dg) {
+		foreach(idx, table; [ "wave", "cmd", "instr", "chord",
+							  "pulse", "filter"]) {
+			dg(tables[table]);
+		}
+		
+	}
+	
 	void setVoicon(shared int[] m) {
 		//setVoicon(m[0], m[1], m[2]);
 		buffer[offsets[Offsets.VOICE]+0] = m[0] ? 0x19 : 0x00;

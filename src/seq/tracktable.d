@@ -22,7 +22,7 @@ class TrackVoice : SeqVoice {
 	this(VoiceInitParams v) {		
 		super(v);
 		refreshPointer(0);
-		trackinput = new InputTrack(activeRow);
+		trackinput = new InputTrack(activeRow, &(cast(BaseTrackTable)v.voiceTable).trackValueChanged);
 		trackinput.setCoord(area.x,0);
 		activeInput = trackinput;
 	}
@@ -182,6 +182,10 @@ abstract class BaseTrackTable : VoiceTable {
 		
 	}
 
+	void trackValueChanged() {
+		saveState(false);
+	}
+	
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL) {
 			switch(key.raw)
@@ -446,7 +450,7 @@ class TrackTable : BaseTrackTable {
 			x += 13 + com.fb.border;
 
 			voices[v] = new TrackVoice(VoiceInitParams(song.tracks[v],
-													   na, pi.pos[v]));
+													   na, pi.pos[v], this));
 		}
 		super(a, pi);
 	}

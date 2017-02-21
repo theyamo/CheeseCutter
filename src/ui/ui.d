@@ -45,6 +45,7 @@ struct UndoValue {
 	Sequence seq;
 	// undo data needed by track editor
 	TracklistStore[] track;
+	ubyte[][] tableData;
 	int subtuneNum;
 	PosDataTable posTable;
 }
@@ -570,6 +571,13 @@ final private class Toplevel : WindowSwitcher {
 					activeWindowNum %= windows.length;
 				activateWindow();
 				return OK;
+			case SDLK_z:
+				com.session.executeUndo();
+				break;
+			case SDLK_r:
+				com.session.executeRedo();
+				refresh();
+				break;
 			default:
 				break;
 			}

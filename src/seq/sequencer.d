@@ -846,12 +846,6 @@ public:
 				mainui.activateDialog(
 					new DebugDialog(activeView.activeVoice.activeRow.seq));
 				break;
-			case SDLK_z:
-				com.session.executeUndo();
-				break;
-			case SDLK_r:
-				com.session.executeRedo();
-				break;
 			default:
 				return activeView.keypress(key);
 			 }
