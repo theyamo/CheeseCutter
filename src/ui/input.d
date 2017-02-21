@@ -557,7 +557,7 @@ abstract class ExtendedInput : Input {
 			goto case '.';
 		case '.':
 			clearRow();
-			changed = false;
+			changed = true;
 			return WRAP;
 		default: 
 			if(keytab == null) return WRAP;
@@ -734,6 +734,7 @@ class InputNote : ExtendedInput {
 			return WRAP;
 		case ' ':
 			clearRow();
+			changed = true;
 			return WRAP;
 			/+
 		case SDLK_SEMICOLON:
@@ -747,7 +748,7 @@ class InputNote : ExtendedInput {
 		
 		int r = super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p");
 		// r will be > 0 (in 'wrap') if valid data was entered
-		if(r && changed) {
+		if(r) {
 			keyjam.element.transpose = element.transpose;
 			keyjam.keypress(key);
 
