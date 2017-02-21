@@ -513,8 +513,6 @@ abstract class ExtendedInput : Input {
 	protected {
 		int nibble, memvalue;
 		Element element;
-		Voice[] voices;
-		int voice;
 	}
 	int invalue;
 	bool changed;
@@ -559,8 +557,7 @@ abstract class ExtendedInput : Input {
 			goto case '.';
 		case '.':
 			clearRow();
-			// TODO: find a way to check if anything actually changed
-			changed = true;
+			changed = false;
 			return WRAP;
 		default: 
 			if(keytab == null) return WRAP;
@@ -735,6 +732,9 @@ class InputNote : ExtendedInput {
 									 false : true);
 			}
 			return WRAP;
+		case ' ':
+			clearRow();
+			return WRAP;
 			/+
 		case SDLK_SEMICOLON:
 			if(element.note.rawValue >= 3 && element.note.rawValue < 0x5f)
@@ -747,7 +747,7 @@ class InputNote : ExtendedInput {
 		
 		int r = super.keypress(key,"1!azsxdcvgbhnjmq2w3er5t6y7ui9o0p");
 		// r will be > 0 (in 'wrap') if valid data was entered
-		if(r) {
+		if(r && changed) {
 			keyjam.element.transpose = element.transpose;
 			keyjam.keypress(key);
 
@@ -763,6 +763,7 @@ class InputNote : ExtendedInput {
 		element.note = 0;
 		element.note.setTied(false);
 		element.instr = 0x80;
+		element.cmd = 0;
 	}
 
 	override void setRowValue(int value) {
