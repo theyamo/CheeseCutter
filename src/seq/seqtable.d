@@ -41,7 +41,6 @@ class SeqVoice : Voice {
 		import std.typecons;
 		v.dump = Tuple!(ubyte[],ubyte[])(activeRow.seq.data.raw.dup,
 										 activeRow.seq.data.raw);
-		//v.rows = activeRow.seq.rows;
 		v.seq = activeRow.seq;
 		com.session.insertUndo(&undo, v);
 	}
