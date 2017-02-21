@@ -271,27 +271,25 @@ abstract class BaseTrackTable : VoiceTable {
 			default: break;
 			}
 		}
-		else if(key.mods & KMOD_SHIFT) {
-			switch(key.raw)
-			{
-			case SDLK_INSERT:
-				saveState(false);
-				auto v = (cast(TrackVoice)activeVoice);
-				v.trackInsert(true);
-				return OK;
-			case SDLK_DELETE:	
-				saveState(false);
-				auto v = (cast(TrackVoice)activeVoice);
-				v.trackDelete(true);
-				if(v.pos.trkOffset >= v.tracks.trackLength-1) 
-					jump(Jump.toEnd,true);
-				return OK;
-			default: break;
-			}
-		}
-
+		else switch(key.raw)
+			 {
+			 case SDLK_INSERT:
+				 saveState(false);
+				 auto v = (cast(TrackVoice)activeVoice);
+				 v.trackInsert(true);
+				 return OK;
+			 case SDLK_DELETE:	
+				 saveState(false);
+				 auto v = (cast(TrackVoice)activeVoice);
+				 v.trackDelete(true);
+				 if(v.pos.trkOffset >= v.tracks.trackLength-1) 
+					 jump(Jump.toEnd,true);
+				 return OK;
+			 default: break;
+			 }
+		
 		super.keypress(key);
-
+	
 		switch(activeVoice.keypress(key))
 		{
 		case WRAPL:

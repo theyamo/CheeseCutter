@@ -872,25 +872,19 @@ class SweepTable : HexTable {
 	}
 
 	override int keypress(Keyinfo key) {
-		if(key.mods & KMOD_SHIFT) {
-			switch(key.raw) {
-			case SDLK_DELETE:
-				deleteRow();
-				refresh();
-				set();
-				return OK;
-			case SDLK_INSERT:
-				insertRow();
-				refresh();
-				set();
-				return OK;
-			default: break;
-			}
+		switch(key.raw) {
+		case SDLK_DELETE:
+			deleteRow();
+			refresh();
+			set();
+			return OK;
+		case SDLK_INSERT:
+			insertRow();
+			refresh();
+			set();
+			return OK;
+		default: return super.keypress(key);
 		}
-		else if(key.raw == SDLK_DELETE ||
-				key.raw == SDLK_INSERT) return OK;
-		
-		return super.keypress(key);
 	}
 	
 	override void update() {
