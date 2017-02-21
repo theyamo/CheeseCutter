@@ -782,7 +782,7 @@ class InputNote : ExtendedInput {
 									 false : true);
 			}
 			return WRAP;
-		case ' ':
+		case ' ', '.':
 			valueChanged();
 			clearRow();
 			return WRAP;
