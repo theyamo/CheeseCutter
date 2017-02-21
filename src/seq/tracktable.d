@@ -243,6 +243,19 @@ abstract class BaseTrackTable : VoiceTable {
 				break;
 			}	
 		}
+		else if(key.mods & KMOD_ALT) {
+			switch(key.key) {
+			case SDLK_z:
+				mainui.activateDialog(queryClip);
+				return OK;
+			case SDLK_b:
+				pasteTracks(clip, true);
+				return OK;
+			default:
+				break;
+			}
+		}
+
 		if((key.mods & KMOD_CTRL) && (key.mods & KMOD_ALT)) {
 			switch(key.raw)
 			{
