@@ -1,45 +1,48 @@
-LIBS=-ldl -lstdc++
+# dmd + clang + clang++ for windows builds
+LIBS=
 COMFLAGS=
-DLINK=$(COMFLAGS) -Wl,--gc-sections 
+DLINK=$(COMFLAGS) -m32mscoff
 VERSION=$(shell cat Version)
-DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O1
+DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O -m32mscoff
 CFLAGS=$(COMFLAGS) -O1
 CXXFLAGS=-I./src -O3
-COMPILE.d = $(DC) $(DFLAGS) -c -o $@
-OUTPUT_OPTION = 
-DC=gdc
+COMPILE.d = $(DC) $(DFLAGS) -c -of$@
+OUTPUT_OPTION= 
+DC=dmd
+CC=clang
+CXX=clang++
 EXE=
 TARGET=ccutter
-OBJ_EXT=.o
+OBJ_EXT=.obj
 
 include Makefile.objects.mk
 
 $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
-	$(DC) $(DLINK) -o $(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
+	$(DC) $(DLINK) -of$(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
 
-.cpp.o : $(CXX_SRCS)
+.cpp.obj : $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-.c.o : $(C_SRCS)
+.c.obj : $(C_SRCS)
 	$(CC) -c $< -o $@
 
 ct: $(C64OBJS) $(CTOBJS)
 
 ct2util: $(C64OBJS) $(UTILOBJS)
-	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS) 
+	$(DC) $(DLINK) -of$@ $(UTILOBJS) $(LIBS) 
 
 c64: $(C64OBJS)
 
 all: c64 $(OBJS) $(CXX_OBJS) $(UTILOBJS) ct2util ct $(TARGET)
 
 # release version with additional optimizations
-release: DFLAGS += -frelease -fno-bounds-check
+# release: DFLAGS += -release -boundscheck=off
 release: all
 	strip ccutter$(EXE)
 	strip ct2util$(EXE)
 
 # development release pulled from git master
-devrelease: DFLAGS += -fversion=DEV
+devrelease: DFLAGS += -version=DEV
 devrelease: all
 	tar --transform 's,^\.,cheesecutter-devbuild,' -cvf cheesecutter-devbuild-linux-x86.tar.gz $(DIST_FILES)
 
@@ -47,8 +50,9 @@ devrelease: all
 dist:	release
 	tar --transform 's,^\.,cheesecutter-$(VERSION),' -cvf cheesecutter-$(VERSION)-linux-x86.tar.gz $(DIST_FILES)
 
+
 clean: 
-	rm -f *.o *~ resid/*.o resid-fp/*.o ccutter ct2util \
+	rm -f *.o *.obj *~ resid/*.o resid-fp/*.o ccutter ct2util \
 		$(C64OBJS) $(OBJS) $(CTOBJS) $(CXX_OBJS) $(UTILOBJS) $(C_OBJS)
 
 dclean: clean
@@ -62,11 +66,14 @@ tar:
 src/c64/player.bin: src/c64/player_v4.acme
 	acme -f cbm --outfile $@ $<
 
-src/ct/base.o: src/c64/player.bin
-src/ui/ui.o: src/ui/help.o
+src/ct/base.obj: src/c64/player.bin
+src/ui/ui.obj: src/ui/help.obj
 
-%.o: %.d
+%.obj: %.d
 	$(COMPILE.d) $(OUTPUT_OPTION) $<
+
+%.obj: %.cpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(OUTPUT_OPTION) $<
 
 
 

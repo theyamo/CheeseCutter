@@ -13,6 +13,7 @@ COMPILE.d = $(DC) $(DFLAGS) -d -O2 -c -of=$@
 DC=ldc2
 EXE=
 TARGET=ccutter
+OBJ_EXT=.o
 
 include Makefile.objects.mk
 

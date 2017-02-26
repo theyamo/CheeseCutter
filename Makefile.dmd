@@ -6,10 +6,11 @@ DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O
 CFLAGS=$(COMFLAGS) -O1
 CXXFLAGS=-I./src -O3
 COMPILE.d = $(DC) $(DFLAGS) -c -of$@
-OUTPUT_OPTION = 
+OUTPUT_OPTION=
 DC=dmd
 EXE=
 TARGET=ccutter
+OBJ_EXT=.o
 
 include Makefile.objects.mk
 
