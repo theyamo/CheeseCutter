@@ -507,18 +507,31 @@ final private class Toplevel : WindowSwitcher {
 			case SDLK_i:
 				activateWindow(1);
 				break;
-			case SDLK_5:
-			case SDLK_w:
-			case SDLK_6:
-			case SDLK_p:
-			case SDLK_7:
-			case SDLK_f:
-			case SDLK_8:
-			case SDLK_m:
-			case SDLK_9:
-			case SDLK_d:
+			case SDLK_5, SDLK_w:
 				activateWindow(2);
-				break;
+				key.key = SDLK_w;
+				activeWindow.keypress(key);
+				return OK;
+			case SDLK_6, SDLK_p:
+				activateWindow(2);
+				key.key = SDLK_p;
+				activeWindow.keypress(key);
+				return OK;
+			case SDLK_7, SDLK_f:
+				activateWindow(2);
+				key.key = SDLK_f;
+				activeWindow.keypress(key);
+				return OK;
+			case SDLK_8, SDLK_m:
+				activateWindow(2);
+				key.key = SDLK_m;
+				activeWindow.keypress(key);
+				return OK;
+			case SDLK_9, SDLK_d:
+				activateWindow(2);
+				key.key = SDLK_d;
+				activeWindow.keypress(key);
+				return OK;
 			case SDLK_t:
 				ui.activateDialog(UI.infobar);
 				return OK;
