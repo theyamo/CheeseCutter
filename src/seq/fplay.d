@@ -119,13 +119,13 @@ class Fplay : Window {
 	}
 
 	void start(int p) {
-		fplayPos.dup(seqPos);
+		fplayPos.copyFrom(seqPos);
 		ftable.jump(p,true);
 		mode = p;
 	}
 
 	void startFromCursor() {
-		fplayPos.dup(seqPos);
+		fplayPos.copyFrom(seqPos);
 		ftable.centerTo(0);
 		mode = Jump.toBeginning;
 	}

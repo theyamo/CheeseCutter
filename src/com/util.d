@@ -19,6 +19,39 @@ string versionInfo() {
 	return " (" ~__DATE__ ~ ")";
 }
 
+struct Clip {
+	int trans, no;
+}
+
+struct Queue(T) {
+	enum NUM_UNDO_STAGES = 200;
+	import std.container.dlist;
+	auto stages = DList!T();
+
+	void insert(T t) {
+		import std.range;
+		auto r = stages[];
+		if(r.walkLength >= NUM_UNDO_STAGES)
+			stages.removeBack();
+		stages.insertFront(t);
+	}
+
+	bool empty() {
+		return stages.empty;
+	}
+
+	T pop() {
+		if(stages.empty) assert(0);
+		auto t = stages.front;
+		stages.removeFront();
+		return t;
+	}
+
+	void clear() {
+		stages.clear;
+	}
+}
+
 class UserException : Exception {
 	this(string msg) {
 		super(msg);
@@ -105,13 +138,10 @@ string setArgumentValue(string argname, string value, string text) {
 ubyte[] table2Array(string table) {
 	static ubyte[4096] arr;
 	int idx;
-	writeln(table);
-	
 	foreach(strvalue; std.array.split(table)) {
 		munch(strvalue, "\r\n\t");
 		
 		arr[idx] = cast(ubyte)str2Value(strvalue);
-		writeln(arr[idx]);
 		idx++;
 	}
 	return arr[0..idx];

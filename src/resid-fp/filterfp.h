@@ -20,6 +20,9 @@
 #ifndef __FILTERFP_H__
 #define __FILTERFP_H__
 
+#define M_LN2		0.69314718055994530942	/* log_e 2 */
+#define M_PI		3.14159265358979323846	/* pi */
+
 #include <math.h>
 #include "siddefsfp.h"
 

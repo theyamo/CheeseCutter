@@ -10,6 +10,7 @@ OUTPUT_OPTION =
 DC=gdc
 EXE=
 TARGET=ccutter
+OBJ_EXT=.o
 
 include Makefile.objects.mk
 

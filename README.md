@@ -2,9 +2,9 @@ CheeseCutter 2
 
 http://theyamo.kapsi.fi/ccutter
 
-Programmed by abaddon (abaddon@triad.se) 2009-2015.
+Programmed by abaddon 2009-2017.
 
-Mac OSX and D2 port by Ruk (ruk@triad.se) 2013.
+Mac OSX and D2 port by Ruk 2013.
 
 reSID engine by Dag Lem & A. Lankila.
 

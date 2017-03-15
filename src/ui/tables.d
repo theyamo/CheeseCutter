@@ -16,6 +16,7 @@ import std.stdio : stderr;
 import std.file;
 
 abstract class Table : Window {
+	mixin ValueChangedHandler;
 	const int columns, rows, visibleRows;
 	protected {
 		ubyte[] data;
@@ -40,11 +41,16 @@ protected:
 	void adjustView();
 }
 
-class HexTable : Table {
+private class HexTable : Table {
 	this(Rectangle a, ubyte[] tbl, int c, int r) {
 		super(a,tbl,c,r);
+		(cast(InputValue)input).setValueChangedCallback(&valueChangedCallback);
 	}
 
+	void valueChangedCallback() {
+		saveState(false);
+	}
+	
 	override void activate() {
 		initializeInput();
 	}
@@ -219,6 +225,31 @@ protected:
 		return false;
 	}
 
+	void saveState(bool allTables) {
+		UndoValue v;
+		if(allTables) {
+			song.tableIterator((ct.base.Song.Table t) {
+					v.tableData ~= t.data.dup;
+				});
+		}
+		else v.tableData = [data.dup];
+		com.session.insertUndo(&undo, v);
+	}
+
+	void undo(UndoValue v) {
+		// TODO: if array has 1 child, assume to be data for this table
+		if(v.tableData.length == 1) {
+			this.data[] = v.tableData[0];
+		}
+		else {
+			int idx;
+			song.tableIterator((ct.base.Song.Table t) {
+					t.data[0..$] = v.tableData[idx++][0..$];
+				});
+		}
+		initializeInput();
+	}
+	
 }
 
 class InsValueTable : HexTable {
@@ -682,6 +713,7 @@ class ChordTable : HexTable {
 	}
 
 	override void insertRow() {
+		saveState(false);
 		ubyte[] tmp = data[row .. $-1].dup;
 		foreach(i, c; tmp) {
 			if(/+row > 0  && +/ c >= (0x80 + row) && ++c < 0x100) {
@@ -694,9 +726,10 @@ class ChordTable : HexTable {
 	}
 
 	override void deleteRow() {
+		saveState(false);		
 		ubyte[] tmp = data[row + 1 .. $].dup;
 		foreach(i, c; tmp) {
-			if(c >= (0x80 + row) && --c >= 0x80)
+			if(c > (0x80 + row) && --c >= 0x80)
 				tmp[i] = c;
 		}
 		data[row .. $ - 1] = tmp;
@@ -767,11 +800,13 @@ class WaveTable : HexTable {
 				seekCurWave();
 				return OK;
 			case SDLK_DELETE:
+				saveState(true);
 				song.tWave.deleteRow(song, row);
 				refresh();
 				set();
 				return OK;
 			case SDLK_INSERT:
+				saveState(true);
 				song.tWave.insertRow(song, row);
 				refresh();
 				set();
@@ -837,25 +872,19 @@ class SweepTable : HexTable {
 	}
 
 	override int keypress(Keyinfo key) {
-		if(key.mods & KMOD_SHIFT) {
-			switch(key.raw) {
-			case SDLK_DELETE:
-				deleteRow();
-				refresh();
-				set();
-				return OK;
-			case SDLK_INSERT:
-				insertRow();
-				refresh();
-				set();
-				return OK;
-			default: break;
-			}
+		switch(key.raw) {
+		case SDLK_DELETE:
+			deleteRow();
+			refresh();
+			set();
+			return OK;
+		case SDLK_INSERT:
+			insertRow();
+			refresh();
+			set();
+			return OK;
+		default: return super.keypress(key);
 		}
-		else if(key.raw == SDLK_DELETE ||
-				key.raw == SDLK_INSERT) return OK;
-		
-		return super.keypress(key);
 	}
 	
 	override void update() {
@@ -952,10 +981,12 @@ class PulseTable : SweepTable {
 	}
 
 	override void deleteRow() {
+		saveState(true);
 		ct.purge.pulseDeleteRow(song, row);
 	}
 
 	override void insertRow() {
+		saveState(true);
 		ct.purge.pulseInsertRow(song, row);
 	}
 
@@ -997,10 +1028,12 @@ class FilterTable : SweepTable {
 	}
 
 	override void deleteRow() {
+		saveState(true);
 		ct.purge.filterDeleteRow(song, row);
 	}
 
 	override void insertRow() {
+		saveState(true);
 		ct.purge.filterInsertRow(song, row);
 	}
 

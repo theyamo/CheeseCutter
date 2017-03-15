@@ -14,7 +14,7 @@ import ui.input;
 import derelict.sdl.sdl;
 import std.string;
 
-protected class SeqVoice : Voice {
+class SeqVoice : Voice {
 	InputSeq seqinput;
 
 	this(VoiceInitParams v) {		
@@ -26,21 +26,47 @@ protected class SeqVoice : Voice {
 		(cast(InputSeq)seqinput).setPointer(area.x + 4, 0);
 		activeInput = seqinput;
 	}
+
+	void undo(UndoValue entry) {
+		ubyte[] data = entry.dump[0];
+		ubyte[] target = entry.dump[1];
+		target[] = data;
+		assert(parent !is null);
+		entry.seq.refresh();
+		parent.step(0);
+	}
+
+	void saveState() {
+		UndoValue v;
+		import std.typecons;
+		v.dump = Tuple!(ubyte[],ubyte[])(activeRow.seq.data.raw.dup,
+										 activeRow.seq.data.raw);
+		v.seq = activeRow.seq;
+		com.session.insertUndo(&undo, v);
+	}
+
+
+	override int keyrelease(Keyinfo key) {
+		return seqinput.keyrelease(key);
+	}
 	
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_SHIFT) {
 			switch(key.raw)
 			{
 			case SDLK_RETURN:
+				saveState();
 				int r = activeRow.seq.rows;
 				int t = 4 * song.highlight;
 				activeRow.seq.expand(activeRow.seqOffset,
 								   (t - (r + t) % t));
 				break;
 			case SDLK_INSERT:
+				saveState();
 				activeRow.seq.expand(activeRow.seqOffset, 1);
 				break;
 			case SDLK_DELETE:
+				saveState();
 				activeRow.seq.shrink(activeRow.seqOffset, 1, true);
 				break;
 			default:
@@ -51,22 +77,28 @@ protected class SeqVoice : Voice {
 			switch(key.raw)
 			{
 			case SDLK_INSERT:
+				saveState();
 				activeRow.seq.expand(0, 1, false);
 				break;
 			case SDLK_DELETE:
+				saveState();
 				if(activeRow.seqOffset < activeRow.seq.rows - 1)
 					activeRow.seq.shrink(0, 1, false);
 				break;	
 			case SDLK_q:
+				saveState();
 				activeRow.seq.transpose(activeRow.seqOffset, 1);
 				break;
 			case SDLK_a:
+				saveState();
 				activeRow.seq.transpose(activeRow.seqOffset, -1);
 				break;
 			case SDLK_w:
+				saveState();
 				activeRow.seq.transpose(activeRow.seqOffset, 12);
 				break;
 			case SDLK_s:
+				saveState();
 				activeRow.seq.transpose(activeRow.seqOffset, -12);
 				break;
 				
@@ -81,9 +113,11 @@ protected class SeqVoice : Voice {
 			 case SDLK_RIGHT:
 				 return seqinput.step(1);
 			 case SDLK_INSERT:
+				 saveState();
 				 activeRow.seq.insert(activeRow.seqOffset);
 				 break;
 			 case SDLK_DELETE:
+				 saveState();
 				 activeRow.seq.remove(activeRow.seqOffset);
 				 break;
 			 default:
@@ -115,8 +149,10 @@ protected class SeqVoice : Voice {
 		seqofs = wseq.seqOffset;
 		seq = new Sequence(wseq.seq.data.raw[0 .. $], seqofs);
 		void printEmpty() {
+			import std.array;
+			
 			screen.cprint(area.x - 1, scry, 1, 0, 
-						  std.array.replicate(" ", 16));
+						  replicate(" ", 16));
 		}
 		
 		void printTrack() {
@@ -183,14 +219,14 @@ protected class SeqVoice : Voice {
 	}
 }
 
-protected class SequenceTable : VoiceTable {
+class SequenceTable : VoiceTable {
 	this(Rectangle a, PosDataTable pi) { 
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0; v < 6; v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 			voices[v] = new SeqVoice(VoiceInitParams(song.tracks[v],
-													 na, pi[v]));
+													 na, pi[v], this));
 		}
 		super(a, pi); 
 	}

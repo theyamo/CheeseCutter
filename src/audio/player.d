@@ -76,6 +76,12 @@ void playNote(Element emt) {
 	if(playstatus == Status.Play) return;
 	int v = seq.sequencer.activeVoiceNum;
 
+	// no audio reset if already inited
+	if(playstatus != Status.Keyjam) {
+		audio.callback.reset();
+		audio.audio.reset();
+	}
+
 	playstatus = Status.Stop;
 	audio.callback.reset();
 	audio.audio.reset();
@@ -160,13 +166,13 @@ void setVoicon(int[] m) {
 	muteSID(m); //m[0], m[1], m[2]);
 	song.setVoicon(muted);
 }
-
+/+
 deprecated void setVoicon(shared int[] m) {
 	muted[] = cast(int[])m.dup;
 	muteSID(muted); //m[0], m[1], m[2]);
 	song.setVoicon(muted);
 }
-
++/
 void initFP() {
 	init();
 	song.fppres = sidtype ? curfp8580 : curfp6581;

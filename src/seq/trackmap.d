@@ -15,7 +15,7 @@ import std.string : format;
 import ct.base;
 
 
-protected class TrackmapVoice : TrackVoice {
+class TrackmapVoice : TrackVoice {
 	this(VoiceInitParams v) {		
 		super(v);
 	}
@@ -95,14 +95,14 @@ protected class TrackmapVoice : TrackVoice {
 	}
 }
 
-protected class TrackmapTable : BaseTrackTable {
+class TrackmapTable : BaseTrackTable {
 	this(Rectangle a, PosDataTable pi) {
 		int x = 5 + com.fb.border + a.x;
 		for(int v=0; v < 6; v++) {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 			voices[v] = new TrackmapVoice(VoiceInitParams(song.tracks[v],
-														  na, pi.pos[v]));
+														  na, pi.pos[v], this));
 		}
 		super(a, pi); 
 	}
@@ -113,6 +113,21 @@ protected class TrackmapTable : BaseTrackTable {
 		centralize();
 	}
 
+	override int keypress(Keyinfo key) {
+		switch(key.raw)
+		{
+		case SDLK_z:
+			mainui.activateDialog(queryClip);
+			return OK;
+		case SDLK_i:
+			pasteCallback(true);
+			return OK;
+		default:
+			return super.keypress(key);
+		}
+	}
+
+	
 	// centerTo() & jump() (?) do not work with this!
 	override void step(int st) { step(st,0); }
 	override void step(int st, int extra) {
