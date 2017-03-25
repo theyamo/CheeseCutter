@@ -1,21 +1,26 @@
-LIBS=-ldl -lstdc++
-COMFLAGS=
-DLINK=$(COMFLAGS) -Wl,--gc-sections 
+# make install DESTDIR=/home/yamo/devel/cc2/snap/parts/ccutter/install
+
+LIBS=-L-ldl -L-lstdc++
+COMFLAGS=-O2
 VERSION=$(shell cat Version)
-DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font -O1
-CFLAGS=$(COMFLAGS) -O1
-CXXFLAGS=-I./src -O3
-COMPILE.d = $(DC) $(DFLAGS) -c -o $@
-OUTPUT_OPTION = 
-DC=gdc
+DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font
+CFLAGS=$(COMFLAGS)
+CXXFLAGS=$(COMFLAGS) -I./src 
+COMPILE.d = $(DC) $(DFLAGS) -c
+DC=ldc2
 EXE=
 TARGET=ccutter
 OBJ_EXT=.o
 
 include Makefile.objects.mk
 
-$(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
-	$(DC) $(DLINK) -o $(TARGET) $(OBJS) $(CXX_OBJS) $(LIBS)
+.PHONY: install release dist clean dclean tar
+
+all: ct2util ccutter
+
+ccutter:$(C64OBJS) $(OBJS) $(CXX_OBJS)
+	$(DC) $(COMFLAGS) -of=$@ $(OBJS) $(CXX_OBJS) $(LIBS)
+
 
 .cpp.o : $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -26,22 +31,23 @@ $(TARGET): $(C64OBJS) $(OBJS) $(CXX_OBJS)
 ct: $(C64OBJS) $(CTOBJS)
 
 ct2util: $(C64OBJS) $(UTILOBJS)
-	$(DC) $(DLINK) -o $@ $(UTILOBJS) $(LIBS) 
+	$(DC) $(COMFLAGS) -of=$@ $(UTILOBJS)
 
 c64: $(C64OBJS)
 
-all: c64 $(OBJS) $(CXX_OBJS) $(UTILOBJS) ct2util ct $(TARGET)
+install: all
+	strip ccutter$(EXE)
+	strip ct2util$(EXE)
+	cp ccutter$(EXE) $(DESTDIR)
+	cp ct2util$(EXE) $(DESTDIR)
+	mkdir $(DESTDIR)/tunes
+	cp -r tunes/* $(DESTDIR)/tunes
 
 # release version with additional optimizations
 release: DFLAGS += -frelease -fno-bounds-check
 release: all
 	strip ccutter$(EXE)
 	strip ct2util$(EXE)
-
-# development release pulled from git master
-devrelease: DFLAGS += -fversion=DEV
-devrelease: all
-	tar --transform 's,^\.,cheesecutter-devbuild,' -cvf cheesecutter-devbuild-linux-x86.tar.gz $(DIST_FILES)
 
 # tarred release
 dist:	release
@@ -66,7 +72,7 @@ src/ct/base.o: src/c64/player.bin
 src/ui/ui.o: src/ui/help.o
 
 %.o: %.d
-	$(COMPILE.d) $(OUTPUT_OPTION) $<
+	$(COMPILE.d) -of=$@ $<
 
 
 
