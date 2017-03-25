@@ -40,8 +40,8 @@ install: all
 	strip ct2util$(EXE)
 	cp ccutter$(EXE) $(DESTDIR)
 	cp ct2util$(EXE) $(DESTDIR)
-	mkdir $(DESTDIR)/tunes
-	cp -r tunes/* $(DESTDIR)/tunes
+	mkdir $(DESTDIR)/example_tunes
+	cp -r tunes/* $(DESTDIR)/example_tunes
 
 # release version with additional optimizations
 release: DFLAGS += -frelease -fno-bounds-check
