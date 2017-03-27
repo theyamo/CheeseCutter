@@ -231,7 +231,7 @@ abstract class BaseTrackTable : VoiceTable {
 			case SDLK_v:
 				mainui.activateDialog(new ConfirmationDialog("Paste tracks; insert or overwrite? (i/o) ",
 															 &pasteCallback,
-															 "oi"));
+															 "oi", 1));
 				return OK;
 			case SDLK_i:
 				pasteTracks(clip, true);

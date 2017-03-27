@@ -1269,8 +1269,10 @@ class Song {
 	int highlight = 4,
 		highlightOffset = 0;
 
+	private auto playerBinary = cast(ubyte[])import("player_s.bin");
+
 	this() {
-		this(cast(ubyte[])import("player_s.bin"));
+		this(playerBinary);
 	}
 
 	this(ubyte[] player) {
@@ -1289,6 +1291,7 @@ class Song {
 		initialize(bin);
 		sidbuf = memspace[0xd400 .. 0xd439];
 	}
+
 
 	@property int numOfSeqs() {
 		int upto;
@@ -1781,34 +1784,36 @@ class Song {
 	}
 
 	void importData(Song insong) {
-		// copy tables
-		foreach(idx, table; [ "wave", "cmd", "instr", "chord",
-							  "pulse", "filter"]) {
-			tables[table].data[] = insong.tables[table].data;
-		}
-		// sequences
-		foreach(idx, ref seq; insong.seqs) {
-			seqs[idx].data.raw[] = seq.data.raw;
-			seqs[idx].refresh();
-			
-		}
-		// subtunes
-		subtunes.subtunes[][][] = insong.subtunes.subtunes[][][];
-		subtunes.syncFromBuffer();
-		// labels
-		insLabels[] = insong.insLabels[];
-		title[] = insong.title[];
-		author[] = insong.author[];
-		release[] = insong.release[];
-		// vars
-		clock = insong.clock;
-		multiplier = insong.multiplier;
-		sidModel = insong.sidModel[];
-		fppres = insong.fppres[];
-		songspeeds = insong.songspeeds[];
-		speed = songspeeds[0];
-		// TODO highlight, highlightoffset
-		generateChordIndex();
+	  buffer[0xdfe .. 0xdfe + playerBinary.length] = playerBinary[];
+	  ver = SONG_REVISION;
+	  initialize(buffer.dup);
+	  // copy tables
+	  foreach(idx, table; [ "wave", "cmd", "instr", "chord",
+							"pulse", "filter"]) {
+		  tables[table].data[] = insong.tables[table].data;
+	  }
+	  // sequences
+	  foreach(idx, ref seq; insong.seqs) {
+		  seqs[idx].data.raw[] = seq.data.raw;
+		  seqs[idx].refresh();
+	  }
+	  // subtunes
+	  subtunes.subtunes[][][] = insong.subtunes.subtunes[][][];
+	  subtunes.syncFromBuffer();
+	  // labels
+	  insLabels[] = insong.insLabels[];
+	  title[] = insong.title[];
+	  author[] = insong.author[];
+	  release[] = insong.release[];
+	  // vars
+	  clock = insong.clock;
+	  multiplier = insong.multiplier;
+	  sidModel = insong.sidModel[];
+	  fppres = insong.fppres[];
+	  songspeeds = insong.songspeeds[];
+	  speed = songspeeds[0];
+	  // TODO highlight, highlightoffset
+	  generateChordIndex();
 	}
 
 	// hack to help sequencer rowcounting 

@@ -75,13 +75,13 @@ class QueryDialog : QueryDialogBase!int {
 }
 
 class ConfirmationDialog : QueryDialogBase!int {
-	this(string title, Callback fp, string keys) {
-		super(title, fp);
-		input = new InputSingleChar(byt, keys, 1);
+	this(string title, Callback cb, string keys, int defaultkey) {
+		super(title, cb);
+		input = new InputSingleChar(byt, keys, defaultkey);
 	}
 
-	this(string title, Callback fp) {
-		this(title, fp, "yn");
+	this(string title, Callback cb) {
+		this(title, cb, "yn", 1);
 	}
 	
 	override int keypress(Keyinfo key) {
@@ -634,11 +634,42 @@ class LoadFileDialog : FileSelectorDialog {
 		cbimport = cbimp;
 	}
 
-	override int keypress(Keyinfo key) {
-		if(key.raw == SDLK_RETURN && (key.mods & KMOD_SHIFT)) {
-			return returnPressed(cbimport);
+	override protected int returnPressed(CB cb) {
+		if(activeWindow != fsel && activeWindow != sfile)
+			return super.returnPressed(cb);
+
+		if(std.file.exists(fullname) && !std.file.isDir(fullname)
+					     && shouldUpgrade(fullname)) {
+			mainui.activateDialog(new ConfirmationDialog("Upgrade to latest player (Y/n)? ",
+														 &confirmCallback, "yn", 0));
+			return OK;
 		}
-		else return super.keypress(key);
+		else return super.returnPressed(cb);
+	}
+
+	private bool shouldUpgrade(string fn) {
+		try {
+		    Song newsong = new Song();
+		    newsong.open(fn);
+		    return SONG_REVISION > newsong.ver;
+		}
+		catch(Exception e) { return false; }
+		return true;
+	}
+
+	private void confirmCallback(int param) {
+		auto cb = param ? callback : cbimport;
+
+		if(activeWindow == fsel) {
+			int r = fsel.fileHandler();
+			if(r == RETURN)
+				cb(cast(string)(fsel.selected));
+			sdir.setString(getcwd());
+		}
+		else if(activeWindow == sfile) { // pressed RETURN in file dialog
+			string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
+			cb(filename);
+		}
 	}
 }
 
