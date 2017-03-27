@@ -420,9 +420,6 @@ final private class Toplevel : WindowSwitcher {
 				Hotspot(Rectangle(x2 + 3, y1, 1, 30), (int b){ 
 						ui.activateDialog(UI.infobar); 
 					}),
-				Hotspot(Rectangle(x2 + 18, y1 + 1, 1, 10), (int b){ 
-						b > 1 ? audio.player.toggleSIDModel(0) : audio.player.nextFP(0); 
-					}),
 				Hotspot(Rectangle(x2 + 3, y1 + 1, 1, 14), (int b) {
 						b == 1 ? audio.player.incMultiplier() : audio.player.decMultiplier(); 
 					}) 

@@ -74,10 +74,6 @@ void setSidModel(int model1, int model2) {
 	init();
 }
 
-void toggleSIDModel(int sid) {
-	setSidModel(sid, sidtype[sid] ^ 1);
-}
-
 void playNote(Element emt) {
 	if(playstatus == Status.Play) return;
 	int v = seq.sequencer.activeVoiceNum;
