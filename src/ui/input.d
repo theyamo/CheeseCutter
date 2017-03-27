@@ -17,6 +17,21 @@ import std.stdio : stderr;
 
 enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT, IllegalValue }
 
+alias ValueChangedCallback = void delegate();
+
+mixin template ValueChangedHandler() {
+	private ValueChangedCallback valueChangedCallback = null;
+	private void valueChanged() {
+		if(valueChangedCallback !is null)
+			valueChangedCallback();
+	}
+
+	void setValueChangedCallback(ValueChangedCallback cb) {
+		this.valueChangedCallback = cb;
+	}
+}
+
+
 struct Keyinfo {
 	int key, mods, unicode;
 	alias key raw;
@@ -62,6 +77,8 @@ class Cursor {
 }
 
 class Input {
+	mixin ValueChangedHandler;
+
 	Cursor cursor;
 	const int width;
 	int x, y, nibble;
@@ -184,6 +201,7 @@ class InputValue : Input {
 	}
 
 	override int setValue(int v) {
+		valueChanged();
 		inarray[nibble] = cast(ubyte)v;
 		int c = toInt();
 		for(int i = cast(int)(inputLength/2-1); i >= 0; i--) {
@@ -299,10 +317,11 @@ class InputWord : InputValue {
 class InputTrack : InputWord {
 	Track trk;
 	ubyte[2] buf;
-	this(RowData s) {
+	this(RowData s, ValueChangedCallback cb) {
 		super(buf);
 		init(s);
- 		trk.setValue(buf[0], buf[1]);		
+ 		trk.setValue(buf[0], buf[1]);
+		valueChangedCallback = cb;
 	}
 	
 	void init(RowData s) {
@@ -314,6 +333,9 @@ class InputTrack : InputWord {
 	alias init refresh;
 
 	void flush() {
+		if(trk.number != buf[1] ||
+		   trk.trans != buf[0])
+			valueChanged();
  		trk.setValue(buf[0], buf[1]);
 	}
 	
@@ -371,7 +393,8 @@ class InputTrack : InputWord {
 			break;
 		}
 		if(buf[0] < 0xc0) {
-			return super.keypress(key);
+			int r = super.keypress(key);
+			return r;
 		}
 		return OK;
 	}
@@ -513,13 +536,12 @@ abstract class ExtendedInput : Input {
 	protected {
 		int nibble, memvalue;
 		Element element;
-		Voice[] voices;
-		int voice;
 	}
 	int invalue;
 	bool changed;
-	bool valueChanged() { return changed; }
+	//bool valueChanged() { return changed; }
 
+	/+
 	protected this() {
 		super(1);
 	}
@@ -527,6 +549,17 @@ abstract class ExtendedInput : Input {
 	protected this(int w) {
 		super(w);
 	}
+	+/
+
+	this(ValueChangedCallback cb) {
+		this(1, cb);
+	}
+	
+	this(int w, ValueChangedCallback cb) {
+		this.valueChangedCallback = cb;
+		super(w);
+	}
+	
 
 	override int step(int st) {
 		nibble += st;
@@ -553,14 +586,14 @@ abstract class ExtendedInput : Input {
 			if(memvalue >= 0) {
 				changed = (invalue != memvalue);
 				invalue = memvalue;
+				valueChanged();
 				setRowValue(memvalue);
 				return WRAP;
 			}
 			goto case '.';
 		case '.':
+			valueChanged();
 			clearRow();
-			// TODO: find a way to check if anything actually changed
-			changed = true;
 			return WRAP;
 		default: 
 			if(keytab == null) return WRAP;
@@ -588,8 +621,11 @@ protected:
 				invalue |= value & 255;
 			}
 		}
+
+		valueChanged();
+		
 		setRowValue(invalue);
-		changed = true;
+
 		memvalue = invalue;
 		if(++nibble >= width) {
 			nibble = 0;
@@ -628,6 +664,10 @@ protected:
 }
 
 class InputOctave : ExtendedInput {
+	this(ValueChangedCallback cb) {
+		super(1, cb);
+	}
+	
 	override int keypress(Keyinfo key) {
 		return super.keypress(key,"012345678");
 	}	
@@ -643,7 +683,10 @@ class InputOctave : ExtendedInput {
 }
 
 class InputInstrument : ExtendedInput {
-	this() { super(2); }
+	this(ValueChangedCallback cb) {
+		super(2, cb);
+	}
+	
 	override void clearRow() {
 		super.clearRow();
 		element.instr = 0xc0;
@@ -676,8 +719,10 @@ class InputInstrument : ExtendedInput {
 }
 
 class InputCmd : ExtendedInput {
-	this() { super(2); }
-
+	this(ValueChangedCallback cb) {
+		super(2, cb);
+	}
+	
 	override void clearRow() {
 		super.clearRow();
 		element.cmd = 0;
@@ -696,8 +741,9 @@ class InputCmd : ExtendedInput {
 class InputNote : ExtendedInput {
 	InputKeyjam keyjam;
 	private bool noteStarted = false;
-	this() {
-		super();
+
+	this(ValueChangedCallback cb) {
+		super(1, cb);
 		keyjam = new InputKeyjam();
 	}
 
@@ -731,9 +777,14 @@ class InputNote : ExtendedInput {
 			break;
 		case SDLK_COMMA:
 			if(element.note.value >= 3 && element.note.value < 0x5f) {
+				valueChanged();
 				element.note.setTied(element.note.isTied() ?
 									 false : true);
 			}
+			return WRAP;
+		case ' ', '.':
+			valueChanged();
+			clearRow();
 			return WRAP;
 			/+
 		case SDLK_SEMICOLON:
@@ -763,6 +814,7 @@ class InputNote : ExtendedInput {
 		element.note = 0;
 		element.note.setTied(false);
 		element.instr = 0x80;
+		element.cmd = 0;
 	}
 
 	override void setRowValue(int value) {
@@ -804,9 +856,10 @@ class InputNote : ExtendedInput {
 
 class InputKeyjam : ExtendedInput {
 	ubyte[4] dummy;
+
 	this() {
 		element = Element(dummy);
-		super();
+		super(1, null);
 	}
 
 	override void setRowValue(int value) {
@@ -858,11 +911,11 @@ final class InputSeq : ExtendedInput {
 	enum columns = 3;
 	
 	this() {
-		super();
-		inputNote = new InputNote();
-		inputInstrument = new InputInstrument();
-		inputCmd = new InputCmd();
-		inputOctave = new InputOctave();
+		super(1, null);
+		inputNote = new InputNote(&valueChanged);
+		inputInstrument = new InputInstrument(&valueChanged);
+		inputCmd = new InputCmd(&valueChanged);
+		inputOctave = new InputOctave(&valueChanged);
 		activeInput = inputNote;
 		inputters = [inputNote, inputOctave, inputInstrument, inputCmd];
 	}
@@ -904,18 +957,18 @@ final class InputSeq : ExtendedInput {
 			break;
 		}
 
+		int r = activeInput.keypress(key); 
+
+		return r;
+	}
+
+	void valueChanged() {
 		UndoValue v;
 		import std.typecons;
 		v.dump = Tuple!(ubyte[],ubyte[])(activeInput.element.data.dup,
 												element.data);
 
-		int r = activeInput.keypress(key); 
-
-		if(activeInput.valueChanged) {
-			com.session.insertUndo(&undo, v);
-		}
-		
-		return r;
+		com.session.insertUndo(&undo, v);
 	}
 
 	void undo(UndoValue entry) {

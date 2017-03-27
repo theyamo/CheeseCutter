@@ -143,7 +143,7 @@ Ctrl-Q/A................Transpose all tracks up/down from cursor down
 Ctrl-C..................Ask for a number and copy the N of tracks into clipboard
 Ctrl-V..................Paste copied tracks from the clipboard
 Space...................Write the cached sequence number to the track value
-Shift-Insert/Delete.....Insert empty track (A000) or delete track from cursor
+Insert/Delete...........Insert empty track (A000) or delete track from cursor
                         pos down
 Ctrl-Enter..............Insert a track to end of voice and move cursor there
 Ctrl-Insert/Delete......Insert/delete track to end of voice and move cursor there

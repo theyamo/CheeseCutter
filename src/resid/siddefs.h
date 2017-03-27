@@ -20,6 +20,10 @@
 #ifndef __SIDDEFS_H__
 #define __SIDDEFS_H__
 
+// From math.h
+#define M_LN2          0.69314718055994530942  /* log_e 2 */
+#define M_PI           3.14159265358979323846  /* pi */
+
 // Define bool, true, and false for C++ compilers that lack these keywords.
 #define RESID_HAVE_BOOL 1
 

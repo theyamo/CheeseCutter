@@ -16,6 +16,8 @@ import std.string;
 import std.file;
 import std.utf;
 import std.array;
+import std.stdio;
+import std.process;
 
 abstract class QueryDialogBase(T) : Window {
 	string query;

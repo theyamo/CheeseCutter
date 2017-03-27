@@ -28,7 +28,7 @@ __gshared short* mixbuf = null, mixbuf2 = null;
 extern(C) {
 	extern __gshared ubyte[0x19][2] sidreg;
 	extern __gshared int residdelay;
-	extern __gshared int sid_init(int, Filterparams*, int, int, int, int, int, int);
+	extern __gshared int sid_init(const(Filterparams)**, int, ushort*, int, int, int, int);
 	extern __gshared int sid_fillbuffer(short *, int, int);
 	extern __gshared int sid_fillbuffer_stereo(short *, short*, int, int);
 	extern __gshared int sid_close();

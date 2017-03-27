@@ -818,8 +818,8 @@ public:
 	}
 
 	override int keypress(Keyinfo key) {
-		if(key.raw >= SDLK_KP1 && key.raw <= SDLK_KP9) {
-			stepValue = key.raw - SDLK_KP1 + 1;
+		if(key.raw >= SDLK_KP0 && key.raw <= SDLK_KP9) {
+			stepValue = key.raw - SDLK_KP0;
 			return OK;
 		}
 		if(key.mods & KMOD_ALT) {
@@ -845,12 +845,6 @@ public:
 			case SDLK_F12:
 				mainui.activateDialog(
 					new DebugDialog(activeView.activeVoice.activeRow.seq));
-				break;
-			case SDLK_z:
-				com.session.executeUndo();
-				break;
-			case SDLK_r:
-				com.session.executeRedo();
 				break;
 			default:
 				return activeView.keypress(key);
@@ -965,8 +959,27 @@ protected:
 	}
 
 private:
+	void saveState() {
+		UndoValue v;
+		import std.typecons;
+		RowData s = activeView.getRowData();
+		v.dump = Tuple!(ubyte[],ubyte[])(s.seq.data.raw.dup,
+										 s.seq.data.raw);
+		v.seq = s.seq;
+		com.session.insertUndo(&undo, v);
+	}
+
+	void undo(UndoValue entry) {
+		ubyte[] data = entry.dump[0];
+		ubyte[] target = entry.dump[1];
+		target[] = data;
+		entry.seq.refresh();
+		refresh();
+		activeView.step(0);
+	}
 	
 	void insertCallback(int param) {
+		saveState();
 		if(param >= MAX_SEQ_NUM) return;
 		RowData s = activeView.getRowData();
 		Sequence fr = song.seqs[param];
@@ -976,6 +989,7 @@ private:
 	}
 
 	void copyCallback(int param) {
+		saveState();
 		if(param >= MAX_SEQ_NUM) return;
 		RowData s = activeView.getRowData();
 		Sequence fr = song.seqs[param];

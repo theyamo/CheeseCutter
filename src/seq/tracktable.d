@@ -22,7 +22,7 @@ class TrackVoice : SeqVoice {
 	this(VoiceInitParams v) {		
 		super(v);
 		refreshPointer(0);
-		trackinput = new InputTrack(activeRow);
+		trackinput = new InputTrack(activeRow, &(cast(BaseTrackTable)v.voiceTable).trackValueChanged);
 		trackinput.setCoord(area.x,0);
 		activeInput = trackinput;
 	}
@@ -182,6 +182,10 @@ abstract class BaseTrackTable : VoiceTable {
 		
 	}
 
+	void trackValueChanged() {
+		saveState(false);
+	}
+	
 	override int keypress(Keyinfo key) {
 		if(key.mods & KMOD_CTRL) {
 			switch(key.raw)
@@ -239,33 +243,44 @@ abstract class BaseTrackTable : VoiceTable {
 				break;
 			}	
 		}
+		else if(key.mods & KMOD_ALT) {
+			switch(key.key) {
+			case SDLK_z:
+				mainui.activateDialog(queryClip);
+				return OK;
+			case SDLK_b:
+				pasteTracks(clip, true);
+				return OK;
+			default:
+				break;
+			}
+		}
+
 		if((key.mods & KMOD_CTRL) && (key.mods & KMOD_ALT)) {
 			int key1to6 = key.raw - SDLK_1;
 			if(key1to6 >= 0 && key1to6 < 6) {
 				trackSwap(key1to6);
 			}
 		}
-		else if(key.mods & KMOD_SHIFT) {
-			switch(key.raw)
-			{
-			case SDLK_INSERT:
-				saveState(false);
-				auto v = (cast(TrackVoice)activeVoice);
-				v.trackInsert(true);
-				return OK;
-			case SDLK_DELETE:	
-				saveState(false);
-				auto v = (cast(TrackVoice)activeVoice);
-				v.trackDelete(true);
-				if(v.pos.trkOffset >= v.tracks.trackLength-1) 
-					jump(Jump.toEnd,true);
-				return OK;
-			default: break;
-			}
-		}
-
+		else switch(key.raw)
+			 {
+			 case SDLK_INSERT:
+				 saveState(false);
+				 auto v = (cast(TrackVoice)activeVoice);
+				 v.trackInsert(true);
+				 return OK;
+			 case SDLK_DELETE:	
+				 saveState(false);
+				 auto v = (cast(TrackVoice)activeVoice);
+				 v.trackDelete(true);
+				 if(v.pos.trkOffset >= v.tracks.trackLength-1) 
+					 jump(Jump.toEnd,true);
+				 return OK;
+			 default: break;
+			 }
+		
 		super.keypress(key);
-
+	
 		switch(activeVoice.keypress(key))
 		{
 		case WRAPL:
@@ -438,7 +453,7 @@ class TrackTable : BaseTrackTable {
 			x += 13 + com.fb.border;
 
 			voices[v] = new TrackVoice(VoiceInitParams(song.tracks[v],
-													   na, pi.pos[v]));
+													   na, pi.pos[v], this));
 		}
 		super(a, pi);
 	}

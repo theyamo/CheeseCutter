@@ -138,7 +138,7 @@ ofe8		!16 track5
 ofea		!16 track6
 ofec		!16 dummy
 ofee		!16 newseq
-version		!pet "cc4.04s"
+version		!pet "cc4.07s"
 }
 ;;; ----------------------------------------
 ;;; editor specific player routines, will be 
@@ -389,21 +389,17 @@ run		dec speedcnt
 		bpl speedok
 speedalt	ldy speedsub
 		lda chord,y
+                bpl nowrap
+                ldy #0
+                sty speedsub
+                lda chord,y
+nowrap          inc speedsub
 		sta playspeed
 		cmp #2
 		bpl speedok
 		lda #2
 }
 speedok		sta speedcnt
-		
-!if INCLUDE_BREAKSPEED = TRUE {
-		iny
-		lda chord,y
-		bpl speednowrap
-		and #$7f
-		tay
-speednowrap	sty speedsub
-}
 speeddone
 ;---------------------------------------
 		ldx #5

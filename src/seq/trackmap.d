@@ -102,7 +102,7 @@ class TrackmapTable : BaseTrackTable {
 			Rectangle na = Rectangle(x, a.y, a.height, 13 + com.fb.border);
 			x += 13 + com.fb.border;
 			voices[v] = new TrackmapVoice(VoiceInitParams(song.tracks[v],
-														  na, pi.pos[v]));
+														  na, pi.pos[v], this));
 		}
 		super(a, pi); 
 	}

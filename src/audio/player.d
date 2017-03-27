@@ -20,9 +20,11 @@ shared private int playstatus;
 __gshared int[6] muted;
 
 // resid params. should really be in audio.d
-int usefp = 1, sidtype, interpolate = 1, badline, ntsc;
-__gshared Filterparams curfp;
-int curfp6581 = 0, curfp8580 = 0;
+const int usefp = 1;
+int interpolate = 1, badline, ntsc;
+ushort[2] sidtype;
+int[2] curfp6581 = 0, curfp8580 = 0;
+__gshared auto curfp = new const(Filterparams)*[2];
 
 int getPlaystatus() {
 	return playstatus;
@@ -41,8 +43,9 @@ void init() {
 		throw new Error("Could not init audio.");
 	}
 	SDL_LockAudio();
-	curfp = sidtype ? FP8580[curfp8580] : FP6581[curfp6581];
-	sid_init(usefp, &curfp, freq, sidtype, ntsc, interpolate, 0, stereo);
+	curfp[0] = sidtype[0] > 0 ? &FP8580[curfp8580[0]] : &FP6581[curfp6581[0]];
+	curfp[1] = sidtype[1] > 0 ? &FP8580[curfp8580[1]] : &FP6581[curfp6581[1]];
+	sid_init(curfp.ptr, freq, sidtype.ptr, ntsc, interpolate, 0, stereo);
 	/+
 	if(!audioinited) {
 		writefln("audio init: engine=%s, freq=%d, buf=%d, sid=%d, clock=%s, interpolation=%s%s",
@@ -61,15 +64,18 @@ void init() {
 	SDL_UnlockAudio();
 }
 
-void setSidModel(int v) {
-	assert(v == 0 || v == 1);
-	if(sidtype == v) return;
-	sidtype = v;
+void setSidModel(int model1, int model2) {
+	if(sidtype[0] == model1
+	   && sidtype[1] == model2)
+		return;
+
+	sidtype[0] = cast(ushort)model1;
+	sidtype[1] = cast(ushort)model2;
 	init();
 }
 
-void toggleSIDModel() {
-	setSidModel(sidtype ^ 1);
+void toggleSIDModel(int sid) {
+	setSidModel(sid, sidtype[sid] ^ 1);
 }
 
 void playNote(Element emt) {
@@ -83,6 +89,8 @@ void playNote(Element emt) {
 	}
 
 	playstatus = Status.Stop;
+	audio.callback.reset();
+	audio.audio.reset();
 	song.setVoicon([v != 0, v != 1, v != 2, v != 3, v != 4, v != 5]);
 	muteSID([1,1,1,1,1,1]);
 	song.cpu.reset();
@@ -163,26 +171,45 @@ void setVoicon(int[] m) {
 	muteSID(m); //m[0], m[1], m[2]);
 	song.setVoicon(muted);
 }
-
+/+
 deprecated void setVoicon(shared int[] m) {
 	muted[] = cast(int[])m.dup;
 	muteSID(muted); //m[0], m[1], m[2]);
 	song.setVoicon(muted);
 }
-
++/
 void initFP() {
 	init();
-	song.fppres = sidtype ? curfp8580 : curfp6581;
+	song.fppres[0] = sidtype[0] ? curfp8580[0] : curfp6581[0];
+	song.fppres[1] = sidtype[1] ? curfp8580[1] : curfp6581[1];
 }
 
-void nextFP() {
+void nextFP(int sid)  {
     if (usefp) {
-        if (sidtype) {
-            ++curfp8580;
-            curfp8580 %= FP8580.length;
+        if (sidtype[sid]) {
+            ++curfp8580[sid];
+            curfp8580[sid] %= FP8580.length;
         } else {
-            ++curfp6581;
-            curfp6581 %= FP6581.length;
+            ++curfp6581[sid];
+            curfp6581[sid] %= FP6581.length;
+        }
+        initFP();
+    }
+}
+
+
+void setFP(int fp0, int fp1) {
+    if (usefp) {
+        if (sidtype[0]) {
+			curfp8580 = cast(int)(fp0 % FP8580.length);
+        } else {
+			curfp6581 = cast(int)(fp0 % FP6581.length);
+        }
+
+        if (sidtype[1]) {
+			curfp8580[1] = cast(int)(fp1 % FP8580.length);
+        } else {
+			curfp6581[1] = cast(int)(fp1 % FP6581.length);
         }
 
         initFP();
@@ -190,28 +217,15 @@ void nextFP() {
 }
 
 
-void setFP(int fp) {
+void prevFP(int sid) {
     if (usefp) {
-        if (sidtype) {
-			curfp8580 = cast(int)(fp % FP8580.length);
+        if (sidtype[sid]) {
+            --curfp8580[sid];
+            if (curfp8580[sid] < 0) curfp8580[sid] = cast(int)(FP8580.length-1);
         } else {
-			curfp6581 = cast(int)(fp % FP6581.length);
+            --curfp6581[sid];
+            if (curfp6581[sid] < 0) curfp6581[sid] = cast(int)(FP6581.length-1);
         }
-        initFP();
-    }
-}
-
-
-void prevFP() {
-    if (usefp) {
-        if (sidtype) {
-            --curfp8580;
-            if (curfp8580 < 0) curfp8580 = cast(int)(FP8580.length-1);
-        } else {
-            --curfp6581;
-            if (curfp6581 < 0) curfp6581 = cast(int)(FP6581.length-1);
-        }
-
         initFP();
     }
 }

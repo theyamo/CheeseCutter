@@ -162,20 +162,25 @@ int main(char[][] args) {
 	bool fnDefined = false;
 
 	DerelictSDL.load();
-	
+
+	import std.process;
+	auto ct_home = environment.get("CC_HOME");
+	if(ct_home !is null)
+		chdir(ct_home);
+
 	scope(exit) {
 		delete mainui;
 		delete video;
 		SDL_Quit();
 	}
-	
+
 	scope(failure) {
 		if(song !is null) {
 			stderr.writefln("Crashed! Saving backup...");
 			song.save("_backup.ct");
 		}
 	}
-
+	
 	try {
 		i = 1;
 		while(i < args.length) {
@@ -185,18 +190,11 @@ int main(char[][] args) {
 				printheader();
 				return 0;
 			case "-m":
-				sidtype = to!int(args[i+1]);
-				if(sidtype != 0 && sidtype != 1 && sidtype != 6581 && sidtype != 8580)
-					throw new UserException("Incorrect SID type; specify 0 for 6581 or 1 for 8580");
-				i++;
-				break;
+				writeln("Use keys in the program to change sid presets");
+				return 0;
         	case "-fpr":
-				int fprarg = to!int(args[i+1]);
-
-				sidtype ? (audio.player.curfp8580 = cast(int)(fprarg % FP8580.length)) :
-					(audio.player.curfp6581 = cast(int)(fprarg % FP6581.length));
-				i++;
-				break;
+				writeln("Use keys in the program to change filter presets");
+				return 0;
 			case "-i":
 				audio.player.interpolate = 0;
 				break;
@@ -248,7 +246,7 @@ int main(char[][] args) {
 		std.stdio.stderr.writeln(e);
 		return -1;
 	}
-	
+
 	audio.player.init();
 	initVideo(fs, yuvOverlay);
 	initSession();

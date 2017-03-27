@@ -535,7 +535,7 @@ bool SID::set_sampling_parameters(double clock_freq, sampling_method method,
   // sample_offset a whole multiple of the filter table resolution.
   int res = method == SAMPLE_RESAMPLE_INTERPOLATE ?
     FIR_RES_INTERPOLATE : FIR_RES_FAST;
-  int n = (int)ceil(log(res/f_cycles_per_sample)/log(2));
+  int n = (int)ceil(log(res/f_cycles_per_sample)/log(2.0));
   fir_RES = 1 << n;
 
   // Allocate memory for FIR tables.
