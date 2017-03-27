@@ -1206,8 +1206,7 @@ final class UI {
 			}
 		}
 		catch(Exception e) {
-			stderr.writeln(e.toString);	
-			statusline.display("Could not load file!");
+			statusline.display("Error: " ~ e.toString);
 			return;
 		}
 		
