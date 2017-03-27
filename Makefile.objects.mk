@@ -113,8 +113,7 @@ UTILOBJS = src/ct2util$(OBJ_EXT) \
 	src/ct/build$(OBJ_EXT) \
 	$(C_OBJS)
 
-C64OBJS = src/c64/player.bin \
-	src/c64/player_s.bin 
+C64OBJS = src/c64/player_s.bin
 
 CTOBJS	=
 

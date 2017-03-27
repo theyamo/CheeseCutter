@@ -63,7 +63,7 @@ tar:
 	git archive master --prefix=cheesecutter-$(VERSION)/ | bzip2 > cheesecutter-$(VERSION)-src.tar.bz2
 # --------------------------------------------------------------------------------
 
-src/c64/player.bin: src/c64/player_v4.acme
+src/c64/player_s.bin: src/c64/player_v4s.acme
 	acme -f cbm --outfile $@ $<
 
 src/ct/base.obj: src/c64/player.bin
@@ -75,5 +75,5 @@ src/ui/ui.obj: src/ui/help.obj
 %.obj: %.cpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $(OUTPUT_OPTION) $<
 
-
-
+%.obj : %.c
+	$(CC) -c $< -o $@
