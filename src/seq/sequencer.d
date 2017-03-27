@@ -818,8 +818,8 @@ public:
 	}
 
 	override int keypress(Keyinfo key) {
-		if(key.raw >= SDLK_KP1 && key.raw <= SDLK_KP9) {
-			stepValue = key.raw - SDLK_KP1 + 1;
+		if(key.raw >= SDLK_KP0 && key.raw <= SDLK_KP9) {
+			stepValue = key.raw - SDLK_KP0;
 			return OK;
 		}
 		if(key.mods & KMOD_ALT) {
