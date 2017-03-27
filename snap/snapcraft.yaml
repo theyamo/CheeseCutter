@@ -29,6 +29,6 @@ parts:
     plugin: make
     stage-packages:
       - libsdl1.2debian
+    build-packages:
+      - ldc
     source: ../
-    organize:
-      '*.ct': example_tunes/
