@@ -43,7 +43,7 @@ extern "C" {
 	SIDFP *sidfp[2] = { 0, 0 };
 	int residdelay = 0;
 	int usestereo = 0;
-	int usefp = 0;
+	int usefp = 1;
 
 	void sid_close() {
 		if(sid) delete sid;
@@ -51,7 +51,7 @@ extern "C" {
 		if(sidfp[1]) delete sidfp[1];
 	}
 
-	void sid_set_fp_params(SIDFP *sidfp, FILTERPARAMS *fparams, int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate) {
+	void sid_set_fp_params(SIDFP *sidfp, const FILTERPARAMS *fparams, int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate) {
 		switch(interpolate)
 		{
 		case 0:
@@ -86,11 +86,10 @@ extern "C" {
 
 	}
 	
-	void sid_init(int fp, FILTERPARAMS *fparams, int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, int stereo)
+	void sid_init(const FILTERPARAMS **fparams, int speed, ushort* m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, int stereo)
 	{
 		int c;
 
-		usefp = fp;
 		usestereo = stereo;
 		
 		if (ntsc) clockrate = NTSCCLOCKRATE;
@@ -111,10 +110,11 @@ extern "C" {
 		}
 
 		if(usefp) {
-			sid_set_fp_params(sidfp[0], fparams, speed, m, ntsc, interpolate, customclockrate);
-			sid_set_fp_params(sidfp[1], fparams, speed, m, ntsc, interpolate, customclockrate);
+			sid_set_fp_params(sidfp[0], fparams[0], speed, m[0], ntsc, interpolate, customclockrate);
+			sid_set_fp_params(sidfp[1], fparams[1], speed, m[1], ntsc, interpolate, customclockrate);
 		}
 		else {
+			/*
 			switch(interpolate)
 			{
 			case 0:
@@ -131,6 +131,7 @@ extern "C" {
 			else {
 				sid->set_chip_model(MOS6581);
 			}
+			*/
 		}
 	}
 

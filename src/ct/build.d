@@ -109,8 +109,9 @@ private ubyte[] generatePSIDHeader(Song insong, ubyte[] data, int initAddress,
 		throw new UserException(format("The relocated tune goes past $fff9 (by $%x bytes).",endAddr-0xfff9));
 	
 	data[PSID_FLAGS_OFFSET + 1] 
-		= cast(ubyte)(0x04 /+ PAL +/ | (insong.sidModel ? (0x20 | 0x80) : (0x10 | 0x40)));
-
+		= cast(ubyte)(0x04 /+ PAL +/
+					  | (insong.sidModel[0] ? 0x20 : 0x10)
+					  | (insong.sidModel[1] ? 0x80 : 0x40));
 	data[PSID_SECOND_SID_ADDR] = 0x42; // d420
 	return data;
 }

@@ -263,16 +263,16 @@ class Infobar : Window {
 				   format("`05Oct: `0d%d  `05Spd: `0d%X  `05St: `0d%d ",
 						  state.octave, song.speed, seq.sequencer.stepValue));
 		screen.fprint(x2+3, area.y+1,
-				   format("`05Rate: `0d%-1d*%dhz  `05SID: `0d%s%s    ",
+				   format("`05Rate: `0d%-1d*%dhz  `05SID1: `0d%s     ",
 						  song.multiplier, audio.player.ntsc ? 60 : 50,
-						  audio.player.usefp ? audio.player.curfp.id : audio.player.sidtype ? "8580" : "6581",
-						  audio.player.badline ? "&0fb" : " "));
+						  audio.player.usefp ? audio.player.curfp[0].id : audio.player.sidtype[1] ? "8580" : "6581"));
 		screen.fprint(x1,area.y+1,format("`05Filename: `0d%s", state.filename.leftJustify(38)));
 		//screen.fprint(x2,area.y,format("`05  `b1T`01itle: `0d%-32s", std.string.toString(cast(char *)song.title))); 
 		screen.fprint(x2,area.y,
 					  format("`05%s `0d%-32s", (["  `b1T`01itle:", " `01Author:", "`01Release:" ])[idx],
 							 song.title));
-		screen.fprint(x2,area.y+2,format("`05 Player: `0d%s", ztos(song.playerID)));
+		screen.fprint(x2,area.y+2,format("`05 Player: `0d%s `05SID2: `0d%s     ", ztos(song.playerID),
+										 audio.player.usefp ? audio.player.curfp[1].id : audio.player.sidtype[1] ? "8580" : "6581"));
 	}
 
 	override void refresh() {
@@ -421,7 +421,7 @@ final private class Toplevel : WindowSwitcher {
 						ui.activateDialog(UI.infobar); 
 					}),
 				Hotspot(Rectangle(x2 + 18, y1 + 1, 1, 10), (int b){ 
-						b > 1 ? audio.player.toggleSIDModel() : audio.player.nextFP(); 
+						b > 1 ? audio.player.toggleSIDModel(0) : audio.player.nextFP(0); 
 					}),
 				Hotspot(Rectangle(x2 + 3, y1 + 1, 1, 14), (int b) {
 						b == 1 ? audio.player.incMultiplier() : audio.player.decMultiplier(); 
@@ -1053,17 +1053,18 @@ final class UI {
 				audio.player.init();
 				break;
 			case SDLK_F3:
-				song.sidModel ^= 1;
-				audio.player.setSidModel(song.sidModel);
+				song.sidModel[0] ^= 1;
+				audio.player.setSidModel(song.sidModel[0], song.sidModel[1]);
 				break;
-				/+
-			case SDLK_F4, SDLK_b:
-				audio.player.badline ^= 1;
-				audio.player.init();
+			case SDLK_F4:
+				song.sidModel[1] ^= 1;
+				audio.player.setSidModel(song.sidModel[0], song.sidModel[1]);
 				break;
-				+/
+			case SDLK_F7:
+				key.mods & KMOD_SHIFT ? audio.player.prevFP(0) : audio.player.nextFP(0);
+				break;
 			case SDLK_F8:
-				key.mods & KMOD_SHIFT ? audio.player.prevFP() : audio.player.nextFP();
+				key.mods & KMOD_SHIFT ? audio.player.prevFP(1) : audio.player.nextFP(1);
 				break;
 			case SDLK_F9:
 				/+
@@ -1271,8 +1272,8 @@ final class UI {
 		savedialog.fsel.fpos = loaddialog.fsel.fpos;
 	
 		// set variables
-		audio.player.setSidModel(song.sidModel);
-		audio.player.setFP(song.fppres);
+		audio.player.setSidModel(song.sidModel[0], song.sidModel[1]);
+		audio.player.setFP(song.fppres[0], song.fppres[1]);
 		audio.player.setMultiplier(song.multiplier);
 		
 		enableKeyjamMode(false);

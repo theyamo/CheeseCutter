@@ -190,18 +190,11 @@ int main(char[][] args) {
 				printheader();
 				return 0;
 			case "-m":
-				sidtype = to!int(args[i+1]);
-				if(sidtype != 0 && sidtype != 1 && sidtype != 6581 && sidtype != 8580)
-					throw new UserException("Incorrect SID type; specify 0 for 6581 or 1 for 8580");
-				i++;
-				break;
+				writeln("Use keys in the program to change sid presets");
+				return 0;
         	case "-fpr":
-				int fprarg = to!int(args[i+1]);
-
-				sidtype ? (audio.player.curfp8580 = cast(int)(fprarg % FP8580.length)) :
-					(audio.player.curfp6581 = cast(int)(fprarg % FP6581.length));
-				i++;
-				break;
+				writeln("Use keys in the program to change filter presets");
+				return 0;
 			case "-i":
 				audio.player.interpolate = 0;
 				break;

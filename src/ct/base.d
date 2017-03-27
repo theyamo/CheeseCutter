@@ -44,7 +44,7 @@ enum {
 	TRACK_LIST_LENGTH = 0x200,
 	OFFSETTAB_LENGTH = 16 * 6,
 	SEQ_END_MARK = 0xbf,
-	SONG_REVISION = 128,
+	SONG_REVISION = 129,
 	NOTE_KEYOFF = 1,
 	NOTE_KEYON = 2,
 	SUBTUNE_MAX = 16
@@ -1217,7 +1217,8 @@ class Song {
 			return arr;
 		}
 	}
-	int ver = SONG_REVISION, clock, multiplier = 1, sidModel, fppres;
+	int ver = SONG_REVISION, clock, multiplier = 1;
+	int[2] sidModel, fppres;
 	char[32] title = ' ', author = ' ', release = ' ', message = ' ';
 	char[32][48] insLabels;
 	private Features features;
@@ -1335,8 +1336,8 @@ class Song {
 			throw new UserException("The song is incompatible (too old) for this version of the editor.");
 		clock = debuf[offset++];
 		multiplier = debuf[offset++];
-		sidModel = debuf[offset++];
-		fppres = debuf[offset++];
+		sidModel[0] = debuf[offset++];
+		fppres[0] = debuf[offset++];
 		if(ver >= 6) {
 			songspeeds[0..32] = debuf[offset .. offset+32];
 			offset += 32;
@@ -1345,6 +1346,15 @@ class Song {
 			highlight = debuf[offset++];
 			highlightOffset = debuf[offset++];
 		}
+		if(ver > 128) {
+			sidModel[1] = debuf[offset++];
+			fppres[1] = debuf[offset++];
+		}
+		else {
+			sidModel[1] = sidModel[0];
+			fppres[1] = fppres[0];
+		}
+		assert(offset <= DatafileOffset.Title);
 		offset = DatafileOffset.Title;
 		title[0..32] = cast(char[])debuf[offset .. offset + 32];
 		author[0..32] = cast(char[])debuf[offset + 32 .. offset + 64];
@@ -1534,7 +1544,7 @@ class Song {
 		b[0..65536] = memspace;
 		offset += 65536;
 
-		foreach(val; [ver, clock, multiplier, sidModel, fppres]) {
+		foreach(val; [SONG_REVISION, clock, multiplier, sidModel[0], fppres[0]]) {
 			b[offset++] = val & 255;
 		}
 		
@@ -1542,6 +1552,8 @@ class Song {
 		offset += 32;
 		b[offset++] = cast(ubyte)highlight;
 		b[offset++] = cast(ubyte)highlightOffset;
+		b[offset++] = cast(ubyte)sidModel[1];
+		b[offset++] = cast(ubyte)fppres[1];
 
 		offset = DatafileOffset.Title;
 
@@ -1791,8 +1803,8 @@ class Song {
 		// vars
 		clock = insong.clock;
 		multiplier = insong.multiplier;
-		sidModel = insong.sidModel;
-		fppres = insong.fppres;
+		sidModel = insong.sidModel[];
+		fppres = insong.fppres[];
 		songspeeds = insong.songspeeds[];
 		speed = songspeeds[0];
 		// TODO highlight, highlightoffset
