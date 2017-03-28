@@ -249,7 +249,7 @@ class AboutDialog : Window {
 			screen.fprint(area.x + 1, y, "`01" ~ line.center(area.width-2));
 			y++;
 		}
-		screen.cprint(area.x + 1, y++,15, 0,"(C) 2009-14 Abaddon + contributors".center(area.width-2));
+		screen.cprint(area.x + 1, y++,15, 0,"(C) 2009-17 Abaddon + contributors".center(area.width-2));
 		screen.cprint(area.x + 1, y++,15, 0,"reSID engine by Dag Lem".center(area.width-2));
 		screen.cprint(area.x + 1, y++,15, 0,"Released under GNU GPL".center(area.width-2));
 		screen.fprint(area.x + 1, y++," ".center(area.width-2));
