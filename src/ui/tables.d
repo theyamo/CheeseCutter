@@ -41,7 +41,7 @@ protected:
 	void adjustView();
 }
 
-private class HexTable : Table {
+private class HexTable : Table, Undoable {
 	this(Rectangle a, ubyte[] tbl, int c, int r) {
 		super(a,tbl,c,r);
 		(cast(InputValue)input).setValueChangedCallback(&valueChangedCallback);
@@ -207,7 +207,26 @@ private class HexTable : Table {
 		setColumn(c);
 	}
 
+
 protected:
+
+	override final UndoValue createRedoState(UndoValue value) {
+		return createState(true);
+	}
+
+	override final void undo(UndoValue v) {
+		// if array has 1 child, assume to be data for this table
+		if(v.tableData.length == 1) {
+			this.data[] = v.tableData[0];
+		}
+		else {
+			int idx;
+			song.tableIterator((ct.base.Song.Table t) {
+					t.data[0..$] = v.tableData[idx++][0..$];
+				});
+		}
+		initializeInput();
+	}
 	
 	void showByteDescription() {
 	}
@@ -226,6 +245,13 @@ protected:
 	}
 
 	void saveState(bool allTables) {
+		auto v = createState(allTables);
+		com.session.insertUndo(this, v);
+	}
+
+private:
+
+	UndoValue createState(bool allTables) {
 		UndoValue v;
 		if(allTables) {
 			song.tableIterator((ct.base.Song.Table t) {
@@ -233,23 +259,9 @@ protected:
 				});
 		}
 		else v.tableData = [data.dup];
-		com.session.insertUndo(&undo, v);
+		return v;
 	}
 
-	void undo(UndoValue v) {
-		// TODO: if array has 1 child, assume to be data for this table
-		if(v.tableData.length == 1) {
-			this.data[] = v.tableData[0];
-		}
-		else {
-			int idx;
-			song.tableIterator((ct.base.Song.Table t) {
-					t.data[0..$] = v.tableData[idx++][0..$];
-				});
-		}
-		initializeInput();
-	}
-	
 }
 
 class InsValueTable : HexTable {

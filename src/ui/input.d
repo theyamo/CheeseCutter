@@ -899,7 +899,7 @@ class InputKeyjam : ExtendedInput {
 	}
 }
 
-final class InputSeq : ExtendedInput {
+final class InputSeq : ExtendedInput, Undoable {
 	Element element;
 	private {
 		ExtendedInput inputNote, inputInstrument, inputCmd, inputOctave;
@@ -965,16 +965,21 @@ final class InputSeq : ExtendedInput {
 	void valueChanged() {
 		UndoValue v;
 		import std.typecons;
-		v.dump = Tuple!(ubyte[],ubyte[])(activeInput.element.data.dup,
-												element.data);
+		v.array = UndoValue.Array(activeInput.element.data.dup,
+								  element.data);
 
-		com.session.insertUndo(&undo, v);
+		com.session.insertUndo(this, v);
 	}
 
-	void undo(UndoValue entry) {
-		ubyte[] data = entry.dump[0];
-		ubyte[] target = entry.dump[1];
+	override protected final void undo(UndoValue entry) {
+		ubyte[] data = entry.array.target;
+		ubyte[] target = entry.array.source;
 		target[] = data;
+	}
+
+	override protected final UndoValue createRedoState(UndoValue value) {
+		value.array.target = value.array.source.dup;
+		return value;
 	}
 
 	void columnReset(int foo) {

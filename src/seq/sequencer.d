@@ -742,7 +742,7 @@ abstract class VoiceTable : Window {
 
 // -------------------------------------------------------------------
 
-final class Sequencer : Window {
+final class Sequencer : Window, Undoable {
 	private {
 		VoiceTable[] voiceTables;
 		TrackmapTable trackmapTable;
@@ -783,7 +783,6 @@ final class Sequencer : Window {
 		
 	}
 
-public:
 	void activateVoice(int n) {
 		activeView.jumpToVoice(n);
 		input = activeView.input;
@@ -923,6 +922,7 @@ public:
 	}
 
 protected:
+
 	void changeSubtune(int direction) {
 		postables[song.subtune].copyFrom(activeView.posTable);
 		
@@ -958,26 +958,40 @@ protected:
 	  }
 	}
 
+	override final void undo(UndoValue entry) {
+		if(entry.subtuneNum != song.subtune)
+			return;
+
+		with(entry) {
+			auto data = array.target;
+			auto target = array.source;
+			target[] = data;
+			seq.refresh();
+			activeView.posTable.copyFrom(entry.posTable);
+		}
+		refresh();
+		activeView.step(0);
+	}
+
+	override final UndoValue createRedoState(UndoValue value) {
+		value.array.target = value.array.source.dup;
+		return value;
+	}
+
 private:
+
 	void saveState() {
 		UndoValue v;
 		import std.typecons;
 		RowData s = activeView.getRowData();
-		v.dump = Tuple!(ubyte[],ubyte[])(s.seq.data.raw.dup,
-										 s.seq.data.raw);
+		v.array = UndoValue.Array(s.seq.data.raw.dup,
+								  s.seq.data.raw);
 		v.seq = s.seq;
-		com.session.insertUndo(&undo, v);
+		v.posTable = activeView.posTable.dup();
+		v.subtuneNum = song.subtune;
+		com.session.insertUndo(this, v);
 	}
 
-	void undo(UndoValue entry) {
-		ubyte[] data = entry.dump[0];
-		ubyte[] target = entry.dump[1];
-		target[] = data;
-		entry.seq.refresh();
-		refresh();
-		activeView.step(0);
-	}
-	
 	void insertCallback(int param) {
 		saveState();
 		if(param >= MAX_SEQ_NUM) return;
