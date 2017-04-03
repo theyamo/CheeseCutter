@@ -651,7 +651,6 @@ class LoadFileDialog : FileSelectorDialog {
 		try {
 		    Song newsong = new Song();
 		    newsong.open(fn);
-		    import std.stdio;writeln(newsong.ver);
 		    return SONG_REVISION > newsong.ver;
 		}
 		catch(Exception e) { return false; }
@@ -706,7 +705,6 @@ class SaveFileDialog : FileSelectorDialog {
 		}
 		else if(activeWindow == sfile) { // pressed RETURN in file dialog
 			string filename = getcwd() ~ DIR_SEPARATOR ~ sfile.toString();
-			std.stdio.writeln("saving ", filename);
 			processFileCallback(filename);
 		}
 	}
