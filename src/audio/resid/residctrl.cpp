@@ -86,7 +86,7 @@ extern "C" {
 
 	}
 	
-	void sid_init(const FILTERPARAMS **fparams, int speed, ushort* m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, int stereo)
+	void sid_init(const FILTERPARAMS **fparams, int speed, unsigned short *m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, int stereo)
 	{
 		int c;
 
