@@ -172,7 +172,7 @@ protected:
 	}
 }
 
-abstract class BaseTrackTable : VoiceTable {
+abstract class BaseTrackTable : VoiceTable, Undoable {
 	QueryDialog queryClip;
 	
 	this(Rectangle a, PosDataTable pi) {
@@ -410,37 +410,52 @@ abstract class BaseTrackTable : VoiceTable {
 	}
 
 	protected void saveState(bool allVoices) {
+		com.session.insertUndo(this, createState(allVoices));
+	}
+
+	private UndoValue createState(bool allVoices) {
 		import std.typecons;
 		UndoValue v;
+
+		v.trackValue = (cast(InputTrack)input).trk.dup;
+		v.track = (cast(InputTrack)input).trk;
+
 		if(allVoices) {
 			for(int i = 0; i < voices.length; i++) {
 				auto tl = getTracklist(voices[i]);
 				auto t = TracklistStore(tl.deepcopy, tl);
-				v.track ~= t;
+				v.trackLists ~= t;
 			}
 		}
 		else {
 			auto tl = getTracklist(activeVoice);
 			auto t = TracklistStore(tl.deepcopy, tl);
-			v.track = [t];
+			v.trackLists = [t];
 		}
 		v.posTable = posTable.dup();
 		v.subtuneNum = song.subtune;
-		com.session.insertUndo(&undo, v);
+		v.allVoices = allVoices;
+		return v;
 	}
 
-	void undo(UndoValue v) {
+	override protected final void undo(UndoValue v) {
 		if(v.subtuneNum != song.subtune)
 			return;
 		
-		foreach(t; v.track) {
+		foreach(t; v.trackLists) {
 			t.source.overwriteFrom(t.store);
 		}
+
+		v.track = v.trackValue;
 
 		posTable.copyFrom(v.posTable);
 		refresh();
 		// make sure cursor not past track end
 		step(0,0,0);
+	}
+
+	override protected UndoValue createRedoState(UndoValue value) {
+		return createState(value.allVoices);
 	}
 }
 

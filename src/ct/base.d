@@ -456,7 +456,7 @@ struct Track {
 		data[0] = t;
 	}
 
-	@property ushort dup() {
+	@property deprecated ushort dup() {
 		return trans | (number << 8);
 	}
 
