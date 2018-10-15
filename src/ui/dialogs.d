@@ -12,6 +12,7 @@ private import ct.base;
 import ui.help;
 import ui.ui;
 import ui.input;
+import std.algorithm;
 import std.string;
 import std.file;
 import std.utf;
