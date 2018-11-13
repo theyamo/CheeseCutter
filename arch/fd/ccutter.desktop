@@ -1,12 +1,10 @@
 [Desktop Entry]
 # Actions=Play;
-Version=1.0
 Name=CheeseCutter
 Comment=SID music editor
 Terminal=false
-TryExec=ccutter
 Exec=ccutter %f
 Type=Application
-Icon=ccutter-96
+Icon=cheesecutter
 Categories=GNOME;Application;AudioVideo;Audio;Video;
-X-Desktop-File-Install-Version=0.21
+MimeType=audio/ct;audio/sid;
