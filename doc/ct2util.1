@@ -1,0 +1,53 @@
+.TH ct2util "1" "November 2018" "CheeseCutter 2 utilities (Nov 12 2018)" "User Commands"
+.SH NAME
+ct2util \- manual page for CheeseCutter 2 utilities (Nov 12 2018)
+.SH SYNOPSIS
+.B ct2util
+\fI\,<command> <options> <infile> <-o outfile>\/\fR
+.SH DESCRIPTION
+CheeseCutter 2 utilities (Nov 12 2018)
+.IP
+ct2util import <infile> <infile2> <\-o outfile>
+ct2util init <binaryfile> <\-o outfile>
+.SS "Commands:"
+.TP
+prg
+Export song (.ct) to PRG file
+.TP
+sid
+Export song (.ct) to SID file
+.TP
+dump
+Dump song data to assembler source (BETA)
+.TP
+import
+Copy data from another song without overwriting the player
+.TP
+init
+Create a fresh .ct from player binary
+.SS "General options:"
+.TP
+\fB\-o\fR <outfile>
+Set output filename (by default gathered from input filename)
+.SS "Export options:"
+.TP
+\fB\-r\fR <addr>
+Relocate output to address (default = )
+.TP
+\fB\-d\fR <num>
+Set the default subtune (1\-32)
+.TP
+\fB\-s\fR <num>
+Export single subtune (1\-32) (disables \fB\-d\fR)
+.TP
+\fB\-zp\fR <num>
+Relocate zero page (valid range 2\-)
+.TP
+\fB\-q\fR
+Don't output information
+.PP
+Prefix value options with '0x' or '$' to indicate a hexadecimal value.
+.SH "SEE ALSO"
+.BR ccutter(1),
+.BR klystrack(1),
+.BR goattracker (1).
