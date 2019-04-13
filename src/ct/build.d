@@ -10,8 +10,8 @@ import com.util;
 import std.stdio;
 import std.string;
 import std.conv;
-import std.c.string;
-import std.c.stdlib;
+import core.stdc.string;
+import core.stdc.stdlib;
 
 extern(C) {
 	extern char* acme_assemble(const char*,int*,char*);

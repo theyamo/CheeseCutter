@@ -1814,6 +1814,7 @@ class Song {
 	  speed = songspeeds[0];
 	  // TODO highlight, highlightoffset
 	  generateChordIndex();
+	  subtunes.activate(0);
 	}
 
 	// hack to help sequencer rowcounting 

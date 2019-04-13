@@ -1,0 +1,37 @@
+.TH ccutter "1" "November 2018" "User Commands"
+.SH NAME
+ccutter \- SID music editor
+.SH SYNOPSIS
+.B ccutter
+[\fI\,OPTION\/\fR]... [\fI\,FILE\/\fR]
+.SH DESCRIPTION
+CheeseCutter (C) 2009\-17 Abaddon
+Released under GNU GPL.
+.SH OPTIONS
+.TP
+\fB\-b\fR [value]
+Set playback buffer size (def=2048)
+.TP
+\fB\-f\fR
+Start in fullscreen mode
+.TP
+\fB\-nofp\fR
+Do not use resid\-fp emulation
+.TP
+\fB\-fpr\fR [x]
+Specify filter preset. x = 0..16 for 6581 and 0..1 for 8580
+.TP
+\fB\-i\fR
+Disable resid interpolation (use fast mode instead)
+.TP
+\fB\-m\fR [0|1]
+Specify SID model for reSID (6581/8580) (def=0)
+.TP
+\fB\-n\fR
+Enable NTSC mode
+.TP
+\fB\-r\fR [value]
+Set playback frequency (def=48000)
+.TP
+\fB\-y\fR
+Use YUV video overlay
