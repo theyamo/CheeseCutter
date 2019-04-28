@@ -1,0 +1,57 @@
+.TH ct2util "1" "Novembre 2018" "utilitaires CheeseCutter 2 (12 nov 2018)" "Commandes utilisateur"
+.SH NOM
+ct2util \- page de manuel pour les utilitaires de CheeseCutter 2 utilities (12 nov 2018)
+.SH SYNOPSIS
+.B ct2util
+\fI\,<commande> <options> <fichier_en_entrée> <-o fichier_en_sortie>\/\fR
+.SH DESCRIPTION
+Utilitaires CheeseCutter 2 (12 nov 2018)
+.IP
+ct2util import <fichier_en_entrée> <fichier_en_entrée_2> <\-o fichier_en_sortie>
+ct2util init <fichier_binaire> <\-o fichier_en_sortie>
+.SS "Commandes :"
+.TP
+prg
+Exporter le morceau (.ct) en un fichier PRG
+.TP
+sid
+Exporter le morceau (.ct) en un fichier SID
+.TP
+dump
+Déverser les données du morceau dans une source assembleur (BETA)
+.TP
+import
+Copier les données depuis un autre morceau sans écraser le lecteur
+.TP
+init
+Créer un .ct frais depuis le lecteur binaire
+.SS "Options générales :"
+.TP
+\fB\-o\fR <fichier_en_sortie>
+Paramètrer le nom de fichier de sortie (par défaut recueilli à partir du nom du fichier d'entrée)
+.SS "Options d'export :"
+.TP
+\fB\-r\fR <addr>
+Relocaliser la sortie à l'adresse (par défaut = )
+.TP
+\fB\-d\fR <num>
+Définir les sous-réglages par défaut (1\-32)
+.TP
+\fB\-s\fR <num>
+Export une sub-tonalité unique (1\-32) (désactive \fB\fB\-d\fR)
+.TP
+\fB\-zp\fR <num>
+Relocaliser la page zéro (plage valide 2\-)
+.TP
+\fB\-q\fR
+Ne pas afficher d'informations
+.PP
+Préfixer les options de valeur par'0x' ou '$' pour indiquer une valeur hexadécimale.
+.SH "VOIR ÉGALEMENT"
+.BR ccutter(1),
+.BR klystrack(1),
+.BR goattracker (1).
+.SH AUTEUR
+Michel Vergnaud \- Copyright 2015\-2016.
+.PP
+Cette page de manuel a été traduite par Olivier Humbert "trebmuh" <trebmuh@tuxfamily.org> le 24 avril 2019 pour le projet LibraZiK et peut être utilisée par tout un chacun.
