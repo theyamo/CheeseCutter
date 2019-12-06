@@ -1267,8 +1267,8 @@ class Song {
 
 	@property int numOfSeqs() {
 		int upto;
-		foreach(int i, s; seqs) {
-			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = i;
+		foreach(i, s; seqs) {
+			if(s.data.raw[0 .. 5] != INITIAL_SEQ) upto = cast(int)i;
 		}
 		return upto + 1;
 	}
@@ -1601,10 +1601,10 @@ class Song {
 	}
 
 	void seqIterator(void delegate(int seqno, Sequence s, Element e) dg) {
-		foreach(int i, s; seqs) {
+		foreach(i, s; seqs) {
 			for(int j = 0; j < s.rows; j++) {
 				Element e = s.data[j];
-				dg(i, s, e);
+				dg(cast(int)i, s, e);
 			}
 		}
 	}

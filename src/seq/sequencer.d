@@ -5,21 +5,20 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 module seq.sequencer;
 import main;
 import com.fb;
-import ui.ui;
+import ui.ui, ui.help;
 import ct.base;
 import com.session;
 import com.util;
 import ui.input;
 import ui.dialogs;
-
-	import seq.fplay;
-	import seq.tracktable;
-	import seq.seqtable;
-	import seq.trackmap;
-
+import seq.fplay;
+import seq.tracktable;
+import seq.seqtable;
+import seq.trackmap;
 import derelict.sdl.sdl;
 import std.string;
 import std.stdio;
+import audio.audio, audio.player;
 
 enum PAGESTEP = 2;
 enum Jump { toBeginning = 0, toMark = -1, toEnd = -2, toWrapMark = -3 };

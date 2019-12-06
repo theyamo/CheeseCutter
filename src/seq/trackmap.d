@@ -13,6 +13,7 @@ import ui.input;
 import derelict.sdl.sdl;
 import std.string : format;
 import ct.base;
+import std.array;
 
 
 class TrackmapVoice : TrackVoice {

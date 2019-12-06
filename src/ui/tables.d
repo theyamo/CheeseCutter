@@ -14,6 +14,8 @@ import derelict.sdl.sdl;
 import std.string;
 import std.stdio : stderr;
 import std.file;
+import com.fb;
+import std.conv, std.array;
 
 abstract class Table : Window {
 	mixin ValueChangedHandler;

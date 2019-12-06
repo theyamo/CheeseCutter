@@ -13,6 +13,7 @@ import ct.base;
 import ui.input;
 import derelict.sdl.sdl;
 import std.string;
+import audio.player;
 
 class SeqVoice : Voice, Undoable {
 	InputSeq seqinput;

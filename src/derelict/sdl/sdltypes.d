@@ -136,7 +136,7 @@ struct SDL_AudioCVT
     int len_cvt;
     int len_mult;
     double len_ratio;
-    void function(SDL_AudioCVT *cvt, Uint16 format) filters[10];
+    void function(SDL_AudioCVT *cvt, Uint16 format)[10] filters;
     int filter_index;
 }
 
@@ -207,7 +207,7 @@ struct SDL_CD
     int numtracks;
     int cur_track;
     int cur_frame;
-    SDL_CDtrack track[SDL_MAX_TRACKS + 1];
+    SDL_CDtrack[SDL_MAX_TRACKS + 1] track;
 }
 
 enum { CD_FPS = 75 }
@@ -817,7 +817,7 @@ struct SDL_Cursor
     Sint16 hot_x, hot_y;
     Uint8 *data;
     Uint8 *mask;
-    Uint8 *save[2];
+    Uint8*[2] save;
     WMcursor *wm_cursor;
 }
 

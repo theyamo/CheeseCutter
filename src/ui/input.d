@@ -14,6 +14,7 @@ import ui.ui;
 import std.string;
 import std.utf;
 import std.stdio : stderr;
+import std.conv;
 
 enum { RETURN = -1, CANCEL = -2, OK = 0, WRAP = 1, WRAPR, WRAPL, EXIT, IllegalValue }
 
@@ -652,11 +653,11 @@ protected:
 	}
 	
 	static int valueKeyReader(Keyinfo key,  const char[] keytab) {
-        foreach(int i, k; keytab) {
+        foreach(i, k; keytab) {
 			if(key.raw == k) {
 				if(key.mods & KMOD_SHIFT)
 					return cast(int)(i | 0x80);
-				return i;
+				return cast(int)i;
 			}
         }
         return -1;

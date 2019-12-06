@@ -22,6 +22,7 @@ import audio.audio;
 import std.string;
 import std.file;
 import std.stdio;
+import audio.audio, audio.timer, audio.callback;
 
 enum PAGESTEP = 16;
 enum CONFIRM_TIMEOUT = 90;

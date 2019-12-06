@@ -8,6 +8,7 @@ import audio.player;
 import com.session;
 import com.cpu;
 import ct.base;
+static import audio.audio, audio.timer;
 
 /+ holds the state of cpu and memory for frame debug dumps. not implemented for now. +/
 class SongState {
@@ -15,19 +16,6 @@ class SongState {
     private CPU cpu;                                                                                                                
     private ubyte[65536] data;
     CPUException exception;
-	/+
-    this(Song song, int tfc, int sfc) {
-        data = song.data;
-        cpu = new CPU(data);
-        totalFramecallCounter = tfc;
-        subframeCounter = sfc;
-        exception = null;
-    }
-
-    void dump() {
-        writefln("Frame %d(%d)", totalFrameCallCounter, subframeCounter);
-        cpu.execute(pc, true);
-    }+/
 }
 
 __gshared private int frameCallCounter, totalFrameCallCounter; // for multispeed

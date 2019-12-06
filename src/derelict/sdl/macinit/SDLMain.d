@@ -377,7 +377,7 @@ extern (C)
     {
         if (shouldChdir)
         {
-            char parentdir[MAXPATHLEN];
+            char[MAXPATHLEN] parentdir;
 
             CFURLRef url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
             CFURLRef url2 = CFURLCreateCopyDeletingLastPathComponent(null, url);

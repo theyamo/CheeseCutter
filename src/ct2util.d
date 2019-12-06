@@ -11,6 +11,7 @@ import ct.build;
 import std.stdio;
 import std.string;
 import std.conv;
+import std.file;
 
 enum Command { None, ExportPRG, ExportSID, Dump, Import, Init }
 const string[] exts = [ "", "prg", "sid", "s", "ct", "ct" ];

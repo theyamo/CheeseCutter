@@ -17,6 +17,7 @@ import std.stdio;
 import std.string;
 import std.conv;
 import std.file;
+import audio.timer;
 
 version(linux) {
 	const DIR_SEPARATOR = '/';
@@ -170,8 +171,8 @@ int main(char[][] args) {
 		chdir(ct_home);
 
 	scope(exit) {
-		delete mainui;
-		delete video;
+		destroy(video);
+		destroy(video);
 		SDL_Quit();
 	}
 

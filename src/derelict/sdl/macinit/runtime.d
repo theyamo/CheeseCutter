@@ -99,7 +99,7 @@ struct objc_ivar_list
         int space;
 
     /* variable length structure */
-    objc_ivar ivar_list[1];
+    objc_ivar[1] ivar_list;
 }
 
 struct objc_method
@@ -119,21 +119,21 @@ struct objc_method_list
         int space;
 
     /* variable length structure */
-    objc_method method_list[1];
+    objc_method[1] method_list;
 }
 
 struct objc_cache
 {
     uint mask /* total = mask + 1 */;
     uint occupied;
-    Method buckets[1];
+    Method[1] buckets;
 }
 
 struct objc_protocol_list
 {
     objc_protocol_list* next;
     long count;
-    Protocol* list[1];
+    Protocol*[1] list;
 }
 
 // Objective-C runtime bindings from the Cocoa framework

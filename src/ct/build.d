@@ -12,6 +12,7 @@ import std.string;
 import std.conv;
 import core.stdc.string;
 import core.stdc.stdlib;
+import std.array;
 
 extern(C) {
 	extern char* acme_assemble(const char*,int*,char*);
@@ -59,7 +60,7 @@ private int paddedStringLength(char[] s, char padchar) {
 
 private char[] assemble(string source) {
 	int length;
-	char error_message[1024];
+	char[1024] error_message;
 	memset(&error_message, '\0', 1024);
 	char* input = acme_assemble(toStringz(source), &length, &error_message[0]);
 	
