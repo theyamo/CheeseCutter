@@ -7,7 +7,7 @@
  * Feel free to customize this file to suit your needs
  */
 module derelict.sdl.macinit.SDLMain;
-import main;
+//import main;
 
 version(DigitalMars) version(OSX) version = darwin;
 
@@ -25,7 +25,6 @@ private
 
     else
     {
-        import std.c.linux.linux;
         import core.stdc.stdlib;
         import core.stdc.string;
         import core.sys.posix.unistd;
@@ -103,7 +102,7 @@ private
 static this ()
 {
     version (SDL_USE_CPS)
-        load(&DerelictSDLMac.bindFunc);
+      load(&DerelictSDLMac.bindFunc);
 
     registerSubclasses();
     CustomApplicationMain();
@@ -300,7 +299,7 @@ class SDLApplication : NSApplication
         objc_msgSend(class_SDLApplication, sel_poseAsClass, aClass);
     }
 
-    SDLApplication init ()
+    override SDLApplication init ()
     {
         id result = objc_msgSend(this.id_, sel_init);
         return result ? this : null;
@@ -348,7 +347,7 @@ class SDLMain : NSObject
         return cast(Class) objc_getClass!(this.stringof);
     }
 
-    SDLMain init ()
+    override SDLMain init ()
     {
         id result = objc_msgSend(this.id_, sel_init);
         return result ? this : null;
@@ -395,7 +394,7 @@ extern (C)
     id application (id sender, SEL selector, id arg0, id arg1)
     {
 	   if (arg1) {
-		main.openFile((new NSString(arg1)).UTF8String());
+       //		main.openFile((new NSString(arg1)).UTF8String());
 	    }
 
 	    return cast(id) true;

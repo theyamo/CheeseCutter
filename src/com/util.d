@@ -139,9 +139,8 @@ ubyte[] table2Array(string table) {
 	static ubyte[4096] arr;
 	int idx;
 	foreach(strvalue; std.array.split(table)) {
-		munch(strvalue, "\r\n\t");
-		
-		arr[idx] = cast(ubyte)str2Value(strvalue);
+        string s = strvalue.replace("\r\n\t", "");
+		arr[idx] = cast(ubyte)str2Value(s);
 		idx++;
 	}
 	return arr[0..idx];

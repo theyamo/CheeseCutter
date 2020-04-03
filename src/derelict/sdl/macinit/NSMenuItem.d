@@ -66,7 +66,7 @@ class NSMenuItem : NSObject
         return cast(Class) objc_getClass!(this.stringof);
     }
 
-    NSMenuItem init ()
+    override NSMenuItem init ()
     {
         id result = objc_msgSend(this.id_, sel_init);
         return result ? this : null;

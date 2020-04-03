@@ -115,7 +115,7 @@ protected:
         return _lib;
     }
 
-    void bindFunc(void** ptr, string funcName, bool doThrow = true)
+    public void bindFunc(void** ptr, string funcName, bool doThrow = true)
     {
         void* func = lib.loadSymbol(funcName, doThrow);
         *ptr = func;

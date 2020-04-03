@@ -64,7 +64,7 @@ class NSArray : NSObject
         return cast(Class) objc_getClass!(this.stringof);
     }
 
-    NSArray init ()
+    override NSArray init ()
     {
         id result = objc_msgSend(this.id_, sel_init);
         return result ? this : null;

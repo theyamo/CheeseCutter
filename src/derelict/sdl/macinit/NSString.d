@@ -74,7 +74,7 @@ class NSString : NSObject
         return cast(Class) objc_getClass!(this.stringof);
     }
 
-    NSString init ()
+    override NSString init ()
     {
         id result = objc_msgSend(this.id_, sel_init);
         return result ? this : null;

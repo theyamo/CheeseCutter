@@ -63,7 +63,7 @@ class NSNotification : NSObject
         return cast(Class) objc_getClass!(this.stringof);
     }
 
-    NSNotification init ()
+    override NSNotification init ()
     {
         id result = objc_msgSend(this.id_, sel_init);
         return result ? this : null;

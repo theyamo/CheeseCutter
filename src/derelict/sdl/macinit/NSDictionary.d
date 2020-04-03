@@ -63,7 +63,7 @@ class NSDictionary : NSObject
         return cast(Class) objc_getClass!(this.stringof);
     }
 
-    NSDictionary init ()
+    override NSDictionary init ()
     {
         id result = objc_msgSend(this.id_, sel_init);
         return result ? this : null;

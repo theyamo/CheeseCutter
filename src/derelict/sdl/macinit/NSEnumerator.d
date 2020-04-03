@@ -63,7 +63,7 @@ class NSEnumerator : NSObject
         return cast(Class) objc_getClass!(this.stringof);
     }
 
-    NSEnumerator init ()
+    override NSEnumerator init ()
     {
         id result = objc_msgSend(this.id_, sel_init);
         return result ? this : null;
