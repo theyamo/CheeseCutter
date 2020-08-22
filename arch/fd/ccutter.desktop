@@ -3,6 +3,7 @@
 Version=1.0
 Name=CheeseCutter
 Comment=SID music editor
+Comment[fr]=Éditeur de musique SID
 Terminal=false
 TryExec=ccutter
 Exec=ccutter %f
