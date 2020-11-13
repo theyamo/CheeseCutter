@@ -20,3 +20,6 @@ Special thanks to Vent/Triad, Blackspawn, Mr Ammo, Scarzix/Offence,
 SuperNoise, Wisdom/Crescent and the forgotten ones...
 
 Licensed under GNU General Public License (see the file COPYING for details).
+
+Binary packages are available for some distributions via:
+https://repology.org/metapackage/cheesecutter/versions
