@@ -23,3 +23,6 @@ Licensed under GNU General Public License (see the file COPYING for details).
 
 Binary packages are available for some distributions via:
 https://repology.org/metapackage/cheesecutter/versions
+
+NOTE: authors of CheeseCutter take no responsibility of binaries downloaded
+from any third party website, including the one above.
