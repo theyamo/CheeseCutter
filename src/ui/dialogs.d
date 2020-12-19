@@ -399,12 +399,19 @@ class FileSelector : Window {
 		foreach(i, d; dir) {
 			char[] first = d[0..1];
 			// skip hidden / temp files
-			if(first == "." || first == "#" || !d.exists())
+			if(first == "." || first == "#")
 				continue;
-			if(d.isDir()) {
-				dirs[idxd++] = d;
-			} else {
-				 files[idxf++] = d;
+			try {
+				if(d.isDir()) {
+					dirs[idxd++] = d;
+				} else {
+					files[idxf++] = d;
+				}
+			}
+			catch(FileException) {
+				// may occur if entry "d" does not
+				// exist or is a dangling symlink
+				continue;
 			}
 		}
 
