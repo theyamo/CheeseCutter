@@ -23,6 +23,10 @@ version(linux) {
 	const DIR_SEPARATOR = '/';
 }
 
+version(FreeBSD) {
+	const DIR_SEPARATOR = '/';
+}
+
 version(OSX) {
 	const DIR_SEPARATOR = '/';
 }
