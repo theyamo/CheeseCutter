@@ -3,21 +3,22 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 module main;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import com.fb;
 import com.session;
 import com.kbd;
 import com.util;
+import ct.base;
 import ui.ui;
 import ui.input;
 import audio.player;
 import audio.resid.filter;
-import audio.audio;
+import audio.audio, audio.callback, audio.timer;
 import std.stdio;
 import std.string;
 import std.conv;
 import std.file;
-import audio.timer;
+
 
 version(linux) {
 	const DIR_SEPARATOR = '/';
@@ -45,12 +46,11 @@ void initVideo(bool useFullscreen, bool useyuv) {
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
-	video = useyuv ? new VideoYUV(800, 600, screen, useFullscreen ? 1 : 0) :
-		new VideoStandard(800, 600, screen, useFullscreen ? 1 : 0);
+	video = new VideoStandard(800, 600, screen, useFullscreen ? 1 : 0);
 
-	SDL_EnableKeyRepeat(200, 10);
-	SDL_EnableUNICODE(1);
-	SDL_WM_SetCaption("CheeseCutter".toStringz(),"CheeseCutter".toStringz());
+	// SDL_EnableKeyRepeat(200, 10);
+	// SDL_EnableUNICODE(1);
+	// SDL_WM_SetCaption("CheeseCutter".toStringz(),"CheeseCutter".toStringz());
 }
 
 void mainloop() {
@@ -76,11 +76,12 @@ void mainloop() {
 				mods &= 0xffffff - KMOD_NUM;
 				auto keyinfo = Keyinfo(key, mods, unicode);
 				com.kbd.translate(keyinfo);
+                // FIXME
 				version(OSX) {
-					if (key == SDLK_q && evt.key.keysym.mod & KMOD_META)
+					if (key == SDLK_q && evt.key.keysym.mod & KMOD_GUI)
 						quit=true;
 				}	
-				
+
 				mainui.keypress(keyinfo);
 				if(mainui.exitRequested)
 					quit = true;
@@ -119,15 +120,16 @@ void mainloop() {
 				break;
 			case SDL_MOUSEMOTION:
 				break;
-			case SDL_ACTIVEEVENT:
-				break;
-			case SDL_VIDEORESIZE:
-				video.resizeEvent(evt.resize.w, evt.resize.h);
-				break;
-			case SDL_VIDEOEXPOSE:
-				mainui.update();
-				break;
+        //			case SDL_ACTIVEEVENT:
+				//break;
+        //case SDL_VIDEORESIZE:
+				//video.resizeEvent(evt.resize.w, evt.resize.h);
+				//break;
+        //case SDL_VIDEOEXPOSE:
+				//mainui.update();
+				//break;
 			default:
+				//writeln("Unknown SDL event ",evt.type);
 				break;
 			}
 		}
@@ -142,7 +144,7 @@ void mainloop() {
 }
 
 void printheader() {
-	stderr.writefln("CheeseCutter (C) 2009-17 Abaddon");
+	stderr.writefln("CheeseCutter (C) 2009-15 Abaddon");
 	stderr.writefln("Released under GNU GPL.");
 	stderr.writef("\n");
 	stderr.writefln("Usage: ccutter [OPTION]... [FILE]");
@@ -167,26 +169,21 @@ int main(char[][] args) {
 	string filename;
 	bool fnDefined = false;
 
-	DerelictSDL.load();
-
-	import std.process;
-	auto ct_home = environment.get("CC_HOME");
-	if(ct_home !is null)
-		chdir(ct_home);
-
+  // DerelictSDL2.load();
+	
 	scope(exit) {
-		destroy(video);
-		destroy(video);
+		delete mainui;
+		delete video;
 		SDL_Quit();
 	}
-
+	
 	scope(failure) {
 		if(song !is null) {
 			stderr.writefln("Crashed! Saving backup...");
 			song.save("_backup.ct");
 		}
 	}
-	
+
 	try {
 		i = 1;
 		while(i < args.length) {
@@ -259,7 +256,7 @@ int main(char[][] args) {
 		std.stdio.stderr.writeln(e);
 		return -1;
 	}
-
+	
 	audio.player.init();
 	initVideo(fs, yuvOverlay);
 	initSession();

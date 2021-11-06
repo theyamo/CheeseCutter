@@ -1,19 +1,18 @@
 #LIBS=/opt/ldc/build/lib/libphobos-ldc.a /opt/ldc/build/lib/libdruntime-ldc.a -lstdc++
 #LIBS=/opt/ldc2/lib/libphobos-ldc.a /opt/ldc2/lib/libdruntime-ldc.a -lstdc++
-LIBS=/usr/local/lib/libphobos2-ldc.a /usr/local/lib/libdruntime-ldc.a -lstdc++
-FRAMEWORKS=-framework Foundation -framework SDL
-COMFLAGS= -mmacosx-version-min=10.7
+LIBS=/usr/local/lib/libphobos2-ldc.a /usr/local/lib/libdruntime-ldc.a -lstdc++ -lsdl2
+FRAMEWORKS=-framework Foundation
+COMFLAGS= -mmacosx-version-min=11.0 -g 
 VERSION=$(shell cat Version)
 DLINK=$(COMFLAGS)
-DFLAGS=-I./src -J./src/c64 -J./src/font
+DFLAGS=-d-version=DerelictSDL2_Static -I./src -J./src/c64 -J./src/font
 CFLAGS=$(COMFLAGS)
 CXXFLAGS=$(CFLAGS) -I./src -O2
 LDFLAGS=-rpath,@executable_path/../Frameworks
-COMPILE.d = $(DC) $(DFLAGS) -d -O2 -c -of=$@
+COMPILE.d = $(DC) $(DFLAGS) -d -O2 -c -of=$@ 
 DC=ldc2
 EXE=
 TARGET=ccutter
-OBJ_EXT=.o
 
 include Makefile.objects.mk
 

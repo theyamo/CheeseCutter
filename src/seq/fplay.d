@@ -11,7 +11,7 @@ import ct.base;
 import com.session;
 import com.fb;
 import audio.audio, audio.player, audio.timer;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 private int mode;
 

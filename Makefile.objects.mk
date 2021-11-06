@@ -1,62 +1,29 @@
-OBJS=   src/derelict/util/compat$(OBJ_EXT) \
-	src/derelict/util/sharedlib$(OBJ_EXT) \
-	src/derelict/util/exception$(OBJ_EXT) \
-        src/derelict/util/loader$(OBJ_EXT) \
-        src/derelict/util/wintypes$(OBJ_EXT) \
-        src/derelict/util/xtypes$(OBJ_EXT) \
-        src/derelict/sdl/sdl$(OBJ_EXT) \
-        src/derelict/sdl/net$(OBJ_EXT) \
-        src/derelict/sdl/ttf$(OBJ_EXT) \
-        src/derelict/sdl/mixer$(OBJ_EXT) \
-        src/derelict/sdl/image$(OBJ_EXT) \
-        src/derelict/sdl/sdlfuncs$(OBJ_EXT) \
-        src/derelict/sdl/sdltypes$(OBJ_EXT) \
-        src/derelict/sdl/macinit/CoreFoundation$(OBJ_EXT) \
-        src/derelict/sdl/macinit/DerelictSDLMacLoader$(OBJ_EXT) \
-        src/derelict/sdl/macinit/ID$(OBJ_EXT) \
-        src/derelict/sdl/macinit/MacTypes$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSApplication$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSArray$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSAutoreleasePool$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSDictionary$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSEnumerator$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSEvent$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSGeometry$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSMenu$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSMenuItem$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSNotification$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSObject$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSProcessInfo$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSString$(OBJ_EXT) \
-        src/derelict/sdl/macinit/NSZone$(OBJ_EXT) \
-        src/derelict/sdl/macinit/runtime$(OBJ_EXT) \
-        src/derelict/sdl/macinit/SDLMain$(OBJ_EXT) \
-        src/derelict/sdl/macinit/selectors$(OBJ_EXT) \
-        src/derelict/sdl/macinit/string$(OBJ_EXT) \
-	src/audio/audio$(OBJ_EXT) \
-	src/audio/player$(OBJ_EXT) \
-	src/audio/timer$(OBJ_EXT) \
-	src/audio/callback$(OBJ_EXT) \
-	src/ct/purge$(OBJ_EXT) \
-	src/ct/base$(OBJ_EXT) \
-	src/ct/dump$(OBJ_EXT) \
-	src/com/fb$(OBJ_EXT) \
-	src/com/cpu$(OBJ_EXT) \
-	src/com/kbd$(OBJ_EXT) \
-	src/com/session$(OBJ_EXT) \
-	src/com/util$(OBJ_EXT) \
-	src/main$(OBJ_EXT) \
-	src/ui/tables$(OBJ_EXT) \
-	src/ui/dialogs$(OBJ_EXT) \
-	src/ui/ui$(OBJ_EXT) \
-	src/ui/input$(OBJ_EXT) \
-	src/ui/help$(OBJ_EXT) \
-	src/seq/seqtable$(OBJ_EXT) \
-	src/seq/tracktable$(OBJ_EXT) \
-	src/seq/trackmap$(OBJ_EXT) \
-	src/seq/fplay$(OBJ_EXT) \
-	src/seq/sequencer$(OBJ_EXT) \
-	src/audio/resid/filter$(OBJ_EXT)
+
+OBJS= \
+	src/derelict/sdl2/internal/sdl_types.o \
+	src/audio/audio.o \
+	src/audio/player.o \
+	src/audio/timer.o \
+	src/audio/callback.o \
+	src/ct/purge.o \
+	src/ct/base.o \
+	src/com/fb.o \
+	src/com/cpu.o \
+	src/com/kbd.o \
+	src/com/session.o \
+	src/com/util.o \
+	src/main.o \
+	src/ui/tables.o \
+	src/ui/dialogs.o \
+	src/ui/ui.o \
+	src/ui/input.o \
+	src/ui/help.o \
+	src/seq/seqtable.o \
+	src/seq/tracktable.o \
+	src/seq/trackmap.o \
+	src/seq/fplay.o \
+	src/seq/sequencer.o \
+	src/audio/resid/filter.o
 
 CXX_SRCS = src/audio/resid/residctrl.cpp \
 	src/resid/envelope.cpp \
@@ -83,7 +50,7 @@ CXX_SRCS = src/audio/resid/residctrl.cpp \
 	src/resid-fp/voicefp.cpp \
 	src/resid-fp/wavefp.cpp 
 
-CXX_OBJS = $(CXX_SRCS:.cpp=$(OBJ_EXT))
+CXX_OBJS = $(CXX_SRCS:.cpp=.o)
 
 C_SRCS	= \
 	src/asm/acme.c \
@@ -102,15 +69,15 @@ C_SRCS	= \
 	src/asm/section.c \
 	src/asm/tree.c
 
-C_OBJS	= $(C_SRCS:.c=$(OBJ_EXT))
+C_OBJS	= $(C_SRCS:.c=.o)
 
-UTILOBJS = src/ct2util$(OBJ_EXT) \
-	src/ct/base$(OBJ_EXT) \
-	src/com/cpu$(OBJ_EXT) \
-	src/com/util$(OBJ_EXT) \
-	src/ct/purge$(OBJ_EXT) \
-	src/ct/dump$(OBJ_EXT) \
-	src/ct/build$(OBJ_EXT) \
+UTILOBJS = src/ct2util.o \
+	src/ct/base.o \
+	src/com/cpu.o \
+	src/com/util.o \
+	src/ct/purge.o \
+	src/ct/dump.o \
+	src/ct/build.o \
 	$(C_OBJS)
 
 C64OBJS = src/c64/player.bin

@@ -3,13 +3,12 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 module audio.audio;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import audio.resid.filter;
 import audio.player;
 import audio.callback;
-import audio.timer;
 import std.stdio;
-import core.stdc.stdlib; 
+import core.stdc.stdlib;
 import core.stdc.string;
 import std.conv;
 
@@ -28,13 +27,13 @@ __gshared short* mixbuf = null;
 extern(C) {
 	extern __gshared char[0x19] sidreg;
 	extern __gshared int residdelay;
-	extern __gshared int sid_init(int, Filterparams*, int, int, int, int, int);
-	extern __gshared int sid_fillbuffer(short *, int, int);
+	extern __gshared int sid_init(int, Filterparams*, int, int, int, int, int) nothrow ;
+	extern __gshared int sid_fillbuffer(short *, int, int) nothrow ;
 	extern __gshared int sid_close();
-	__gshared void function() callback;
+	__gshared void function() nothrow callback;
 
 
-	int audio_init(int fr, void function() cb) {
+	int audio_init(int fr, void function() nothrow cb) {
 		SDL_AudioSpec requested;
 
 		if(audioInited) return 0;
@@ -44,7 +43,7 @@ extern(C) {
 		framerate = fr;
 
 		if(bufferSize < freq / framerate) {
-		//	fprintf(stderr,"Minimum buffer size is %d bytes.\n", freq / framerate);
+			// fprintf(stderr,"Minimum buffer size is %d bytes.\n", freq / framerate);
 			return -1;
 		}
 
@@ -67,6 +66,7 @@ extern(C) {
 		}
 		bufferSize = audiospec.samples;
 		mixbuf = cast(short *)malloc(bufferSize * short.sizeof * MIXBUF_MUL);
+        memset(mixbuf, 0, bufferSize * short.sizeof * MIXBUF_MUL);
 		setCallMultiplier(1);
 		return 0;
 	}
@@ -96,7 +96,7 @@ extern(C) {
 		SDL_UnlockAudio();
 	}
 
-	void audio_callback(void *data, ubyte* stream, int len) {
+	void audio_callback(void *data, ubyte* stream, int len) nothrow {
 		int samplesRequested = cast(int) (len / short.sizeof);
 		int total = 0,todo = 0,t = 0;
 		int steps;
@@ -126,10 +126,14 @@ extern(C) {
 		assert(total == samplesRequested);
 	}
 
-	__gshared void audio_callback_2(void *data, ubyte* stream, int len) {
+	__gshared void audio_callback_2(void *data, ubyte* stream, int len) nothrow {
 		int samplesRequested = cast(int) (len / short.sizeof);
 		int i,t;
-		if(!audio.player.isPlaying()) return;
+		if(!audio.player.isPlaying()) {
+            //memcpy(stream, cast(ubyte*)mixbuf, len);
+            memset(stream, 0, len);
+            return;
+        }
 		while((bufferUsed + callbackInterval) <= bufferSize * MIXBUF_MUL) {
 			t = sid_fillbuffer(mixbuf+bufferUsed, callbackInterval, cyclesPerFrame);
 			bufferUsed += t;
@@ -139,7 +143,7 @@ extern(C) {
 		memcpy(stream, cast(ubyte*)mixbuf, len);
 		bufferUsed -= samplesRequested;
 		if(bufferUsed < 0) {
-			writeln("Audio buffer underrun ", bufferUsed);
+      //			writeln("Audio buffer underrun ", bufferUsed);
 			bufferUsed = 0;
 		}
 

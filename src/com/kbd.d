@@ -3,7 +3,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 module com.kbd;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import ui.input : Keyinfo;
 
 void translate(ref Keyinfo key) {
@@ -18,24 +18,24 @@ void translate(ref Keyinfo key) {
 }
 
 void translate_super(ref Keyinfo key) {
-	if(key.mods & KMOD_META) {
+	if(key.mods & KMOD_GUI) {
         switch(key.key) {
-        case SDLK_1: key.key = SDLK_KP1; break;
-        case SDLK_2: key.key = SDLK_KP2; break;
-        case SDLK_3: key.key = SDLK_KP3; break;
-        case SDLK_4: key.key = SDLK_KP4; break;
-        case SDLK_5: key.key = SDLK_KP5; break;
-        case SDLK_6: key.key = SDLK_KP6; break;
-        case SDLK_7: key.key = SDLK_KP7; break;
-        case SDLK_8: key.key = SDLK_KP8; break;
-        case SDLK_9: key.key = SDLK_KP9; break;
+        case SDLK_1: key.key = SDLK_KP_1; break;
+        case SDLK_2: key.key = SDLK_KP_2; break;
+        case SDLK_3: key.key = SDLK_KP_3; break;
+        case SDLK_4: key.key = SDLK_KP_4; break;
+        case SDLK_5: key.key = SDLK_KP_5; break;
+        case SDLK_6: key.key = SDLK_KP_6; break;
+        case SDLK_7: key.key = SDLK_KP_7; break;
+        case SDLK_8: key.key = SDLK_KP_8; break;
+        case SDLK_9: key.key = SDLK_KP_9; break;
 		case SDLK_UP: key.mods = KMOD_SHIFT; key.key = SDLK_HOME; break;
 		case SDLK_DOWN: key.mods = KMOD_SHIFT; key.key = SDLK_END; break;
         default: // otherwise just translate to ctrl+shift...                                                                       
             key.mods |= KMOD_CTRL | KMOD_SHIFT;
             break;
         }
-		key.mods ^= KMOD_META; // meta off
+		key.mods ^= KMOD_GUI; // meta off
     }
 }
 
