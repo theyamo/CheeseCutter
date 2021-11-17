@@ -1,13 +1,15 @@
 # make install DESTDIR=/home/yamo/devel/cc2/snap/parts/ccutter/install
 
-LIBS=-ldl -lstdc++
-COMFLAGS=-O2 -g
+PREFIX?=/usr
+EXAMPLESDIR?=/usr/share/examples/ccutter
+LIBS=-L-ldl -L-lstdc++
+COMFLAGS=-O2
 VERSION=$(shell cat Version)
-DFLAGS=$(COMFLAGS) $(LDFLAGS) -I./src -J./src/c64 -J./src/font
-CFLAGS:=$(COMFLAGS) $(CFLAGS)
-CXXFLAGS=$(COMFLAGS) $(CPPFLAGS) -I./src 
+DFLAGS=-d-version=DerelictSDL2_Static $(COMFLAGS) -I./src -J./src/c64 -J./src/font
+CFLAGS=$(COMFLAGS)
+CXXFLAGS=$(COMFLAGS) -I./src 
 COMPILE.d = $(DC) $(DFLAGS) -c
-DC=gdc
+DC=ldc2
 EXE=
 TARGET=ccutter
 OBJ_EXT=.o
@@ -18,9 +20,8 @@ include Makefile.objects.mk
 
 all: ct2util ccutter
 
-ccutter:$(C64OBJS) $(OBJS) $(CXX_OBJS)
-	$(DC) $(COMFLAGS) -o $@ $(OBJS) $(CXX_OBJS) $(LIBS)
-
+ccutter: $(C64OBJS) $(OBJS) $(CXX_OBJS)
+	$(DC) $(COMFLAGS) -of=$@ $(OBJS) $(CXX_OBJS) $(LIBS)
 
 .cpp.o : $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -31,17 +32,17 @@ ccutter:$(C64OBJS) $(OBJS) $(CXX_OBJS)
 ct: $(C64OBJS) $(CTOBJS)
 
 ct2util: $(C64OBJS) $(UTILOBJS)
-	$(DC) $(COMFLAGS) -o $@ $(UTILOBJS)
+	$(DC) $(COMFLAGS) -of=$@ $(UTILOBJS)
 
 c64: $(C64OBJS)
 
 install: all
 	strip ccutter$(EXE)
 	strip ct2util$(EXE)
-	cp ccutter$(EXE) $(DESTDIR)
-	cp ct2util$(EXE) $(DESTDIR)
-	mkdir $(DESTDIR)/example_tunes
-	cp -r tunes/* $(DESTDIR)/example_tunes
+	cp ccutter$(EXE) $(DESTDIR)$(PREFIX)/bin
+	cp ct2util$(EXE) $(DESTDIR)$(PREFIX)/bin
+	mkdir -p $(DESTDIR)/$(EXAMPLESDIR)/example_tunes
+	cp -r tunes/* $(DESTDIR)/$(EXAMPLESDIR)/example_tunes
 
 # release version with additional optimizations
 release: DFLAGS += -frelease -fno-bounds-check
@@ -72,7 +73,7 @@ src/ct/base.o: src/c64/player.bin
 src/ui/ui.o: src/ui/help.o
 
 %.o: %.d
-	$(COMPILE.d) -o $@ $<
+	$(COMPILE.d) -of=$@ $<
 
 
 
