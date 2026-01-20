@@ -6,7 +6,7 @@ LIBS=-L-ldl -L-lstdc++
 COMFLAGS=-O2
 VERSION=$(shell cat Version)
 DFLAGS=$(COMFLAGS) -I./src -J./src/c64 -J./src/font
-CFLAGS=$(COMFLAGS)
+CFLAGS=$(COMFLAGS) -std=c99
 CXXFLAGS=$(COMFLAGS) -I./src 
 COMPILE.d = $(DC) $(DFLAGS) -c
 DC=ldc2
@@ -28,7 +28,7 @@ ccutter:$(C64OBJS) $(OBJS) $(CXX_OBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .c.o : $(C_SRCS)
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 ct: $(C64OBJS) $(CTOBJS)
 
