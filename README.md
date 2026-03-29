@@ -1,6 +1,6 @@
 CheeseCutter 2
 
-*NOTE: see the branch sdl2-port to build it with SDL2. It's still under testing and may have bugs. As SDL1 is disappearing fast, I'm working on this to slightly increase the program's lifespan.*
+As of 2026/3, SDL2 port has been merged to master.
 
 http://theyamo.kapsi.fi/ccutter
 
