@@ -88,6 +88,6 @@ DIST_FILES = \
 	./ChangeLog \
 	./LICENSE.md \
 	./README.md \
-	./ccutter$(EXE) \
-	./ct2util$(EXE) \
+	./ccutter \
+	./ct2util \
 	./tunes/*
