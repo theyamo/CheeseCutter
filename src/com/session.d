@@ -9,6 +9,7 @@ import com.util;
 import ui.ui;
 import seq.sequencer;
 import std.typecons;
+import com.util;
 
 interface Undoable {
 	void undo(UndoValue);

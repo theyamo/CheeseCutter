@@ -12,7 +12,7 @@ import com.util;
 import ui.ui;
 import ui.dialogs;
 import ui.input;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import ct.base;
 
 
@@ -174,7 +174,9 @@ protected:
 
 abstract class BaseTrackTable : VoiceTable, Undoable {
 	QueryDialog queryClip;
-	
+
+	protected Clip[] clip;
+    
 	this(Rectangle a, PosDataTable pi) {
 		super(a, pi);
 		queryClip = new QueryDialog("Copy number of tracks to clipboard: $",

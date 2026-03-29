@@ -3,7 +3,7 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 module ui.ui;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import std.conv;
 import main;
 import ct.base;
@@ -516,7 +516,7 @@ final private class Toplevel : WindowSwitcher {
 			case SDLK_t:
 				ui.activateDialog(UI.infobar);
 				return OK;
-			case SDLK_KP0:
+			case SDLK_KP_0:
 				clearSeqs();
 				return OK;
 			case SDLK_KP_PERIOD:
@@ -1048,9 +1048,11 @@ final class UI {
 				 }
 				 tickcounter3 = 0;
 				 break;
+                 /+
 			 case SDLK_PRINT:
 			 	 audio.player.dumpFrame();
 			 	 break;
+                 +/
 			 case SDLK_F1:
 				 F1orF2(key, false);
 				 break;
@@ -1060,7 +1062,7 @@ final class UI {
 			 case SDLK_F3:
 				 toplevel.playFromCursor();
 				 break;
-			 case SDLK_SCROLLOCK:
+			 case SDLK_SCROLLLOCK:
 				 if(!audio.player.isPlaying) break;
 				 if(toplevel.fplayEnabled()) {
 					 stop(false);

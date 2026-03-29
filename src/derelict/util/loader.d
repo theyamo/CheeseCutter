@@ -27,126 +27,367 @@ DEALINGS IN THE SOFTWARE.
 */
 module derelict.util.loader;
 
-private
+import std.array,
+       std.string;
+
+import derelict.util.exception,
+       derelict.util.sharedlib,
+       derelict.util.system;
+
+struct SharedLibVersion
 {
-    import derelict.util.sharedlib;
-    import derelict.util.compat;
+    int major;
+    int minor;
+    int patch;
 }
 
-class SharedLibLoader
+abstract class SharedLibLoader
 {
-public:
-    this(string winLibs, string nixLibs, string macLibs)
-    {
-        version(Windows)
-        {
-            _libNames = winLibs;
-        }
-        else version(OSX)
-        {
-            _libNames = macLibs;
-        }
-        else version(darwin)
-        {
-            _libNames = macLibs;
-        }
-        else
-        {
-            _libNames = nixLibs;
-        }
+    /++
+     Constructs a new instance of shared lib loader with a string of one
+     or more shared library names to use as default.
 
-        _lib = new SharedLib();
+     Params:
+        libNames =      A string containing one or more comma-separated shared
+                        library names.
+    +/
+    this(string libNames) { _libNames = libNames; }
+
+    /++
+     Binds a function pointer to a symbol in this loader's shared library.
+
+     Params:
+        ptr =       Pointer to a function pointer that will be used as the bind
+                    point.
+        funcName =  The name of the symbol to be bound.
+        doThrow =   If true, a SymbolLoadException will be thrown if the symbol
+                    is missing. If false, no exception will be thrown and the
+                    ptr parameter will be set to null.
+     Throws:        SymbolLoadException if doThrow is true and a the symbol
+                    specified by funcName is missing from the shared library.
+    +/
+    final void bindFunc(void** ptr, string funcName, bool doThrow = true)
+    {
+        void* func = loadSymbol(funcName, doThrow);
+        *ptr = func;
     }
 
-    static void disableAutoUnload()
-    {
-        _manualUnload = true;
-    }
+    /++
+     Binds a function pointer to a stdcall symbol in this loader's shared library.
 
-    static bool isAutoUnloadEnabled()
-    {
-        return (_manualUnload == false);
-    }
+     On builds for anything other than 32-bit Windows, this simply delegates to bindFunc.
 
-    void load()
+     Params:
+        ptr =       Pointer to a function pointer that will be used as the bind
+                    point.
+        funcName =  The name of the symbol to be bound.
+        doThrow =   If true, a SymbolLoadException will be thrown if the symbol
+                    is missing. If false, no exception will be thrown and the
+                    ptr parameter will be set to null.
+     Throws:        SymbolLoadException if doThrow is true and a the symbol
+                    specified by funcName is missing from the shared library.
+    +/
+    final void bindFunc_stdcall(Func)(ref Func f, string unmangledName)
     {
-        load(_libNames);
-    }
+        static if(Derelict_OS_Windows && !Derelict_Arch_64) {
+            import std.format : format;
+            import std.traits : ParameterTypeTuple;
 
-    void load(string libNameString)
-    {
-        assert(libNameString !is null);
+            // get type-tuple of parameters
+            ParameterTypeTuple!f params;
 
-        string[] libNames = libNameString.splitStr(",");
-        foreach(ref string l; libNames)
-        {
-            l = l.stripWhiteSpace();
+            size_t sizeOfParametersOnStack(A...)(A args)
+            {
+                size_t sum = 0;
+                foreach (arg; args) {
+                    sum += arg.sizeof;
+
+                    // align on 32-bit stack
+                    if (sum % 4 != 0)
+                        sum += 4 - (sum % 4);
+                }
+                return sum;
+            }
+            unmangledName = format("_%s@%s", unmangledName, sizeOfParametersOnStack(params));
         }
+        bindFunc(cast(void**)&f, unmangledName);
+    }
 
+    /++
+     Finds and loads a shared library, using this loader's default shared library
+     names and default supported shared library version.
+
+     If multiple library names are specified as default, a SharedLibLoadException
+     will only be thrown if all of the libraries fail to load. It will be the head
+     of an exceptin chain containing one instance of the exception for each library
+     that failed.
+
+     Examples:  If this loader supports versions 2.0 and 2.1 of a shared libary,
+                this method will attempt to load 2.1 and will fail if only 2.0
+                is present on the system.
+
+     Throws:    SharedLibLoadException if the shared library or one of its
+                dependencies cannot be found on the file system.
+                SymbolLoadException if an expected symbol is missing from the
+                library.
+    +/
+    final void load() { load(_libNames); }
+
+    /++
+     Finds and loads any version of a shared library greater than or equal to
+     the required mimimum version, using this loader's default shared library
+     names.
+
+     If multiple library names are specified as default, a SharedLibLoadException
+     will only be thrown if all of the libraries fail to load. It will be the head
+     of an exceptin chain containing one instance of the exception for each library
+     that failed.
+
+     Examples:  If this loader supports versions 2.0 and 2.1 of a shared library,
+                passing a SharedLibVersion with the major field set to 2 and the
+                minor field set to 0 will cause the loader to load version 2.0
+                if version 2.1 is not available on the system.
+
+     Params:
+        minRequiredVersion = the minimum version of the library that is acceptable.
+                             Subclasses are free to ignore this.
+
+     Throws:    SharedLibLoadException if the shared library or one of its
+                dependencies cannot be found on the file system.
+                SymbolLoadException if an expected symbol is missing from the
+                library.
+    +/
+    final void load(SharedLibVersion minRequiredVersion)
+    {
+        configureMinimumVersion(minRequiredVersion);
+        load();
+    }
+
+    /++
+     Finds and loads a shared library, using libNames to find the library
+     on the file system.
+
+     If multiple library names are specified in libNames, a SharedLibLoadException
+     will only be thrown if all of the libraries fail to load. It will be the head
+     of an exceptin chain containing one instance of the exception for each library
+     that failed.
+
+     Examples:  If this loader supports versions 2.0 and 2.1 of a shared libary,
+                this method will attempt to load 2.1 and will fail if only 2.0
+                is present on the system.
+
+     Params:
+        libNames =      A string containing one or more comma-separated shared
+                        library names.
+     Throws:    SharedLibLoadException if the shared library or one of its
+                dependencies cannot be found on the file system.
+                SymbolLoadException if an expected symbol is missing from the
+                library.
+    +/
+    final void load(string libNames)
+    {
+        if(libNames == null)
+            libNames = _libNames;
+
+        auto lnames = libNames.split(",");
+        foreach(ref string l; lnames)
+            l = l.strip();
+
+        load(lnames);
+    }
+
+    /++
+     Finds and loads any version of a shared library greater than or equal to
+     the required mimimum version, using libNames to find the library
+     on the file system.
+
+     If multiple library names are specified as default, a SharedLibLoadException
+     will only be thrown if all of the libraries fail to load. It will be the head
+     of an exceptin chain containing one instance of the exception for each library
+     that failed.
+
+     Examples:  If this loader supports versions 2.0 and 2.1 of a shared library,
+                passing a SharedLibVersion with the major field set to 2 and the
+                minor field set to 0 will cause the loader to load version 2.0
+                if version 2.1 is not available on the system.
+
+     Params:
+        libNames =      A string containing one or more comma-separated shared
+                        library names.
+        minRequiredVersion = The minimum version of the library that is acceptable.
+                             Subclasses are free to ignore this.
+
+     Throws:    SharedLibLoadException if the shared library or one of its
+                dependencies cannot be found on the file system.
+                SymbolLoadException if an expected symbol is missing from the
+                library.
+    +/
+    final void load(string libNames, SharedLibVersion minRequiredVersion)
+    {
+        configureMinimumVersion(minRequiredVersion);
         load(libNames);
     }
 
-    void load(string[] libNames)
+    /++
+     Finds and loads a shared library, using libNames to find the library
+     on the file system.
+
+     If multiple library names are specified in libNames, a SharedLibLoadException
+     will only be thrown if all of the libraries fail to load. It will be the head
+     of an exception chain containing one instance of the exception for each library
+     that failed.
+
+
+     Params:
+        libNames =      An array containing one or more shared library names,
+                        with one name per index.
+
+     Throws:    SharedLibLoadException if the shared library or one of its
+                dependencies cannot be found on the file system.
+                SymbolLoadException if an expected symbol is missing from the
+                library.
+    +/
+    final void load(string[] libNames)
     {
         _lib.load(libNames);
         loadSymbols();
     }
 
-    void unload()
+    /++
+     Finds and loads any version of a shared library greater than or equal to
+     the required mimimum version, , using libNames to find the library
+     on the file system.
+
+     If multiple library names are specified in libNames, a SharedLibLoadException
+     will only be thrown if all of the libraries fail to load. It will be the head
+     of an exception chain containing one instance of the exception for each library
+     that failed.
+
+     Examples:  If this loader supports versions 2.0 and 2.1 of a shared library,
+                passing a SharedLibVersion with the major field set to 2 and the
+                minor field set to 0 will cause the loader to load version 2.0
+                if version 2.1 is not available on the system.
+
+
+     Params:
+        libNames =      An array containing one or more shared library names,
+                        with one name per index.
+        minRequiredVersion = The minimum version of the library that is acceptable.
+                             Subclasses are free to ignore this.
+
+     Throws:    SharedLibLoadException if the shared library or one of its
+                dependencies cannot be found on the file system.
+                SymbolLoadException if an expected symbol is missing from the
+                library.
+    +/
+    final void load(string[] libNames, SharedLibVersion minRequiredVersion)
     {
-        _lib.unload();
+        configureMinimumVersion(minRequiredVersion);
+        load(libNames);
     }
 
-	@property bool isLoaded()
+    /++
+     Unloads the shared library from memory, invalidating all function pointers
+     which were assigned a symbol by one of the load methods.
+    +/
+    final void unload() { _lib.unload(); }
+
+
+    /// Returns: true if the shared library is loaded, false otherwise.
+    @property @nogc nothrow
+    final bool isLoaded() { return _lib.isLoaded; }
+
+    /++
+     Sets the callback that will be called when an expected symbol is
+     missing from the shared library.
+
+     Params:
+        callback =      A delegate that returns a value of type
+                        derelict.util.exception.ShouldThrow and accepts
+                        a string as the sole parameter.
+    +/
+    @property @nogc nothrow
+    final void missingSymbolCallback(MissingSymbolCallbackDg callback)
     {
-        return _lib.isLoaded;
+        _lib.missingSymbolCallback = callback;
+    }
+
+    /++
+     Sets the callback that will be called when an expected symbol is
+     missing from the shared library.
+
+     Params:
+        callback =      A pointer to a function that returns a value of type
+                        derelict.util.exception.ShouldThrow and accepts
+                        a string as the sole parameter.
+    +/
+    @property @nogc nothrow
+    final void missingSymbolCallback(MissingSymbolCallbackFunc callback)
+    {
+        _lib.missingSymbolCallback = callback;
+    }
+
+    /++
+     Returns the currently active missing symbol callback.
+
+     This exists primarily as a means to save the current callback before
+     setting a new one. It's useful, for example, if the new callback needs
+     to delegate to the old one.
+    +/
+    @property @nogc nothrow
+    final MissingSymbolCallback missingSymbolCallback()
+    {
+        return _lib.missingSymbolCallback;
     }
 
 protected:
+    /++
+     Must be implemented by subclasses to load all of the symbols from a
+     shared library.
+
+     This method is called by the load methods.
+    +/
     abstract void loadSymbols();
 
-    void* loadSymbol(string name)
+    /++
+     Allows a subclass to install an exception handler for specific versions
+     of a library before loadSymbols is called.
+
+     This method is optional. If the subclass does not implement it, calls to
+     any of the overloads of the load method that take a SharedLibVersion will
+     cause a compile time assert to fire.
+    +/
+    void configureMinimumVersion(SharedLibVersion minVersion)
     {
-        return _lib.loadSymbol(name);
+        assert(0, "SharedLibVersion is not supported by this loader.");
     }
 
-    @property SharedLib lib()
+    /++
+     Subclasses can use this as an alternative to bindFunc, but must bind
+     the returned symbol manually.
+
+     bindFunc calls this internally, so it can be overloaded to get behavior
+     different from the default.
+
+     Params:
+        name =      The name of the symbol to load.doThrow =   If true, a SymbolLoadException will be thrown if the symbol
+                    is missing. If false, no exception will be thrown and the
+                    ptr parameter will be set to null.
+     Throws:        SymbolLoadException if doThrow is true and a the symbol
+                    specified by funcName is missing from the shared library.
+     Returns:       The symbol matching the name parameter.
+    +/
+    void* loadSymbol(string name, bool doThrow = true)
     {
-        return _lib;
+        return _lib.loadSymbol(name, doThrow);
     }
 
-    public void bindFunc(void** ptr, string funcName, bool doThrow = true)
-    {
-        void* func = lib.loadSymbol(funcName, doThrow);
-        *ptr = func;
-    }
+    /// Returns a reference to the shared library wrapped by this loader.
+    @property @nogc nothrow
+    final ref SharedLib lib(){ return _lib; }
+
 
 private:
-    static bool _manualUnload;
     string _libNames;
     SharedLib _lib;
-}
-
-/*
-* These templates need to stick around a bit longer, until the macinit stuff
-in Derelict SDL gets sorted
-*/
-package struct Binder(T) {
-    void opCall(in char[] n, SharedLib lib) {
-        *fptr = lib.loadSymbol(n);
-    }
-
-
-    private {
-        void** fptr;
-    }
-}
-
-
-template bindFunc(T) {
-    Binder!(T) bindFunc(inout T a) {
-        Binder!(T) res;
-        res.fptr = cast(void**)&a;
-        return res;
-    }
 }

@@ -1285,7 +1285,7 @@ class Song {
 			memspace[offsets[Offsets.PlaySpeed]] = cast(ubyte)spd;
 	}
 
-	@property int playSpeed() {
+	@property int playSpeed() nothrow {
 		return memspace[offsets[Offsets.PlaySpeed]];
 	}
 

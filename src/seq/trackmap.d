@@ -10,7 +10,7 @@ import ui.ui;
 import seq.sequencer;
 import seq.tracktable;
 import ui.input;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import std.string : format;
 import ct.base;
 import std.array;

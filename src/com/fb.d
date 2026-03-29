@@ -3,26 +3,34 @@ CheeseCutter v2 (C) Abaddon. Licensed under GNU GPL.
 */
 
 module com.fb;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import std.string : indexOf;
 import com.util;
 
-immutable SDL_Color[] PALETTE = [
+SDL_Color[] PALETTE = [
 	{ 0,0,0 },       
 	{ 63 << 2,63 << 2,63 << 2 },
 	{ 26 << 2,13 << 2,10 << 2 },
 	{ 28 << 2,41 << 2,44 << 2 },
 	{ 27 << 2,15 << 2,33 << 2 },
-	{ 22 << 2,35 << 2,16 << 2 },
+
+	{ 27 << 2,23 << 2,45 << 2 },
+	
 	{ 13 << 2,10 << 2,30 << 2 },
+	
+	
+	
 	{ 46 << 2,49 << 2,27 << 2 },
 	{ 27 << 2,19 << 2,9 << 2 },
 	{ 16 << 2,14 << 2,0 << 2 },
 	{ 38 << 2,25 << 2,22 << 2 },
 	{ 17 << 2,17 << 2,17 << 2 },
 	{ 27 << 2,27 << 2,27 << 2 },
-	{ 38 << 2,52 << 2,33 << 2 },
-	{ 27 << 2,23 << 2,45 << 2 },
+//	{ 38 << 2,52 << 2,33 << 2 },
+	{ 37 << 2,37 << 2,37 << 2 } ,	
+
+
+	{ 22 << 2,35 << 2,16 << 2 },	
 	{ 37 << 2,37 << 2,37 << 2 } ];
 
 immutable FONT_X = 8, FONT_Y = 14;
@@ -46,28 +54,32 @@ static this() {
 
 abstract class Video {
 	protected {
-		SDL_Surface* surface;
+		//SDL_Surface* surface;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Texture* texture;
 		bool useFullscreen;
 		Screen screen;
 		Visualizer vis;
 		const int requestedWidth, requestedHeight;
 		int height, width; // resolution of window
-		int displayHeight, displayWidth; // resolution of the monitor
+		//int displayHeight, displayWidth; // resolution of the monitor
 		SDL_Rect rect;
 	}
 	
 	this(int wx, int wy, Screen scr, int fs) {
-		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
+		//const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 		screen = scr;
-		displayHeight = vidinfo.current_h;
-		displayWidth = vidinfo.current_w;
+		//displayHeight = vidinfo.current_h;
+		//displayWidth = vidinfo.current_w;
 		requestedHeight = wy;
 		requestedWidth = wx;
+    
 	}
 
 	~this() {
-		if(surface !is null)
-			SDL_FreeSurface(surface);
+    if(window !is null)
+      SDL_DestroyWindow(window);
 	}
 
 	abstract void drawVisualizer(int);
@@ -87,8 +99,10 @@ abstract class Video {
 	void scalePosition(ref int x, ref int y) {
 		x -= rect.x;
 		y -= rect.y;
+    /+
 		x *= cast(float)requestedWidth / width;
 		y *= cast(float)requestedHeight / height;
+    +/
 	}
 		
 	abstract void updateFrame();
@@ -104,28 +118,37 @@ class VideoStandard : Video {
 		width = requestedWidth;
 		height = requestedHeight;
 		useFullscreen = fs;
+    /*
 		int sdlflags = SDL_SWSURFACE;
-		sdlflags |= fs ? SDL_FULLSCREEN : 0;
+		sdlflags |= fs ? SDL_WINDOW_FULLSCREEN : 0;
 		surface = SDL_SetVideoMode(width, height, 0, sdlflags); 
 		if(surface is null) {
 			throw new DisplayError("Unable to initialize graphics mode.");
 		}
 		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
 					   cast(SDL_Color *)PALETTE, 0, 16);
-		vis = new Oscilloscope(surface, 500, 14);
+    */
+    
+      // Create an application window with the following settings:
+    /*
+    window = SDL_CreateWindow(
+        "An SDL2 window",                  // window title
+        SDL_WINDOWPOS_UNDEFINED,           // initial x position
+        SDL_WINDOWPOS_UNDEFINED,           // initial y position
+        800,                               // width, in pixels
+        600,                               // height, in pixels
+        cast(SDL_WindowFlags)0
+    );
+    */
+    SDL_CreateWindowAndRenderer(800, 600, cast(SDL_WindowFlags)0, &window, &renderer);
+		//vis = new Oscilloscope(surface, 500, 14);
 		screen.refresh();
 	}
 
 	override void drawVisualizer(int n) {
-		SDL_LockSurface(surface);
-		vis.draw(n);
-		SDL_UnlockSurface(surface);
 	}
 
 	override void clearVisualizer() {
-		SDL_LockSurface(surface);
-		vis.clear();
-		SDL_UnlockSurface(surface);
 	}
 	
 	override void updateFrame() {
@@ -133,248 +156,102 @@ class VideoStandard : Video {
 		int a,b,c;
 		Uint16* bptr = &screen.data[0];
 		Uint16* cptr = &screen.olddata[0];
-		Uint32* sptr = cast(Uint32 *)surface.pixels;
+		// Uint32* sptr = cast(Uint32 *)surface.pixels;
 		Uint32* sp;
 		Uint8* bp;
 		Uint8 ubg, ufg;
-		
+		int outx, outy;
+    
 		if (!isDirty) return;
 		isDirty = false;
 
-		SDL_LockSurface(surface);
-  
+        SDL_Rect rect;
+        rect.x = 0;
+        rect.y = 0;
+        rect.x = 800;
+        rect.y = 600;
+        //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        //SDL_RenderDrawRect(renderer, &rect);
+		//SDL_LockSurface(surface);
+        SDL_RenderClear(renderer);  
 		for(y = 0;y < screen.height; y++) {
 			for(x = 0; x < screen.width; x++) {
-				if(*bptr != *cptr) {
+				//if(*bptr != *cptr) {
+                if(true) {
 					*cptr = *bptr;
-					sp = sptr;
+					//sp = sptr;
 					a = *bptr & 255;
 					bp = &font[a * 16];
 					ufg = (*bptr >> 8) & 15;
 					ubg = (*bptr >> 12);
-					auto fgcolor = getColor(surface, ufg),
-						bgcolor = getColor(surface, ubg);
+                    /+
+                     auto fgcolor = getColor(surface, ufg),
+                     bgcolor = getColor(surface, ubg);
+                     +/
+                    rect.x = x * 8;
+                    rect.y = y * 14;
+                    rect.h = 14;
+                    rect.w = 8;
+                    SDL_SetRenderDrawColor(renderer, PALETTE[ubg].r,
+                                           PALETTE[ubg].g,
+                                           PALETTE[ubg].b, 255);
+                    SDL_RenderFillRect(renderer, &rect);
+          
+                    SDL_SetRenderDrawColor(renderer, PALETTE[ufg].r,
+                                           PALETTE[ufg].g,
+                                           PALETTE[ufg].b, 255);
+                    int yy = y * 14;
 					for(c = 4; c < 18; c++, bp++) {
+                        int xx = x * 8;
 						b = *bp;
-						if(b & 0x80) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x40) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x20) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x10) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x08) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x04) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x02) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x01) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
+						if(b & 0x80) {
+                            SDL_RenderDrawPoint(renderer, xx, yy);
+                        }
+                        xx++;
+						if(b & 0x40) {
+                            SDL_RenderDrawPoint(renderer, xx, yy);
+                        }
+                        xx++;
+						if(b & 0x20) {
+                            SDL_RenderDrawPoint(renderer, xx, yy);
+                        } 
+                        xx++;
+						if(b & 0x10) {
+                            SDL_RenderDrawPoint(renderer, xx, yy);
+                        }
+                        xx++;
+						if(b & 0x08) {
+                            SDL_RenderDrawPoint(renderer, xx, yy);
+                        }
+                        xx++;
+						if(b & 0x04) {
+                            SDL_RenderDrawPoint(renderer, xx, yy);
+                        }
+                        xx++;
+						if(b & 0x02) {
+                            SDL_RenderDrawPoint(renderer, xx, yy);
+                        }
+                        xx++;
+						if(b & 0x01) {
+                            SDL_RenderDrawPoint(renderer, xx, yy);
+                        }
+                        xx++;
 						sp += width - 8;
+                        yy++;
 					}
+          
 				}
-				sptr += 8;
+				//sptr += 8;
 				bptr++;
 				cptr++;
 			}
-			sptr += width*13;
+			//sptr += width*13;
 		}
-		SDL_UnlockSurface(surface);
-		SDL_Flip(surface);
-	}
-}
-
-class VideoYUV : Video {
-	private SDL_Overlay* overlay;
-	private int correctedHeight, correctedWidth;
-	
-	this(int wx, int wy, Screen scr, int fs) {
-		super(wx, wy, scr, fs);
-		calcAspect();
-		enableFullscreen(fs > 0);
+		//SDL_UnlockSurface(surface);
+		//SDL_Flip(surface);
+    SDL_RenderPresent(renderer);
 	}
 
-	~this() {
-		if(overlay !is null)
-			SDL_FreeYUVOverlay(overlay);
-	}
-
-	private void calcAspect() {
-		correctedHeight = displayHeight;
-		correctedWidth = displayWidth;
-		if(cast(float)displayHeight / displayWidth < 0.75) { // wide screen
-			correctedWidth = cast(int)(correctedHeight / 0.75);
-			correctedHeight = displayHeight;
-		}
-		else {
-			correctedWidth = displayWidth;
-			correctedHeight = cast(int)(correctedWidth * 0.75);
-		}
-	}
-
-	override void drawVisualizer(int n) {
-		SDL_LockSurface(surface);
-		vis.draw(n);
-		SDL_UnlockSurface(surface);
-	}
-
-	override void clearVisualizer() {
-		SDL_LockSurface(surface);
-		vis.clear();
-		SDL_UnlockSurface(surface);
-	}
-	
-	override void resizeEvent(int nw, int nh) {
-		if(useFullscreen)
-			return;
-
-		width = nw; height = nh;
-
-		if(surface !is null)
-			SDL_FreeSurface(surface);
-
-		surface = SDL_SetVideoMode(nw, nh, 0, SDL_SWSURFACE | SDL_RESIZABLE);
-		if(surface is null) {
-			throw new DisplayError("Unable to initialize graphics mode.");
-		}
-		
-		createOverlay(nw, nh);
-		screen.refresh();
-	}
-
-	override protected void enableFullscreen(bool fs) {
-		if(fs) { // enable aspect corr. if in fullscreen
-			width = correctedWidth;
-			height = correctedHeight;
-		}
-		else {
-			width = requestedWidth;
-			height = requestedHeight;
-		}
-
-		int sdlflags = SDL_SWSURFACE;
-		useFullscreen = fs; 
-		sdlflags |= fs ? SDL_FULLSCREEN : SDL_RESIZABLE;
-		if(!fs)
-			surface = SDL_SetVideoMode(requestedWidth, requestedHeight, 0, sdlflags);
-		else surface = SDL_SetVideoMode(displayWidth, displayHeight, 0, sdlflags);
-		if(surface is null) {
-			throw new DisplayError("Unable to initialize graphics mode.");
-		}
-		vis = new Oscilloscope(surface, 500, 14);
-		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
-					   cast(SDL_Color *)PALETTE, 0, 16);
-		createOverlay(width, height);
-		screen.refresh();
-	}
-
-	override void updateFrame() {
-		int x, y;
-		int a,b,c;
-		static Uint32[32] pixbuf;
-		Uint16* bptr = &screen.data[0];
-		Uint16* cptr = &screen.olddata[0];
-		Uint32* sp;
-		Uint8* bp;
-		Uint8 ubg, ufg;
-		
-		if (!isDirty) return;
-		isDirty = false;
-
-		SDL_LockYUVOverlay(overlay);
-	
-		// clear bottom stripe if necessary (mode = 800x600)
-		/+if(video.resolution == Resolution.Res800x600)+/
-		{
-			pixbuf[] = 0;
-			for(x = 0; x < screen.width; x++) {
-				for(y = 0; y < 12; y++) {
-					RGBBlock2YUV(pixbuf, x * 8, screen.height * 14 + y);
-				}
-			}
-		}
-	
-		for(y = 0;y < screen.height; y++) {
-			for(x = 0; x < screen.width; x++) {
-				if(*bptr != *cptr) {
-					*cptr = *bptr;
-					a = *bptr & 255;
-					bp = &font[a * 16];
-					ufg = (*bptr >> 8) & 15;
-					ubg = (*bptr >> 12);
-					auto fgcolor = getColor(surface, ufg),
-						bgcolor = getColor(surface, ubg);
-					for(c = 4; c < 18; c++, bp++) {
-						sp = &pixbuf[0];
-						b = *bp;
-						if(b & 0x80) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x40) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x20) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x10) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x08) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x04) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x02) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						if(b & 0x01) *(sp++) = fgcolor;
-						else *(sp++) = bgcolor;
-						RGBBlock2YUV(pixbuf, x * 8, y * 14 + c - 4);
-						sp += width - 8;
-					}
-				}
-				bptr++;
-				cptr++;
-			}
-		}
-		SDL_UnlockYUVOverlay(overlay);
-		SDL_DisplayYUVOverlay(overlay, &rect);
-	}
-
-	private	void RGBBlock2YUV(const Uint32[] source, int x, int y) {
-		void RGB_to_YUV(Uint8 *rgb, Uint8* yuv) {
-			yuv[0] = cast(ubyte)(0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2]);
-			yuv[2] = cast(ubyte)((rgb[2]-yuv[0])*0.565 + 128);
-			yuv[1] = cast(ubyte)((rgb[0]-yuv[0])*0.713 + 128);
-		}
-
-		static Uint8[3] yuv;
-		static Uint8*[3] plane;
-		plane[0] = overlay.pixels[0] + overlay.pitches[0] * y + x;
-		plane[1] = overlay.pixels[1] + overlay.pitches[1] * y / 2 + x / 2;
-		plane[2] = overlay.pixels[2] + overlay.pitches[2] * y / 2 + x / 2;
-		for(int xc = 0; xc < 8 && xc < overlay.w; xc++) {
-			RGB_to_YUV(cast(Uint8*)&source[xc], cast(ubyte*)&yuv);
-			*(plane[0]++) = yuv[0];
-			if(xc % 2 == 0 && y % 2 == 0) {
-				*(plane[1]++) = yuv[2];
-				*(plane[2]++) = yuv[1];
-			}
-		}
-	}
-
-	private void createOverlay(int scaledx, int scaledy) {
-		if(overlay !is null)
-			SDL_FreeYUVOverlay(overlay);
-		overlay = SDL_CreateYUVOverlay(requestedWidth, requestedHeight, SDL_YV12_OVERLAY, surface);
-		if(overlay is null) {
-			throw new DisplayError("Couldn't initialize YUV overlay.");
-		}
-		rect.w = cast(ushort)scaledx;
-		rect.h = cast(ushort)scaledy;
-		rect.x = rect.y = 0;
-
-		if(useFullscreen) {
-			rect.x = cast(short)(displayWidth/2 - scaledx/2);
-			rect.y = cast(short)(displayHeight/2 - scaledy/2);
-		}
-	}
 }
 
 class Screen {
@@ -566,11 +443,11 @@ class DisplayError : Error {
 }
 
 void enableKeyRepeat() {
-	SDL_EnableKeyRepeat(200, 10);
+  //	SDL_EnableKeyRepeat(200, 10);
 }
 
 void disableKeyRepeat() {
-	SDL_EnableKeyRepeat(0, 0);
+	//SDL_EnableKeyRepeat(0, 0);
 }
 
 Uint16 readkey() {
@@ -590,7 +467,7 @@ Uint16 readkey() {
 		}
 		SDL_Delay(50);
 	}
-	return evt.key.keysym.unicode;
+	return cast(Uint16)evt.key.keysym.unicode;
 }
 
 private int getColor(SDL_Surface* s, int c) {

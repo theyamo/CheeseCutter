@@ -11,7 +11,7 @@ import seq.sequencer;
 import com.session;
 import ct.base;
 import ui.input;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import std.string;
 import audio.player;
 
@@ -345,7 +345,7 @@ class SequenceTable : VoiceTable {
 					toSeqEnd();
 				}
 				break;
-			case SDLK_KP0:
+			case SDLK_KP_0:
 				audio.player.playRow(voices);
 				step(1);
 				break;

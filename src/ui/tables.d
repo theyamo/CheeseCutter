@@ -10,7 +10,7 @@ import ui.help;
 import com.session;
 import com.util;
 import ct.purge;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import std.string;
 import std.stdio : stderr;
 import std.file;
@@ -143,8 +143,12 @@ private class HexTable : Table, Undoable {
 	}
 
 	override int keypress(Keyinfo key) {
+        /+
 		if(key.mods & KMOD_CTRL || key.mods & KMOD_ALT || 
 		   key.mods & KMOD_META) return OK;
+           +/
+		if(key.mods & KMOD_CTRL || key.mods & KMOD_ALT || 
+		   key.mods & KMOD_GUI) return OK;
 
 		switch(key.raw) 
 		{

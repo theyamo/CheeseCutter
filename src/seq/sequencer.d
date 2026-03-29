@@ -15,7 +15,7 @@ import seq.fplay;
 import seq.tracktable;
 import seq.seqtable;
 import seq.trackmap;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import std.string;
 import std.stdio;
 import audio.audio, audio.player;
@@ -816,8 +816,8 @@ final class Sequencer : Window, Undoable {
 	}
 
 	override int keypress(Keyinfo key) {
-		if(key.raw >= SDLK_KP0 && key.raw <= SDLK_KP9) {
-			stepValue = key.raw - SDLK_KP0;
+		if(key.raw >= SDLK_KP_0 && key.raw <= SDLK_KP_9) {
+			stepValue = key.raw - SDLK_KP_0;
 			return OK;
 		}
 		if(key.mods & KMOD_ALT) {

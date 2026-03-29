@@ -12,7 +12,7 @@ import audio.audio;
 import audio.resid.filter;
 import seq.sequencer;
 import ui.ui;
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 import std.stdio;
 
 enum Status { Stop, Play, Keyjam };
@@ -22,15 +22,15 @@ int usefp = 1, sidtype, interpolate = 1, badline, ntsc;
 __gshared Filterparams curfp;
 int curfp6581 = 0, curfp8580 = 0;
 
-int getPlaystatus() {
+int getPlaystatus() nothrow {
 	return playstatus;
 }
 
-@property bool isPlaying() { 
+bool isPlaying() nothrow {  
 	return playstatus == Status.Play || playstatus == Status.Keyjam;
 }
 
-@property bool keyjamEnabled() {
+bool keyjamEnabled() nothrow {
 	return playstatus == Status.Keyjam;
 }
 
@@ -144,7 +144,7 @@ void start() {
 	start([0, 0, 0], [0, 0, 0]);
 }
 
-void stop() {
+void stop() nothrow {
 	playstatus = Status.Stop;
 	muteSID(1,1,1);
 }
@@ -287,7 +287,7 @@ private void initPlayOffset(int[] t, int[] s) {
 	SDL_PauseAudio(0);
 }
 
-private void muteSID(int v1, int v2, int v3 ) {
+private void muteSID(int v1, int v2, int v3 ) nothrow {
 	if(v1) song.sidbuf[4] = 0x08;
 	if(v2) song.sidbuf[7 + 4] = 0x08;
 	if(v3) song.sidbuf[14 + 4]= 0x08;

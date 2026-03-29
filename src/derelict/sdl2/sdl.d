@@ -25,53 +25,49 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-module derelict.sdl.macinit.NSEnumerator;
+module derelict.sdl2.sdl;
 
-version(DigitalMars) version(OSX) version = darwin;
+import derelict.sdl2.config;
 
-version (darwin):
+public:
+import derelict.sdl2.internal.sdl_types;
+static if(staticSDL)
+      import derelict.sdl2.internal.sdl_static;
+else
+      import derelict.sdl2.internal.sdl_dynload;
 
-import derelict.sdl.macinit.ID;
-import derelict.sdl.macinit.NSObject;
-import derelict.sdl.macinit.runtime;
-import derelict.sdl.macinit.selectors;
-import derelict.sdl.macinit.string;
-import derelict.util.compat;
 
-package:
+alias SDL_BlitSurface = SDL_UpperBlit;
+alias SDL_BlitScaled = SDL_UpperBlitScaled;
 
-class NSEnumerator : NSObject
-{
-    this ()
-    {
-        id_ = null;
+@nogc nothrow {
+    // SDL_audio.h
+    SDL_AudioSpec* SDL_LoadWAV(const(char)* file,SDL_AudioSpec* spec,Uint8** audio_buf,Uint32* len) {
+        return SDL_LoadWAV_RW(SDL_RWFromFile(file,"rb"),1,spec,audio_buf,len);
     }
 
-    this (id id_)
-    {
-        this.id_ = id_;
+    // SDL_events.h
+    Uint8 SDL_GetEventState(Uint32 type) {
+        return SDL_EventState(type,SDL_QUERY);
     }
 
-    static NSEnumerator alloc ()
-    {
-        id result = objc_msgSend(cast(id)class_, sel_alloc);
-        return result ? new NSEnumerator(result) : null;
+    // SDL_GameController.h
+    int SDL_GameControllerAddMappingsFromFile(const(char)* file) {
+        return SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(file,"rb"),1);
     }
 
-    static Class class_ ()
-    {
-        return cast(Class) objc_getClass!(this.stringof);
+    // SDL_quit.h
+    bool SDL_QuitRequested() {
+        SDL_PumpEvents();
+        return SDL_PeepEvents(null,0,SDL_PEEKEVENT,SDL_QUIT,SDL_QUIT) > 0;
     }
 
-    override NSEnumerator init ()
-    {
-        id result = objc_msgSend(this.id_, sel_init);
-        return result ? this : null;
+    // SDL_surface.h
+    SDL_Surface* SDL_LoadBMP(const(char)* file) {
+        return SDL_LoadBMP_RW(SDL_RWFromFile(file,"rb"),1);
     }
 
-    ID nextObject ()
-    {
-        id result = objc_msgSend(this.id_, sel_nextObject);
-        return result ? new ID(result) : null;
+    int SDL_SaveBMP(SDL_Surface* surface,const(char)* file) {
+        return SDL_SaveBMP_RW(surface,SDL_RWFromFile(file,"wb"),1);
     }
 }
