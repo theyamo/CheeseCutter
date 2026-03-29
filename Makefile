@@ -6,7 +6,7 @@ LIBS=-L-ldl -L-lstdc++ -L-lSDL2
 COMFLAGS=-O2
 VERSION=$(shell cat Version)
 DFLAGS=-d-version=DerelictSDL2_Static $(COMFLAGS) -I./src -J./src/c64 -J./src/font
-CFLAGS=$(COMFLAGS)
+CFLAGS=$(COMFLAGS) -std=c99
 CXXFLAGS=$(COMFLAGS) -I./src 
 COMPILE.d = $(DC) $(DFLAGS) -c
 DC=ldc2
@@ -23,11 +23,11 @@ all: ct2util ccutter
 ccutter: $(C64OBJS) $(OBJS) $(CXX_OBJS)
 	$(DC) $(COMFLAGS) -of=$@ $(OBJS) $(CXX_OBJS) $(LIBS)
 
-.cpp.o : $(CXX_SRCS)
+.cpp.o: $(CXX_SRCS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-.c.o : $(C_SRCS)
-	$(CC) -c $< -o $@
+.c.o: $(C_SRCS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 ct: $(C64OBJS) $(CTOBJS)
 
