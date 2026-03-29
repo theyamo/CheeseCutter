@@ -161,7 +161,7 @@ class HelpDialog : Window {
 	}
 
 	override int keypress(Keyinfo key) {
-		int k = key.unicode;
+		int k = key.key;
 		if(k == SDLK_SPACE ||
 		   k == SDLK_PLUS ||
 			k == SDLK_RIGHT ||
@@ -258,9 +258,10 @@ class AboutDialog : Window {
   
 	override int keypress(Keyinfo key) {
 		if(key.mods) return OK;
-		if(key.unicode == SDLK_ESCAPE ||
-			key.unicode == SDLK_SPACE ||
-			key.unicode == SDLK_RETURN) return RETURN;
+    auto k = key.key;
+		if(k == SDLK_ESCAPE ||
+			k == SDLK_SPACE ||
+			k == SDLK_RETURN) return RETURN;
 		return OK;
 	}
 }
