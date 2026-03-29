@@ -92,14 +92,12 @@ class Video {
                               );
 
     if (window is null) {
-      writeln("Window could not be created");
       return false;
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     if (renderer is null) {
-      writeln("Renderer could not be created");
       return false;
     }
 
@@ -107,7 +105,6 @@ class Video {
                                 SDL_TEXTUREACCESS_TARGET, 800, 600);
 
     if (texture is null) {
-      writeln("Texture could not be created");
       return false;
     }
 

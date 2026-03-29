@@ -36,7 +36,7 @@ version(Win32) {
 	const DIR_SEPARATOR = '\\';
 }
 
-void initVideo(bool useFullscreen, bool useyuv) {
+bool initVideo(bool useFullscreen, bool useyuv) {
 	int mx, my;
 
 	if( SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -47,10 +47,10 @@ void initVideo(bool useFullscreen, bool useyuv) {
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
 	video = new Video(800, 600, screen, 0);
-  video.init();
 	// SDL_EnableKeyRepeat(200, 10);
 	// SDL_EnableUNICODE(1);
 	// SDL_WM_SetCaption("CheeseCutter".toStringz(),"CheeseCutter".toStringz());
+  return video.init();
 }
 
 void mainloop() {
@@ -261,7 +261,11 @@ int main(char[][] args) {
 	}
 	
 	audio.player.init();
-	initVideo(fs, yuvOverlay);
+	if (!initVideo(fs, yuvOverlay)) {
+    writeln("Video init failed: ", SDL_GetError().fromStringz);
+    SDL_Quit();
+    return -1;
+  }
 	initSession();
 	mainui = new UI();
 	loadFile(filename);
