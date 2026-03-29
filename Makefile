@@ -2,7 +2,7 @@
 
 PREFIX?=/usr
 EXAMPLESDIR?=/usr/share/examples/ccutter
-LIBS=-L-ldl -L-lstdc++
+LIBS=-L-ldl -L-lstdc++ -L-lSDL2
 COMFLAGS=-O2
 VERSION=$(shell cat Version)
 DFLAGS=-d-version=DerelictSDL2_Static $(COMFLAGS) -I./src -J./src/c64 -J./src/font

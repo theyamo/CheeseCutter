@@ -76,7 +76,7 @@ void mainloop() {
 				mods &= 0xffffff - KMOD_NUM;
 				auto keyinfo = Keyinfo(key, mods, unicode);
 				com.kbd.translate(keyinfo);
-                // FIXME
+        // FIXME
 				version(OSX) {
 					if (key == SDLK_q && evt.key.keysym.mod & KMOD_GUI)
 						quit=true;
@@ -172,8 +172,6 @@ int main(char[][] args) {
   // DerelictSDL2.load();
 	
 	scope(exit) {
-		delete mainui;
-		delete video;
 		SDL_Quit();
 	}
 	
