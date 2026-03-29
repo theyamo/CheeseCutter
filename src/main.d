@@ -36,13 +36,11 @@ version(Win32) {
 	const DIR_SEPARATOR = '\\';
 }
 
-bool initVideo(bool useFullscreen, bool useyuv) {
-	int mx, my;
+bool initVideo() {
+	int mx = 800, my = 600;
 
-	if( SDL_Init(SDL_INIT_VIDEO) < 0) {
-		throw new DisplayError("Couldn't initialize framebuffer.");
-	}
-	mx = 800; my = 600;
+	if( SDL_Init(SDL_INIT_VIDEO) < 0) return false;
+
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
@@ -156,21 +154,18 @@ void printheader() {
 	stderr.writef("\n");
 	stderr.writefln("Options:");
 	stderr.writefln("  -b [value]       Set playback buffer size (def=%d)", audio.audio.bufferSize);
-	stderr.writefln("  -f               Start in fullscreen mode");
 	stderr.writefln("  -nofp            Do not use resid-fp emulation");
 	stderr.writefln("  -fpr [x]         Specify filter preset. x = 0..16 for 6581 and 0..1 for 8580");
 	stderr.writefln("  -i               Disable resid interpolation (use fast mode instead)");
 	stderr.writefln("  -m [0|1]         Specify SID model for reSID (6581/8580) (def=0)");
 	stderr.writefln("  -n               Enable NTSC mode");
 	stderr.writefln("  -r [value]       Set playback frequency (def=48000)");
-	stderr.writefln("  -y               Use YUV video overlay");
 	stderr.writef("\n");
 }
 
 int main(char[][] args) {
 	int i;
 	bool fs = false;
-	bool yuvOverlay;
 	string filename;
 	bool fnDefined = false;
 
@@ -225,14 +220,8 @@ int main(char[][] args) {
 				audio.audio.bufferSize = to!int(args[i+1]);
 				i++;
 				break;
-			case "-f","--full":
-				fs = true;
-				break;
 			case "-nofp":
 				audio.player.usefp = 0;
-				break;
-			case "-y", "-ya", "-yuv":	
-				yuvOverlay = true;
 				break;
 			default:
 				version (OSX) {
@@ -261,7 +250,7 @@ int main(char[][] args) {
 	}
 	
 	audio.player.init();
-	if (!initVideo(fs, yuvOverlay)) {
+	if (!initVideo()) {
     writeln("Video init failed: ", SDL_GetError().fromStringz);
     SDL_Quit();
     return -1;
