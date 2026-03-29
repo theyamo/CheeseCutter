@@ -7,30 +7,22 @@ import derelict.sdl2.sdl;
 import std.string : indexOf;
 import com.util;
 
-SDL_Color[] PALETTE = [
+immutable SDL_Color[] PALETTE = [
 	{ 0,0,0 },       
 	{ 63 << 2,63 << 2,63 << 2 },
 	{ 26 << 2,13 << 2,10 << 2 },
 	{ 28 << 2,41 << 2,44 << 2 },
 	{ 27 << 2,15 << 2,33 << 2 },
-
-	{ 27 << 2,23 << 2,45 << 2 },
-	
+	{ 22 << 2,35 << 2,16 << 2 },
 	{ 13 << 2,10 << 2,30 << 2 },
-	
-	
-	
 	{ 46 << 2,49 << 2,27 << 2 },
 	{ 27 << 2,19 << 2,9 << 2 },
 	{ 16 << 2,14 << 2,0 << 2 },
 	{ 38 << 2,25 << 2,22 << 2 },
 	{ 17 << 2,17 << 2,17 << 2 },
 	{ 27 << 2,27 << 2,27 << 2 },
-//	{ 38 << 2,52 << 2,33 << 2 },
-	{ 37 << 2,37 << 2,37 << 2 } ,	
-
-
-	{ 22 << 2,35 << 2,16 << 2 },	
+	{ 38 << 2,52 << 2,33 << 2 },
+	{ 27 << 2,23 << 2,45 << 2 },
 	{ 37 << 2,37 << 2,37 << 2 } ];
 
 immutable FONT_X = 8, FONT_Y = 14;
@@ -52,207 +44,194 @@ static this() {
 	}
 }
 
-abstract class Video {
+
+class Video {
 	protected {
-		//SDL_Surface* surface;
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
+    uint[] framebuffer;
 		bool useFullscreen;
 		Screen screen;
-		Visualizer vis;
 		const int requestedWidth, requestedHeight;
+    int correctedHeight, correctedWidth;
 		int height, width; // resolution of window
 		//int displayHeight, displayWidth; // resolution of the monitor
-		SDL_Rect rect;
+		SDL_Rect destRect;
 	}
-	
+
 	this(int wx, int wy, Screen scr, int fs) {
-		//const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
-		screen = scr;
-		//displayHeight = vidinfo.current_h;
-		//displayWidth = vidinfo.current_w;
-		requestedHeight = wy;
-		requestedWidth = wx;
-    
+		this.screen = scr;
+		this.requestedHeight = wy;
+		this.requestedWidth = wx;
+    this.framebuffer = new uint[wx*wy];
 	}
+
 
 	~this() {
+		if(renderer !is null)
+			SDL_DestroyRenderer(renderer);
+
+    // if(texture !is null)
+    //   SDL_DestroyTexture
+
     if(window !is null)
       SDL_DestroyWindow(window);
+
 	}
 
-	abstract void drawVisualizer(int);
+	bool init() {
+		width = requestedWidth;
+		height = requestedHeight;
+		useFullscreen = false;
 
-	abstract void clearVisualizer();
+    import std.string, std.stdio;
 
-	abstract protected void enableFullscreen(bool fs);
+    window = SDL_CreateWindow("CheeseCutter 2.10", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, cast(SDL_WindowFlags)
+                              SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+                              );
 
-	void resizeEvent(int nw, int nh) {
+    if (window is null) {
+      writeln("Window could not be created");
+      return false;
+    }
+
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    if (renderer is null) {
+      writeln("Renderer could not be created");
+      return false;
+    }
+
+    texture = SDL_CreateTexture(renderer, SDL_GetWindowPixelFormat(window),
+                                SDL_TEXTUREACCESS_TARGET, 800, 600);
+
+    if (texture is null) {
+      writeln("Texture could not be created");
+      return false;
+    }
+
+    SDL_SetRenderTarget(renderer, null);
+
+    calcAspect();
+    screen.refresh();
+
+    return true;
 	}
+
+  void drawVisualizer(int) {}
+
+  void clearVisualizer() {}
+
+  protected void enableFullscreen(bool fs) {}
 
 	void toggleFullscreen() {
-		useFullscreen ^= 1; 
+		useFullscreen ^= 1;
 		enableFullscreen(useFullscreen);
 	}
 
+  // TBD
 	void scalePosition(ref int x, ref int y) {
-		x -= rect.x;
-		y -= rect.y;
+		x -= destRect.x;
+		y -= destRect.y;
     /+
 		x *= cast(float)requestedWidth / width;
 		y *= cast(float)requestedHeight / height;
     +/
 	}
-		
-	abstract void updateFrame();
-}
 
-class VideoStandard : Video {
-	this(int wx, int wy, Screen scr, int fs) {
-		super(wx, wy, scr, fs);
-		enableFullscreen(fs > 0);
-	}
-
-	override protected void enableFullscreen(bool fs) {
-		width = requestedWidth;
-		height = requestedHeight;
-		useFullscreen = fs;
-    /*
-		int sdlflags = SDL_SWSURFACE;
-		sdlflags |= fs ? SDL_WINDOW_FULLSCREEN : 0;
-		surface = SDL_SetVideoMode(width, height, 0, sdlflags); 
-		if(surface is null) {
-			throw new DisplayError("Unable to initialize graphics mode.");
-		}
-		SDL_SetPalette(surface, SDL_PHYSPAL|SDL_LOGPAL, 
-					   cast(SDL_Color *)PALETTE, 0, 16);
-    */
-    
-      // Create an application window with the following settings:
-    /*
-    window = SDL_CreateWindow(
-        "An SDL2 window",                  // window title
-        SDL_WINDOWPOS_UNDEFINED,           // initial x position
-        SDL_WINDOWPOS_UNDEFINED,           // initial y position
-        800,                               // width, in pixels
-        600,                               // height, in pixels
-        cast(SDL_WindowFlags)0
-    );
-    */
-    SDL_CreateWindowAndRenderer(800, 600, cast(SDL_WindowFlags)0, &window, &renderer);
-		//vis = new Oscilloscope(surface, 500, 14);
-		screen.refresh();
-	}
-
-	override void drawVisualizer(int n) {
-	}
-
-	override void clearVisualizer() {
-	}
-	
-	override void updateFrame() {
+  void updateFrame() {
+    auto surface = SDL_GetWindowSurface(window);
 		int x, y;
 		int a,b,c;
-		Uint16* bptr = &screen.data[0];
-		Uint16* cptr = &screen.olddata[0];
-		// Uint32* sptr = cast(Uint32 *)surface.pixels;
-		Uint32* sp;
-		Uint8* bp;
-		Uint8 ubg, ufg;
-		int outx, outy;
-    
+		ushort* bptr = &screen.data[0];
+		ushort* cptr = &screen.olddata[0];
+    uint* sptr = framebuffer.ptr;
+		uint* sp;
+		ubyte* bp;
+		ubyte ubg, ufg;
+
 		if (!isDirty) return;
 		isDirty = false;
 
-        SDL_Rect rect;
-        rect.x = 0;
-        rect.y = 0;
-        rect.x = 800;
-        rect.y = 600;
-        //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        //SDL_RenderDrawRect(renderer, &rect);
-		//SDL_LockSurface(surface);
-        SDL_RenderClear(renderer);  
 		for(y = 0;y < screen.height; y++) {
 			for(x = 0; x < screen.width; x++) {
-				//if(*bptr != *cptr) {
-                if(true) {
+				if(*bptr != *cptr) {
 					*cptr = *bptr;
-					//sp = sptr;
+					sp = sptr;
 					a = *bptr & 255;
 					bp = &font[a * 16];
 					ufg = (*bptr >> 8) & 15;
 					ubg = (*bptr >> 12);
-                    /+
-                     auto fgcolor = getColor(surface, ufg),
-                     bgcolor = getColor(surface, ubg);
-                     +/
-                    rect.x = x * 8;
-                    rect.y = y * 14;
-                    rect.h = 14;
-                    rect.w = 8;
-                    SDL_SetRenderDrawColor(renderer, PALETTE[ubg].r,
-                                           PALETTE[ubg].g,
-                                           PALETTE[ubg].b, 255);
-                    SDL_RenderFillRect(renderer, &rect);
-          
-                    SDL_SetRenderDrawColor(renderer, PALETTE[ufg].r,
-                                           PALETTE[ufg].g,
-                                           PALETTE[ufg].b, 255);
-                    int yy = y * 14;
+					auto fgcolor = getColor(surface, ufg),
+						bgcolor = getColor(surface, ubg);
 					for(c = 4; c < 18; c++, bp++) {
-                        int xx = x * 8;
 						b = *bp;
-						if(b & 0x80) {
-                            SDL_RenderDrawPoint(renderer, xx, yy);
-                        }
-                        xx++;
-						if(b & 0x40) {
-                            SDL_RenderDrawPoint(renderer, xx, yy);
-                        }
-                        xx++;
-						if(b & 0x20) {
-                            SDL_RenderDrawPoint(renderer, xx, yy);
-                        } 
-                        xx++;
-						if(b & 0x10) {
-                            SDL_RenderDrawPoint(renderer, xx, yy);
-                        }
-                        xx++;
-						if(b & 0x08) {
-                            SDL_RenderDrawPoint(renderer, xx, yy);
-                        }
-                        xx++;
-						if(b & 0x04) {
-                            SDL_RenderDrawPoint(renderer, xx, yy);
-                        }
-                        xx++;
-						if(b & 0x02) {
-                            SDL_RenderDrawPoint(renderer, xx, yy);
-                        }
-                        xx++;
-						if(b & 0x01) {
-                            SDL_RenderDrawPoint(renderer, xx, yy);
-                        }
-                        xx++;
+						if(b & 0x80) *(sp++) = fgcolor;
+						else *(sp++) = bgcolor;
+						if(b & 0x40) *(sp++) = fgcolor;
+						else *(sp++) = bgcolor;
+						if(b & 0x20) *(sp++) = fgcolor;
+						else *(sp++) = bgcolor;
+						if(b & 0x10) *(sp++) = fgcolor;
+						else *(sp++) = bgcolor;
+						if(b & 0x08) *(sp++) = fgcolor;
+						else *(sp++) = bgcolor;
+						if(b & 0x04) *(sp++) = fgcolor;
+						else *(sp++) = bgcolor;
+						if(b & 0x02) *(sp++) = fgcolor;
+						else *(sp++) = bgcolor;
+						if(b & 0x01) *(sp++) = fgcolor;
+						else *(sp++) = bgcolor;
 						sp += width - 8;
-                        yy++;
 					}
-          
 				}
-				//sptr += 8;
+				sptr += 8;
 				bptr++;
 				cptr++;
 			}
-			//sptr += width*13;
+			sptr += width*13;
 		}
-		//SDL_UnlockSurface(surface);
-		//SDL_Flip(surface);
+
+    // Apparently this is fairly slow: https://wiki.libsdl.org/SDL3/SDL_UpdateTexture
+    SDL_UpdateTexture(texture, null, framebuffer.ptr, 800 * uint.sizeof);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, null, &destRect);
     SDL_RenderPresent(renderer);
 	}
 
+	void resizeEvent(int nw, int nh) {
+    calcAspect();
+		screen.refresh();
+	}
+
+	private void calcAspect() {
+    int windowWidth, windowHeight;
+
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
+		int correctedHeight = windowHeight;
+		int correctedWidth = windowWidth;
+		if(cast(float)windowHeight / windowWidth < 0.75) {
+			correctedWidth = cast(int)(correctedHeight / 0.75);
+			correctedHeight = windowHeight;
+		}
+		else {
+			correctedWidth = windowWidth;
+			correctedHeight = cast(int)(correctedWidth * 0.75);
+		}
+    destRect.w = correctedWidth;
+    destRect.h = correctedHeight;
+    if (windowWidth > correctedWidth)
+      destRect.x = (windowWidth - correctedWidth) / 2;
+    else destRect.x = 0;
+    if (windowHeight > correctedHeight)
+      destRect.y = (windowHeight - correctedHeight) / 2;
+    else destRect.y = 0;
+	}
 }
+
 
 class Screen {
 	Uint16[] data;
@@ -260,7 +239,7 @@ class Screen {
 	immutable int width, height;
 	alias width w;
 	alias height h;
-	
+
 	this(int xchars, int ychars) {
 		width = xchars;
 		height = ychars;
@@ -268,7 +247,7 @@ class Screen {
 		olddata.length = xchars * ychars;
 		refresh();
 	}
-	
+
 	Uint16 getChar(int x, int y) {
 		mixin(CHECKS);
 		return data[x + y * width];
@@ -291,7 +270,7 @@ class Screen {
 	int getbg(int x, int y) {
 		return getChar(x, y) >> 12;
 	}
-	
+
 	void setbg(int x, int y, int bg) {
 		Uint16* s = &data[x + y * width];
 		*s &= 0xfff;
@@ -333,7 +312,7 @@ class Screen {
 				col = cast(Uint16)((fg << 8) | (s[i] & 0xf000));
 			if(skipfg)
 				col = cast(Uint16)((bg << 12) | (s[i] & 0x0f00));
-	
+
 			s[i] = cast(Uint16)(c | col);
 		}
 		isDirty = true;
@@ -395,7 +374,7 @@ private class Oscilloscope : Visualizer {
 		SDL_FillRect(surface, new SDL_Rect(xconst, yconst,
                                            width, height), 0);
 	}
-	
+
 	void draw(int frames) {
 		float smpofs;
 		float n = frames * 50.0f;
@@ -405,7 +384,7 @@ private class Oscilloscope : Visualizer {
 			coll = getColor(surface, 5);
 
 		clear();
-		
+
 		smpofs = 0.0f;
 		import audio.audio;
 		int oldposition = height / 2 + samples[cast(int)smpofs]  / 768;
@@ -453,7 +432,7 @@ void disableKeyRepeat() {
 Uint16 readkey() {
 	SDL_Event evt;
 	bool loop = true;
-	
+
 	while(loop) {
 		while(SDL_PollEvent(&evt)) {
 			if(evt.type == SDL_QUIT) {
@@ -470,8 +449,6 @@ Uint16 readkey() {
 	return cast(Uint16)evt.key.keysym.unicode;
 }
 
-private int getColor(SDL_Surface* s, int c) {
-	return PALETTE[c].b << s.format.Bshift | 
-		(PALETTE[c].g << s.format.Gshift) |
-		(PALETTE[c].r << s.format.Rshift);
+auto getColor(SDL_Surface* s, int c) {
+  return SDL_MapRGBA(s.format, PALETTE[c].r, PALETTE[c].g, PALETTE[c].b, 255);
 }

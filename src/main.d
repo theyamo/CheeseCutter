@@ -46,8 +46,8 @@ void initVideo(bool useFullscreen, bool useyuv) {
 	int width = mx / FONT_X;
 	int height = my / FONT_Y;
 	screen = new Screen(width, height);
-	video = new VideoStandard(800, 600, screen, useFullscreen ? 1 : 0);
-
+	video = new Video(800, 600, screen, 0);
+  video.init();
 	// SDL_EnableKeyRepeat(200, 10);
 	// SDL_EnableUNICODE(1);
 	// SDL_WM_SetCaption("CheeseCutter".toStringz(),"CheeseCutter".toStringz());
@@ -128,6 +128,11 @@ void mainloop() {
         //case SDL_VIDEOEXPOSE:
 				//mainui.update();
 				//break;
+      case SDL_WINDOWEVENT:
+        if (evt.window.event == SDL_WINDOWEVENT_RESIZED) {
+          video.resizeEvent(evt.window.data1, evt.window.data2);
+        }
+        break;
 			default:
 				//writeln("Unknown SDL event ",evt.type);
 				break;
